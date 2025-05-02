@@ -4,8 +4,7 @@ import 'package:flutter/widgets.dart';
 
 @RoutePage()
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
-
+  const SplashScreen({super.key});
 
   @override
   _SplashScreenState createState() => _SplashScreenState();
@@ -20,9 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _navigateToNextScreen() async {
-    // Simulate a delay for splash screen
     await Future.delayed(Duration(seconds: 2));
-    // Navigate to the next screen (e.g., HomeScreen)
     Navigator.pushReplacementNamed(context, '/home');
   }
 

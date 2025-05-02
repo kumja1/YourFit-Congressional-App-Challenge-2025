@@ -10,9 +10,8 @@ class AuthService {
         email: email,
         password: password,
       );
-      if (response.error != null) {
-        throw response.error!;
-      }
+
+
     } catch (e) {
       throw Exception('Failed to sign in: $e');
     }
@@ -24,9 +23,7 @@ class AuthService {
         email: email,
         password: password,
       );
-      if (response..error != null) {
-        throw response.error!;
-      }
+ 
     } catch (e) {
       throw Exception('Failed to sign up: $e');
     }
