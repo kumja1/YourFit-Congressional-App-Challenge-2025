@@ -1,7 +1,7 @@
 import 'package:injectable/injectable.dart';
-import 'package:your_fit/src/utils/get_it/get_it.config.dart';
-import 'package:your_fit/src/utils/constants.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:yourfit/src/utils/get_it/get_it.config.dart';
+import 'package:yourfit/src/utils/constants/constants.dart';
 
 @InjectableInit(
   asExtension: true,
@@ -9,6 +9,5 @@ import 'package:your_fit/src/utils/constants.dart';
   initializerName: "init",
 )
 Future<void> configureServices() async {
-  
   getIt.init();
 }

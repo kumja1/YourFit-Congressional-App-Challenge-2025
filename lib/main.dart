@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:your_fit/src/app_router.dart';
-import 'package:your_fit/src/utils/constants.dart';
-import 'package:your_fit/src/utils/get_it/get_it.dart';
+import 'package:yourfit/src/app_router.dart';
+import 'package:yourfit/src/utils/constants/constants.dart';
+import 'package:yourfit/src/utils/get_it/get_it.dart';
 
-void main() {
-  configureServices();
+void main() async {
+  await configureServices();
   runApp(YourFitApp());
 }
 
@@ -18,10 +18,11 @@ class YourFitApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'YourFit',
       theme: ThemeData(
+        
+        fontFamily: "Lilita",
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
       ),
       routerConfig: _appRouter.config(),
     );
   }
 }
-

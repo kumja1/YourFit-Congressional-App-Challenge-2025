@@ -1,31 +1,12 @@
+import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:your_fit/src/utils/constants.dart';
+import 'package:yourfit/src/utils/constants/constants.dart';
 
+@singleton
 class AuthService {
- final SupabaseClient supabaseClient  = getIt<SupabaseClient>();
+  final GoTrueClient _auth = supabaseClient.auth;
 
-  Future<void> signInWithEmail(String email, String password) async {
-    try {
-      final response = await supabaseClient.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
-
-
-    } catch (e) {
-      throw Exception('Failed to sign in: $e');
-    }
-  }
-
-  Future<void> signUpWithEmail(String email, String password) async {
-    try {
-      final response = await supabaseClient.auth.signUp(
-        email: email,
-        password: password,
-      );
- 
-    } catch (e) {
-      throw Exception('Failed to sign up: $e');
-    }
+  Future<void> signInWithPassword(String email, String password) async {
+    await _auth.signInWithPassword(email: email, password: password);
   }
 }

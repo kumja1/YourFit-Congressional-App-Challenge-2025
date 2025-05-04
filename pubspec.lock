@@ -17,6 +17,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.4.4"
+  animated_snack_bar:
+    dependency: "direct main"
+    description:
+      name: animated_snack_bar
+      sha256: "9ec2d79507546f65b82038c9ac5ddfc3c2fccf285def43070606b0ec0fc56d34"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.0"
   app_links:
     dependency: transitive
     description:
@@ -225,6 +233,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.1"
+  envied:
+    dependency: "direct main"
+    description:
+      name: envied
+      sha256: a4e2b1d0caa479b5d61332ae516518c175a6d09328a35a0bc0a53894cc5d7e4d
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
   fake_async:
     dependency: transitive
     description:
@@ -496,6 +512,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  nice_buttons:
+    dependency: "direct main"
+    description:
+      name: nice_buttons
+      sha256: "280bcd1e7aa236f7f9acb213e75a6f9375d12094cc4aed03abb25ef0845331ce"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.3"
   package_config:
     dependency: transitive
     description:
@@ -941,6 +965,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.3"
+  wx_divider:
+    dependency: "direct main"
+    description:
+      name: wx_divider
+      sha256: "3b0f22d0058941acafff0dc4e07a5b45830515645159087d01b1fe1ce346a7ab"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   xdg_directories:
     dependency: transitive
     description:
@@ -973,6 +1005,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.0"
+  zod:
+    dependency: "direct main"
+    description:
+      name: zod
+      sha256: "5502cd3565dbf7809f7142d3e92a658be6a54994e3d84e2d264890357e712665"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
 sdks:
   dart: ">=3.8.0-278.1.beta <4.0.0"
   flutter: ">=3.27.0"

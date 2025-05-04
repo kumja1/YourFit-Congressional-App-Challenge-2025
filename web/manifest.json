@@ -1,6 +1,6 @@
 {
-    "name": "your_fit",
-    "short_name": "your_fit",
+    "name": "yourfit",
+    "short_name": "yourfit",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
