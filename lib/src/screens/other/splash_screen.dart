@@ -2,7 +2,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/widgets.dart';
 
-@RoutePage()
+@routePage
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
