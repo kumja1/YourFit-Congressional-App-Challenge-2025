@@ -1,12 +1,10 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:nice_buttons/nice_buttons.dart';
 import 'package:text_divider/text_divider.dart';
-import 'package:wx_divider/wx_divider.dart';
 import 'package:yourfit/src/app_router.dart';
 import 'package:yourfit/src/utils/constants/constants.dart';
-import 'package:yourfit/src/utils/constants/images.dart';
 
 @routePage
 class SignInScreen extends StatefulWidget {
@@ -44,7 +42,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 width: 100,
                 height: 50,
                 stretch: false,
-                child: const Image(image: Images.googleLogo),
+                child: const Icon(FontAwesomeIcons.google)
               ),
               NiceButtons(
                 onTap: () => {},
@@ -54,7 +52,17 @@ class _SignInScreenState extends State<SignInScreen> {
                 width:  100,
                 height: 50,
                 stretch: false,
-                child: const Image(image: Images.appleLogo),
+                child: const Icon(FontAwesomeIcons.apple)
+              ),
+              NiceButtons(
+                onTap: () => {},
+                borderColor: Colors.grey,
+                endColor: Colors.white,
+                startColor: Colors.white,
+                width:  100,
+                height: 50,
+                stretch: false,
+                child: const Icon(FontAwesomeIcons.facebook)
               ),
             ],
           ),

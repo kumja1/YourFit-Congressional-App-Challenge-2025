@@ -47,6 +47,7 @@ dependencies:
   envied: ^1.1.1
   wx_divider: ^1.0.0
   text_divider: ^1.0.0
+  font_awesome_flutter: ^10.8.0
 
 dev_dependencies:
   flutter_test:
