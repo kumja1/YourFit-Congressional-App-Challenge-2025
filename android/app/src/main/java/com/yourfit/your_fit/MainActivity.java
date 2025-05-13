@@ -1,4 +1,4 @@
-package com.cac.yourfit;
+package com.app.yourfit;
 
 import io.flutter.embedding.android.FlutterActivity;
 

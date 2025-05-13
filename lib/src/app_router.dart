@@ -1,15 +1,12 @@
-import 'package:auto_route/auto_route.dart';
-import 'package:auto_route/annotations.dart';
-import 'package:injectable/injectable.dart';
+import 'package:get/get.dart';
+import 'package:yourfit/src/screens/home_screen.dart';
 import 'package:yourfit/src/screens/index.dart';
 
-import 'app_router.gr.dart';
-
-@singleton
-@AutoRouterConfig()
-class AppRouter extends RootStackRouter {
-  @override
-  List<AutoRoute> routes = [AutoRoute(page: SignInRoute.page, initial: true)];
-  @override
-  RouteType get defaultRouteType => RouteType.material();
+class AppRouter {
+  List<GetPage> routes = [
+    GetPage(name: '/', page: () => const SignInScreen()),
+    GetPage(name: "/signin_screen", page: () => const SignInScreen()),
+    GetPage(name: "/signup_screen", page: () => const SignUpScreen()),
+    GetPage(name: "/home_screen", page: () => const HomeScreen()),
+  ];
 }

@@ -35,19 +35,21 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   flutter_animate: ^4.5.2
-  injectable: ^2.5.0
-  auto_route: ^10.0.1
   supabase_flutter: ^2.9.0
-  get_it: ^8.0.3
-  injectable_generator: ^2.7.0
-  auto_route_generator: ^10.0.1
   nice_buttons: ^0.0.3
   animated_snack_bar: ^0.4.0
-  zod: ^0.0.1
   envied: ^1.1.1
   wx_divider: ^1.0.0
   text_divider: ^1.0.0
-  font_awesome_flutter: ^10.8.0
+  envied_generator: ^1.1.1
+  simple_icons: ^14.6.1
+  flutter_svg: ^2.1.0
+  google_sign_in: ^6.3.0
+  google_sign_in_web: ^0.12.4+4
+  custom_button_builder: ^0.0.4
+  get: ^4.7.2
+  animated_button: ^0.3.1
+  onboarding: ^4.0.2
 
 dev_dependencies:
   flutter_test:
@@ -68,8 +70,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/
-    - assets/images/oauth/
+    - assets/icons/
 
   fonts:
     - family: Fredoka-SemiBold
