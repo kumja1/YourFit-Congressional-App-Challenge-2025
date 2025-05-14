@@ -1,0 +1,32 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "YourFit-Congressional-App-Challenge-2025",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "YourFit-Congressional-App-Challenge-2025 (profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "showMemoryUsage": true,
+"openDevTools": "performance",
+            "toolArgs": [
+                "--machine -d web-server",
+                "--web-hostname 0.0.0.0",
+                "--web-port $PORT"
+            ],
+            "flutterMode": "profile"
+        },
+        {
+            "name": "YourFit-Congressional-App-Challenge-2025 (release mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}
