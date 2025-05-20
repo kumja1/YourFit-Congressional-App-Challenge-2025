@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:yourfit/src/controllers/auth_controller.dart';
-import 'package:yourfit/src/widgets/auth_form/auth_form.dart';
-import 'package:yourfit/src/widgets/auth_form_text_field/auth_form_text_field.dart';
+import 'package:yourfit/src/widgets/auth_form.dart';
+import 'package:yourfit/src/widgets/auth_form_text_field.dart';
 
 class SignInScreen extends GetView<AuthController> {
   const SignInScreen({super.key});
@@ -17,21 +17,21 @@ class SignInScreen extends GetView<AuthController> {
           const Text("Sign in", style: TextStyle(fontSize: 30)),
           const SizedBox(height: 60.0),
           AuthForm(
+            formKey: controller.formKey,
             showSubmitButton: true,
-            showCreateAccount: true,
             showForgetPassword: true,
-            showOAuthButtons: true,
+            showOAuthButtons: false,
             fields: [
               AuthFormTextField(
                 label: const Text("Email"),
                 value: controller.email,
-                validator: (value) => controller.validateEmail(value),
+                validator: controller.validateEmail,
               ),
-              
+
               AuthFormTextField(
                 label: const Text("Password"),
+                height: 70,
                 value: controller.password,
-                validator: (value) => controller.validatePassword(value),
                 isPassword: true,
               ),
             ],
@@ -39,7 +39,7 @@ class SignInScreen extends GetView<AuthController> {
               "Sign In",
               style: TextStyle(color: Colors.white),
             ),
-            onSubmit: () => controller.signInWithPassword(),
+            onSubmitPressed: () => controller.signInWithPassword(),
           ),
         ],
       ),

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:yourfit/src/widgets/async_button/async_button.dart';
+import 'package:yourfit/src/widgets/async_button.dart';
 
-class OAuthButton extends GetWidget {
+class OAuthButton extends StatelessWidget {
   final Widget icon;
   final Future Function()? onPressed;
   final Text? label;
@@ -19,7 +18,7 @@ class OAuthButton extends GetWidget {
     this.label,
     this.width = 100,
     this.height = 40,
-    this.borderRadius = 30,
+    this.borderRadius = 20,
     this.foregroundColor = Colors.white,
     this.backgroundColor = Colors.grey,
   });
@@ -35,7 +34,7 @@ class OAuthButton extends GetWidget {
       foregroundColor: foregroundColor,
       height: height,
       width: width,
-      loadingAnimation: true,
+      showLoadingIndicator: true,
       onPressed: onPressed,
       child: Row(
         children: [

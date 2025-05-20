@@ -7,6 +7,6 @@ class SignUpScreen extends GetView {
 
   @override
   Widget build(BuildContext context) {
-    throw UnimplementedError();
+    return Container();
   }
 }

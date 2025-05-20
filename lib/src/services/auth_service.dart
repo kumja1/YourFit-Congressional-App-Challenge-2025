@@ -65,7 +65,6 @@ class AuthService extends GetxService {
         return (code: AuthCode.error, error: AuthError.userNotFound);
       }
 
-      currentUser.value = await _userService.getUser(response.user!.id);
       return (code: AuthCode.success, error: null);
     } on AuthException catch (e) {
       return (code: AuthCode.error, error: e.message);
@@ -74,16 +73,14 @@ class AuthService extends GetxService {
 
   Future<({AuthCode code, String? error})> signOut() async {
     try {
-      currentUser.value = null;
       await _auth.signOut();
-
       return (code: AuthCode.success, error: null);
     } on AuthException catch (e) {
       return (code: AuthCode.error, error: e.message);
     }
   }
 
-  Future<({AuthCode code, String? error})> sendPasswordResetEmail(
+  Future<({AuthCode code, String? error})> sendPasswordReset(
     String email,
   ) async {
     try {

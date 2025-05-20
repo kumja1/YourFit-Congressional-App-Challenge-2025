@@ -5,24 +5,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:yourfit/src/services/index.dart';
 import 'package:yourfit/src/utils/constants/auth/auth_code.dart';
 import 'package:yourfit/src/utils/functions/show_snackbar.dart';
+import 'package:yourfit/src/utils/mixins/input_validation_mixin.dart';
 
-class AuthController extends GetxController {
-  final RxString email = ''.obs;
-  final RxString password = ''.obs;
-  final GlobalKey<FormState> formState = GlobalKey<FormState>();
-  final AuthService _authService = Get.find<AuthService>();
-
-  RxBool passwordVisible = false.obs;
-  
-  void togglePasswordVisible() =>
-      passwordVisible.value = !passwordVisible.value;
+class AuthController extends GetxController with InputValidationMixin {
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final AuthService _authService = Get.find();
 
   Future<void> _handleSignInResponse(
     ({AuthCode code, String? error}) response,
   ) async {
     if (response.code == AuthCode.error) {
       showSnackbar(
-        formState.currentContext,
+        formKey.currentContext,
         response.error!,
         AnimatedSnackBarType.error,
       );
@@ -38,9 +32,9 @@ class AuthController extends GetxController {
   }
 
   Future<void> signInWithPassword() async {
-    if (!formState.currentState!.validate()) {
+    if (!formKey.currentState!.validate()) {
       showSnackbar(
-        formState.currentContext,
+        formKey.currentContext,
         "Invalid email or password",
         AnimatedSnackBarType.error,
       );
@@ -56,48 +50,5 @@ class AuthController extends GetxController {
     ({AuthCode code, String? error}) response = await _authService
         .signInWithOAuth(provider);
     await _handleSignInResponse(response);
-  }
-
-  String? validateEmail(String? value) {
-    if (GetUtils.isNullOrBlank(value)!) {
-      return "Email is required";
-    }
-
-    return !GetUtils.isEmail(value!) ? "Invalid email" : null;
-  }
-
-  String? validatePassword(
-    String? value, {
-    int minLength = 8,
-    bool upper = true,
-    bool lower = true,
-    bool numeric = true,
-    bool special = true,
-  }) {
-    if (GetUtils.isNullOrBlank(value)!) {
-      return "Password is required";
-    }
-
-    if (GetUtils.isLengthLessThan(value, minLength)) {
-      return "Password length must be at least $minLength characters";
-    }
-
-    if (upper && !GetUtils.hasCapitalletter(value!)) {
-      return "Password must contain at least one uppercase letter";
-    }
-
-    if (lower && !GetUtils.hasMatch(value!, r'[a-z]')) {
-      return "Password must contain at least one lowercase letter";
-    }
-
-    if (numeric && !GetUtils.hasMatch(value!, r'[0-9]')) {
-      return "Password must contain at least one number";
-    }
-
-    if (special && !GetUtils.hasMatch(value!, r'[!@#$%^&*(),.?":{}|<>]')) {
-      return "Password must contain at least one special character";
-    }
-
-    return null;
   }
 }
