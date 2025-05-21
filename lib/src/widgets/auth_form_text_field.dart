@@ -68,7 +68,6 @@ class AuthFormTextField extends StatelessWidget {
           decoration: InputDecoration(
             label: label,
             errorStyle: const TextStyle(color: Colors.red),
-
             floatingLabelStyle:  const TextStyle(color: Colors.blueAccent),
             border: const OutlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(12)),

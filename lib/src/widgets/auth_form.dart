@@ -15,6 +15,7 @@ class AuthForm extends StatelessWidget {
   final Color? submitButtonBackgroundColor;
   final Future Function() onSubmitPressed;
   final Future Function()? onCreateAccountPressed;
+  final Function()? onForgetPasswordPressed;
   final Text submitButtonText;
 
   final bool showFields;
@@ -33,6 +34,7 @@ class AuthForm extends StatelessWidget {
     this.showSubmitButton = true,
     this.showOAuthButtons = true,
     this.onCreateAccountPressed,
+    this.onForgetPasswordPressed,
     this.fields,
     this.submitButtonBackgroundColor,
     this.submitButtonForegroundColor,
@@ -45,80 +47,80 @@ class AuthForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-        child: Column(
-          children: [
-            if (showOAuthButtons && oauthButtons != null) ...[
-              _buildOAuth(),
-              const SizedBox(height: 15),
-              const SizedBox(
-                width: 420,
-                child: TextDivider(
-                  text: Text(
-                    "OR",
-                    style: TextStyle(color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                  color: Colors.grey,
+      child: Column(
+        children: [
+          if (showOAuthButtons && oauthButtons != null) ...[
+            _buildOAuth(),
+            const SizedBox(
+              height: 15,
+              width: 420,
+              child: TextDivider(
+                text: Text(
+                  "OR",
+                  style: TextStyle(color: Colors.grey),
+                  textAlign: TextAlign.center,
                 ),
+                color: Colors.grey,
               ),
-              const SizedBox(height: 20),
-            ],
-
-            if (showFields && fields != null)
-              Form(key: formKey, child: Column(children: fields!)),
-
-            if (showSubmitButton) ...[
-              const SizedBox(height: 20),
-              AsyncButton(
-                isThreeD: true,
-                backgroundColor: submitButtonBackgroundColor ?? Colors.blue,
-                foregroundColor: submitButtonForegroundColor ?? Colors.blue,
-                animate: true,
-                width: 250,
-                showLoadingIndicator: true,
-                height: 40,
-                borderRadius: 50,
-                onPressed: onSubmitPressed,
-                child: submitButtonText,
-              ),
-            ],
-
-            if (showForgetPassword) ...[
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: () => Get.toNamed("/reset_password_screen"),
-                style: const ButtonStyle(
-                  textStyle: WidgetStatePropertyAll(
-                    TextStyle(color: Colors.blue),
-                  ),
-                ),
-                child: const Text(
-                  "Forgot Password?",
-                  style: TextStyle(color: Colors.blueAccent),
-                ),
-              ),
-            ],
-            if (showCreateAccount) ...[
-              const SizedBox(height: 60),
-              createAccountButton ??
-                  AsyncButton(
-                    isThreeD: true,
-                    backgroundColor: Colors.grey,
-                    foregroundColor: Colors.white,
-                    showLoadingIndicator: true,
-                    animate: true,
-                    width: 250,
-                    height: 40,
-                    borderRadius: 50,
-                    onPressed: onCreateAccountPressed,
-                    child: const Text(
-                      "New User? Create an Account",
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ),
-            ],
+            ),
+            const SizedBox(height: 20),
           ],
-        ),
+
+          if (showFields && fields != null)
+            Form(key: formKey, child: Column(children: fields!)),
+
+          if (showSubmitButton) ...[
+            const SizedBox(height: 20),
+            AsyncButton(
+              isThreeD: true,
+              backgroundColor: submitButtonBackgroundColor ?? Colors.blue,
+              foregroundColor: submitButtonForegroundColor ?? Colors.blue,
+              animate: true,
+              width: 250,
+              showLoadingIndicator: true,
+              height: 40,
+              borderRadius: 50,
+              onPressed: onSubmitPressed,
+              child: submitButtonText,
+            ),
+          ],
+
+          if (showForgetPassword) ...[
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: onForgetPasswordPressed,
+              style: const ButtonStyle(
+                textStyle: WidgetStatePropertyAll(
+                  TextStyle(color: Colors.blue),
+                ),
+              ),
+              child: const Text(
+                "Forgot Password?",
+                style: TextStyle(color: Colors.blueAccent),
+              ),
+            ),
+          ],
+          if (showCreateAccount) ...[
+            const SizedBox(height: 60),
+            createAccountButton ??
+                AsyncButton(
+                  isThreeD: true,
+                  backgroundColor: Colors.grey,
+                  foregroundColor: Colors.white,
+                  showLoadingIndicator: true,
+                  animate: true,
+                  width: 250,
+                  height: 40,
+                  borderRadius: 50,
+                  onPressed: onCreateAccountPressed,
+                  child: const Text(
+                    "New User? Create an Account",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ),
+          ],
+        ],
+      ),
     );
   }
 

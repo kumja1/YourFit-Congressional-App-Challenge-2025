@@ -40,6 +40,7 @@ class SignInScreen extends GetView<AuthController> {
               style: TextStyle(color: Colors.white),
             ),
             onSubmitPressed: () => controller.signInWithPassword(),
+            onForgetPasswordPressed: () async => Get.toNamed("/reset_password_screen"),
           ),
         ],
       ),

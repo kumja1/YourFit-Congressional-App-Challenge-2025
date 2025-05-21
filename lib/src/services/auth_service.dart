@@ -1,12 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:yourfit/src/models/user_data.dart';
 import 'package:yourfit/src/services/user_service.dart';
 import 'package:yourfit/src/utils/constants/auth/auth_code.dart';
 import 'package:yourfit/src/utils/constants/auth/auth_error.dart';
 import 'package:yourfit/src/utils/constants/variables.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService extends GetxService {
   final GoTrueClient _auth = supabaseClient.auth;
@@ -24,6 +24,7 @@ class AuthService extends GetxService {
           );
           break;
 
+        case AuthChangeEvent.passwordRecovery:
         case AuthChangeEvent.signedOut:
           currentUser.value = null;
           break;
@@ -59,36 +60,41 @@ class AuthService extends GetxService {
     String email,
     String password,
   ) async {
-    try {
+    return await _tryCatch(() async {
       var response = await _auth.signUp(email: email, password: password);
       if (response.user == null) {
         return (code: AuthCode.error, error: AuthError.userNotFound);
       }
 
       return (code: AuthCode.success, error: null);
-    } on AuthException catch (e) {
-      return (code: AuthCode.error, error: e.message);
-    }
+    });
   }
 
   Future<({AuthCode code, String? error})> signOut() async {
-    try {
+    return await _tryCatch(() async {
       await _auth.signOut();
       return (code: AuthCode.success, error: null);
-    } on AuthException catch (e) {
-      return (code: AuthCode.error, error: e.message);
-    }
+    });
   }
 
   Future<({AuthCode code, String? error})> sendPasswordReset(
-    String email,
-  ) async {
-    try {
-      await _auth.resetPasswordForEmail(email);
+    String email, {
+    String? redirectTo,
+  }) async {
+    return await _tryCatch(() async {
+      await _auth.resetPasswordForEmail(email, redirectTo: redirectTo);
       return (code: AuthCode.success, error: null);
-    } on AuthException catch (e) {
-      return (code: AuthCode.error, error: e.message);
-    }
+    });
+  }
+
+  Future<({AuthCode code, String? error})> resetPassword(
+    String email,
+    String newPassword,
+  ) async {
+    return await _tryCatch(() async {
+      await _auth.updateUser(UserAttributes(password: newPassword));
+      return (code: AuthCode.success, error: null);
+    });
   }
 
   Future<({AuthCode code, String? error})> signInWithOAuth(
@@ -104,16 +110,14 @@ class AuthService extends GetxService {
   Future<({AuthCode code, String? error})> _signInWithWebOAuth(
     OAuthProvider provider,
   ) async {
-    try {
+    return await _tryCatch(() async {
       var success = await _auth.signInWithOAuth(provider, redirectTo: null);
       if (!success) {
         return (code: AuthCode.error, error: AuthError.userNotFound);
       }
 
       return (code: AuthCode.success, error: null);
-    } on AuthException catch (e) {
-      return (code: AuthCode.error, error: e.message);
-    }
+    });
   }
 
   Future<({AuthCode code, String? error})> _signInWithGoogleOAuth() async {
@@ -127,7 +131,7 @@ class AuthService extends GetxService {
       serverClientId: webClientId,
     );
 
-    try {
+    return await _tryCatch(() async {
       var account = await googleSignIn.signIn();
 
       if (account == null) {
@@ -158,6 +162,14 @@ class AuthService extends GetxService {
       }
 
       return (code: AuthCode.success, error: null);
+    });
+  }
+
+  Future<({AuthCode code, String? error})> _tryCatch(
+    Future<({AuthCode code, String? error})> Function() callback,
+  ) async {
+    try {
+      return await callback();
     } on AuthException catch (e) {
       return (code: AuthCode.error, error: e.message);
     }
