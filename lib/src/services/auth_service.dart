@@ -13,9 +13,12 @@ class AuthService extends GetxService {
   final UserService _userService = Get.put(UserService());
   final Rx<UserData?> currentUser = Rx(null);
 
+  bool get isSignedIn => currentUser.value != null;
+
   @override
   void onInit() {
     super.onInit();
+
     _auth.onAuthStateChange.listen((event) async {
       switch (event.event) {
         case AuthChangeEvent.signedIn:
@@ -88,7 +91,6 @@ class AuthService extends GetxService {
   }
 
   Future<({AuthCode code, String? error})> resetPassword(
-    String email,
     String newPassword,
   ) async {
     return await _tryCatch(() async {
@@ -152,9 +154,9 @@ class AuthService extends GetxService {
         accessToken: accessToken,
       );
 
-      List<String> names = account.displayName!.split(" ");
-      String firstName = names[0];
-      String lastName = names[1];
+      List<String> nameParts = account.displayName!.split(" ");
+      String firstName = nameParts[0];
+      String lastName = nameParts[1];
 
       bool hasUser = await _userService.hasUser(firstName, lastName);
       if (!hasUser) {

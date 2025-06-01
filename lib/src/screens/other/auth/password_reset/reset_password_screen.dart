@@ -1,21 +1,19 @@
 import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:yourfit/src/services/index.dart';
+import 'package:yourfit/src/controllers/auth_form_controller.dart';
 import 'package:yourfit/src/utils/constants/auth/auth_code.dart';
 import 'package:yourfit/src/utils/functions/show_snackbar.dart';
-import 'package:yourfit/src/utils/mixins/input_validation_mixin.dart';
 import 'package:yourfit/src/widgets/auth_form.dart';
 import 'package:yourfit/src/widgets/auth_form_text_field.dart';
 
 class ResetPasswordScreen extends StatelessWidget {
   const ResetPasswordScreen({super.key});
 
-  _ResetPasswordScreenController get _controller =>
-      Get.put(_ResetPasswordScreenController());
-
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(_ResetPasswordScreenController());
+
     return Scaffold(
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -24,17 +22,17 @@ class ResetPasswordScreen extends StatelessWidget {
           const Text("Reset Password", style: TextStyle(fontSize: 30)),
           const SizedBox(height: 60.0),
           AuthForm(
-            showCreateAccount: false,
+            showBottomButton: false,
             showForgetPassword: false,
             showOAuthButtons: false,
             fields: [
               AuthFormTextField(
-                value: _controller.email,
-                label: const Text("New Password"),
+                onChanged: (value) => controller.password.value = value,
+                labelText: "New Password",
               ),
             ],
-            onSubmitPressed: () => _controller.resetPasswordForEmail(),
-            submitButtonText: const Text(
+            onSubmitPressed: () => controller.resetPassword(),
+            submitButtonChild: const Text(
               "Reset Password",
               style: TextStyle(color: Colors.white),
             ),
@@ -45,25 +43,17 @@ class ResetPasswordScreen extends StatelessWidget {
   }
 }
 
-class _ResetPasswordScreenController extends GetxController
-    with InputValidationMixin {
-  final AuthService _authService = Get.find();
-
-  Future<void> sendPasswordResetForEmail() async {
-    ({AuthCode code, String? error}) response = await _authService
-        .sendPasswordReset(email.value);
+class _ResetPasswordScreenController extends AuthFormController {
+  Future<void> resetPassword() async {
+    ({AuthCode code, String? error}) response = await authService.resetPassword(
+      password.value,
+    );
 
     if (response.code == AuthCode.error) {
-      showSnackbar(Get.context, response.error!, AnimatedSnackBarType.error);
+      showSnackbar(response.error!, AnimatedSnackBarType.error);
       return;
     }
 
-    showSnackbar(
-      Get.context,
-      "Check email for password reset",
-      AnimatedSnackBarType.success,
-    );
+    showSnackbar("Password Reset!", AnimatedSnackBarType.success);
   }
-
-  Widget resetPassword() {}
 }

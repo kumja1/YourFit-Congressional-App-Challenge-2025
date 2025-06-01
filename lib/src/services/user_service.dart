@@ -26,8 +26,13 @@ class UserService {
     return user;
   }
 
-  bool saveUser(UserData user) {
-    return false;
+  Future<bool> saveUser(UserData user) async {
+    try {
+      await _supabase.from("user_data").update(user.toJson()).eq("id", user.id);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<UserData?> getUser(String id) async {

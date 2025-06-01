@@ -29,21 +29,26 @@ class AsyncButton extends StatelessWidget {
     this.animate = true,
     this.vibrate = true,
     this.isThreeD = true,
-    this.foregroundColor = Colors.blue,
-    this.backgroundColor = Colors.blueAccent,
+    this.foregroundColor = Colors.blueAccent,
+    this.backgroundColor = Colors.blue,
     this.loadingIndicatorColor = Colors.white,
   });
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(_AsyncButtonController(), tag: _tag);
+
     return CustomButton(
       onPressed:
-          () => controller.handleOnPressed(onPressed, showLoadingIndicator),
+          () => controller.handleOnPressed(
+            onPressed ?? () async {},
+            showLoadingIndicator,
+          ),
       backgroundColor: foregroundColor,
       shadowColor: backgroundColor,
       height: height,
       width: width,
+      animate: animate,
       isThreeD: isThreeD,
       borderRadius: borderRadius,
       child: GetBuilder<_AsyncButtonController>(
@@ -62,7 +67,7 @@ class _AsyncButtonController extends GetxController {
   bool isLoading = false;
 
   Future<void> handleOnPressed(
-    Future<void> Function()? onPressed,
+    Future Function()? onPressed,
     bool loadingAnimation,
   ) async {
     {
@@ -73,13 +78,13 @@ class _AsyncButtonController extends GetxController {
           isLoading = true;
           update();
 
-          await onPressed();
+         await onPressed();
         } finally {
           isLoading = false;
           update();
         }
       } else {
-        await onPressed();
+         onPressed();
       }
     }
   }

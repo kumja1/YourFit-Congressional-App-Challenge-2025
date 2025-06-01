@@ -14,35 +14,53 @@ mixin InputValidationMixin {
   }
 
   String? validatePassword(
-      String? value, {
-        int minLength = 8,
-        bool upper = true,
-        bool lower = true,
-        bool numeric = true,
-        bool special = true,
-      }) {
+    String? value, {
+    int minLength = 8,
+    bool upper = false,
+    bool lower = false,
+    bool numeric = false,
+    bool special = false,
+  }) => validateString(
+    value,
+    stringType: "Password",
+    lower: lower,
+    minLength: minLength,
+    numeric: numeric,
+    special: special,
+    upper: upper,
+  );
+
+  String? validateString(
+    String? value, {
+    String? stringType = "Value",
+    int minLength = 8,
+    bool upper = true,
+    bool lower = true,
+    bool numeric = true,
+    bool special = true,
+  }) {
     if (GetUtils.isNullOrBlank(value)!) {
-      return "Password is required";
+      return "$stringType is required";
     }
 
     if (GetUtils.isLengthLessThan(value, minLength)) {
-      return "Password length must be at least $minLength characters";
+      return "$stringType length must be at least $minLength characters";
     }
 
     if (upper && !GetUtils.hasCapitalletter(value!)) {
-      return "Password must contain at least one uppercase letter";
+      return "$stringType must contain at least one uppercase letter";
     }
 
     if (lower && !GetUtils.hasMatch(value!, r'[a-z]')) {
-      return "Password must contain at least one lowercase letter";
+      return "$stringType must contain at least one lowercase letter";
     }
 
     if (numeric && !GetUtils.hasMatch(value!, r'[0-9]')) {
-      return "Password must contain at least one number";
+      return "$stringType must contain at least one number";
     }
 
     if (special && !GetUtils.hasMatch(value!, r'[!@#$%^&*(),.?":{}|<>]')) {
-      return "Password must contain at least one special character";
+      return "$stringType must contain at least one special character";
     }
 
     return null;

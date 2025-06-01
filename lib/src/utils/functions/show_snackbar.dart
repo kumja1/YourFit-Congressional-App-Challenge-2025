@@ -1,13 +1,12 @@
 import 'package:animated_snack_bar/animated_snack_bar.dart';
-import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 void showSnackbar(
-  BuildContext? context,
   String message,
   AnimatedSnackBarType type, {
   Duration duration = const Duration(seconds: 5),
 }) {
-  if (context == null) {
+  if (Get.context == null) {
     return;
   }
 
@@ -16,5 +15,5 @@ void showSnackbar(
     type: type,
     mobileSnackBarPosition: MobileSnackBarPosition.top,
     duration: duration,
-  ).show(context);
+  ).show(Get.context!);
 }

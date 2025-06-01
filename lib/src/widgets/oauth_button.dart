@@ -20,7 +20,7 @@ class OAuthButton extends StatelessWidget {
     this.height = 40,
     this.borderRadius = 20,
     this.foregroundColor = Colors.white,
-    this.backgroundColor = Colors.grey,
+    this.backgroundColor = Colors.black12,
   });
 
   @override
@@ -35,6 +35,7 @@ class OAuthButton extends StatelessWidget {
       height: height,
       width: width,
       showLoadingIndicator: true,
+      loadingIndicatorColor: Colors.grey,
       onPressed: onPressed,
       child: Row(
         children: [

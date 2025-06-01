@@ -1,26 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class AuthFormTextField extends StatelessWidget {
-  final RxString value;
-  final Text label;
+class AuthFormTextField extends GetWidget {
+  final Function(String value)? onChanged;
+  final String labelText;
+  final TextStyle labelStyle;
   final bool isPassword;
   final Color passwordVisibilityColor;
   final String? Function(String? value)? validator;
   final double width;
   final double height;
+  final BorderRadius borderRadius;
 
   final _tag = UniqueKey().toString();
 
   AuthFormTextField({
     super.key,
-    required this.value,
-    required this.label,
+    required this.labelText,
+    this.onChanged,
     this.validator,
     this.isPassword = false,
     this.passwordVisibilityColor = Colors.blue,
     this.width = 360,
-    this.height = 100,
+    this.height = 80,
+    this.labelStyle = const TextStyle(
+      color: Colors.black26,
+      fontWeight: FontWeight.normal,
+    ),
+    this.borderRadius = const BorderRadius.all(Radius.circular(12)),
   });
 
   @override
@@ -32,11 +39,11 @@ class AuthFormTextField extends StatelessWidget {
       height: height,
       child:
           !isPassword
-              ? _buildForm()
+              ? _buildField()
               : Stack(
-            alignment: Alignment.center,
+                alignment: Alignment.center,
                 children: [
-                  _buildForm(),
+                  _buildField(),
                   Align(
                     alignment: Alignment.centerRight,
                     child: IconButton(
@@ -58,23 +65,24 @@ class AuthFormTextField extends StatelessWidget {
     );
   }
 
-  Widget _buildForm() => GetBuilder<_AuthFormTextFieldController>(
+  Widget _buildField() => GetBuilder<_AuthFormTextFieldController>(
     tag: _tag,
     builder:
         (controller) => TextFormField(
-          autovalidateMode: AutovalidateMode.onUnfocus,
           obscureText: !controller.passwordVisible,
-          onChanged: (text) => value.value = text,
+          onChanged: onChanged,
           decoration: InputDecoration(
-            label: label,
+            labelText: labelText,
+            labelStyle: labelStyle,
             errorStyle: const TextStyle(color: Colors.red),
-            floatingLabelStyle:  const TextStyle(color: Colors.blueAccent),
-            border: const OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(12)),
+            floatingLabelBehavior: FloatingLabelBehavior.never,
+            enabledBorder: OutlineInputBorder(
+              borderSide: const BorderSide(width: 1.2, color: Colors.black12),
+              borderRadius: borderRadius,
             ),
-            focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: Colors.blue),
-              borderRadius: BorderRadius.all(Radius.circular(12)),
+            focusedBorder: OutlineInputBorder(
+              borderSide: const BorderSide(color: Colors.blue, width: 2.0),
+              borderRadius: borderRadius,
             ),
           ),
         ),
@@ -82,7 +90,7 @@ class AuthFormTextField extends StatelessWidget {
 }
 
 class _AuthFormTextFieldController extends GetxController {
-  bool passwordVisible = false;
+  bool passwordVisible = true;
 
   void togglePasswordVisibility() {
     passwordVisible = !passwordVisible;

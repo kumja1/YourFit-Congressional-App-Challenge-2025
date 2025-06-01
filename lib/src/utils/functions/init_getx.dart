@@ -1,6 +1,6 @@
 import 'package:get/instance_manager.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:yourfit/src/controllers/auth_controller.dart';
+import 'package:yourfit/src/controllers/auth_form_controller.dart';
 import 'package:yourfit/src/services/auth_service.dart';
 import 'package:yourfit/src/utils/constants/env/env.dart';
 
@@ -15,5 +15,5 @@ Future<void> initServices() async {
 }
 
 void initControllers() {
-  Get.put(AuthController());
+  Get.put(AuthFormController());
 }
