@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:simple_icons/simple_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:yourfit/src/controllers/auth_form_controller.dart';
-import 'package:yourfit/src/routes.dart';
+import 'package:yourfit/src/routing/routes.dart';
 import 'package:yourfit/src/utils/constants/icons.dart';
 import 'package:yourfit/src/widgets/auth_form.dart';
 import 'package:yourfit/src/widgets/auth_form_text_field.dart';
 import 'package:yourfit/src/widgets/oauth_button.dart';
 
-class SignInScreen extends GetView<AuthFormController> {
+class SignInScreen extends StatelessWidget {
   const SignInScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(AuthFormController());
     return Scaffold(
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -55,8 +55,10 @@ class SignInScreen extends GetView<AuthFormController> {
               style: TextStyle(color: Colors.white),
             ),
             onSubmitPressed: () => controller.signInWithPassword(),
-            onForgetPasswordPressed: () => Get.toNamed(Routes.forgetPassword),
-            onBottomButtonPressed: () => Get.toNamed(Routes.signUp)!,
+            onForgetPasswordPressed:
+                () => Get.rootDelegate.toNamed(Routes.forgetPassword),
+            onBottomButtonPressed:
+                () => Get.rootDelegate.toNamed(Routes.signUp),
           ),
         ],
       ),

@@ -1,6 +1,14 @@
+import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:custom_button_builder/custom_button_builder.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:text_divider/text_divider.dart';
+import 'package:yourfit/src/routing/routes.dart';
+import 'package:yourfit/src/services/auth_service.dart';
+import 'package:yourfit/src/utils/constants/auth/auth_code.dart';
+import 'package:yourfit/src/utils/functions/show_snackbar.dart';
+import 'package:yourfit/src/utils/mixins/input_validation_mixin.dart';
 import 'package:yourfit/src/widgets/async_button.dart';
 
 class AuthForm extends StatelessWidget {
@@ -49,27 +57,36 @@ class AuthForm extends StatelessWidget {
       child: Column(
         children: [
           if (showOAuthButtons && oauthButtons != null) ...[
-            _buildOAuth(),
-            const SizedBox(height: 20),
-            const SizedBox(
-              width: 420,
-              child: TextDivider(
-                text: Text(
-                  "OR",
-                  style: TextStyle(color: Colors.black26),
-                  textAlign: TextAlign.center,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              spacing: 30,
+              children: oauthButtons!,
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: SizedBox(
+                width: 420,
+                child: TextDivider(
+                  text: Text(
+                    "OR",
+                    style: TextStyle(color: Colors.black26),
+                    textAlign: TextAlign.center,
+                  ),
+                  color: Colors.black12,
                 ),
-                color: Colors.black12,
               ),
             ),
-            const SizedBox(height: 20),
           ],
 
           if (showFields && fields != null)
             Form(
               key: formKey,
               autovalidateMode: AutovalidateMode.onUnfocus,
-              child: Column(children: fields!),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: fields!,
+              ),
             ),
 
           if (showSubmitButton) ...[
@@ -126,12 +143,42 @@ class AuthForm extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildOAuth() {
-    return Row(
-      spacing: 30,
-      mainAxisSize: MainAxisSize.min,
-      children: oauthButtons!,
-    );
+class AuthFormController extends GetxController with InputValidationMixin {
+  final ObjectKey formKey = ObjectKey(null);
+  final AuthService authService = Get.find();
+
+  Future<void> _handleSignInResponse(
+    ({AuthCode code, String? error}) response,
+  ) async {
+    if (response.code == AuthCode.error) {
+      showSnackbar(response.error!, AnimatedSnackBarType.error);
+      return;
+    }
+
+    if (response.code == AuthCode.success) {
+      await Get.toNamed(Routes.home);
+    }
+  }
+
+  Future<void> signInWithPassword() async {
+    if (!(formKey.value as FormState).validate()) {
+      showSnackbar("Invalid email or password", AnimatedSnackBarType.error);
+      return;
+    }
+
+    ({AuthCode code, String? error}) response = await authService
+        .signInWithPassword(email.value, password.value);
+    await _handleSignInResponse(response);
+  }
+
+  Future<void> signInWithOAuth(OAuthProvider provider) async {
+    ({AuthCode code, String? error}) response = await authService
+        .signInWithOAuth(provider);
+
+    await Future.doWhile(() => !authService.isSignedIn);
+
+    await _handleSignInResponse(response);
   }
 }

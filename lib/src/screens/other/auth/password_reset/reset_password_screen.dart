@@ -1,7 +1,6 @@
 import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:yourfit/src/controllers/auth_form_controller.dart';
 import 'package:yourfit/src/utils/constants/auth/auth_code.dart';
 import 'package:yourfit/src/utils/functions/show_snackbar.dart';
 import 'package:yourfit/src/widgets/auth_form.dart';

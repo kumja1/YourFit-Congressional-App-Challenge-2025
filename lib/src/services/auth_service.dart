@@ -10,7 +10,7 @@ import 'package:yourfit/src/utils/constants/variables.dart';
 
 class AuthService extends GetxService {
   final GoTrueClient _auth = supabaseClient.auth;
-  final UserService _userService = Get.put(UserService());
+  final UserService _userService = Get.find();
   final Rx<UserData?> currentUser = Rx(null);
 
   bool get isSignedIn => currentUser.value != null;
@@ -108,6 +108,18 @@ class AuthService extends GetxService {
             (OAuthProvider.google) => await _signInWithGoogleOAuth(),
             _ => (code: AuthCode.error, error: AuthError.invalidOAuthProvider),
           };
+
+  Future<({AuthCode code, String? error})> refreshSession() async {
+    return await _tryCatch(() async {
+      final session = await _auth.refreshSession();
+      if (session.user == null) {
+        return (code: AuthCode.error, error: AuthError.userNotFound);
+      }
+
+      currentUser.value = await _userService.getUser(session.user!.id);
+      return (code: AuthCode.success, error: null);
+    });
+  }
 
   Future<({AuthCode code, String? error})> _signInWithWebOAuth(
     OAuthProvider provider,

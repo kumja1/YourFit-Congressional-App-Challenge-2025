@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:simple_icons/simple_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:yourfit/src/controllers/auth_form_controller.dart';
-import 'package:yourfit/src/routes.dart';
+import 'package:yourfit/src/routing/routes.dart';
 import 'package:yourfit/src/services/index.dart';
 import 'package:yourfit/src/utils/constants/icons.dart';
 import 'package:yourfit/src/widgets/auth_form.dart';
@@ -32,12 +31,13 @@ class SignUpScreen extends StatelessWidget {
                   onPressed:
                       () async =>
                           controller.signInWithOAuth(OAuthProvider.google),
-                ),const OAuthButton(icon: Icon(SimpleIcons.apple)),
+                ),
+                const OAuthButton(icon: Icon(SimpleIcons.apple)),
                 const OAuthButton(
                   icon: Icon(
                     SimpleIcons.facebook,
                     color: SimpleIconColors.facebook,
-                  )
+                  ),
                 ),
               ],
               fields: [
@@ -63,7 +63,7 @@ class SignUpScreen extends StatelessWidget {
                 "Create Account",
                 style: TextStyle(color: Colors.white),
               ),
-              onBottomButtonPressed: () => Get.toNamed(Routes.signIn),
+              onBottomButtonPressed: () => Get.rootDelegate.toNamed(Routes.signIn),
               bottomButtonChild: const Text(
                 "Existing User? Sign in",
                 style: TextStyle(color: Colors.black26),
@@ -82,7 +82,5 @@ class _SignUpScreenController extends AuthFormController {
 
   final UserService _userService = Get.find();
 
-  Future<void> createAccount() async {
-
-  }
+  Future<void> createAccount() async {}
 }
