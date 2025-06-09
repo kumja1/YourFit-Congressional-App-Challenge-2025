@@ -22,12 +22,3 @@ class YourFitApp extends StatelessWidget {
     ),
   );
 }
-
-class T extends GetMiddleware {
-  @override
-  RouteSettings? redirect(String? route) {
-    // TODO: implement redirect
-
-    return super.redirect(route);
-  }
-}
