@@ -44,7 +44,7 @@ mixin InputValidationMixin {
     }
 
     if (GetUtils.isLengthLessThan(value, minLength)) {
-      return "$stringType length must be at least $minLength characters";
+      return "$stringType length must be at least $minLength";
     }
 
     if (upper && !GetUtils.hasCapitalletter(value!)) {

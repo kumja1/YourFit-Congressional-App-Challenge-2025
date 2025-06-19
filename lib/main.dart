@@ -13,7 +13,6 @@ class YourFitApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => GetMaterialApp.router(
-    defaultTransition: Transition.downToUp,
     getPages: Router.screens,
     title: 'YourFit',
     theme: ThemeData(

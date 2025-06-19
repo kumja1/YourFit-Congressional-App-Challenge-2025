@@ -1,7 +1,7 @@
-import 'package:custom_button_builder/custom_button_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:yourfit/src/routing/routes.dart';
+import 'package:yourfit/src/widgets/animated_button.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
@@ -34,7 +34,7 @@ class LandingScreen extends StatelessWidget {
                 ],
               ),
             ),
-            CustomButton(
+            AnimatedButton(
               width: 200,
               height: 20,
               animate: true,

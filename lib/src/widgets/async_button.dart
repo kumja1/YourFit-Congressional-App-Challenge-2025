@@ -1,13 +1,15 @@
-import 'package:custom_button_builder/custom_button_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:yourfit/src/widgets/animated_button.dart';
 
 class AsyncButton extends StatelessWidget {
   final Future Function()? onPressed;
   final Widget child;
+  final bool disabled;
   final bool showLoadingIndicator;
-  final double width;
-  final double height;
+  final double? width;
+  final double? height;
+  final BoxConstraints? constraints;
   final double borderRadius;
   final bool animate;
   final bool vibrate;
@@ -23,8 +25,9 @@ class AsyncButton extends StatelessWidget {
     required this.child,
     this.onPressed,
     this.showLoadingIndicator = true,
-    this.width = 200,
-    this.height = 20,
+    this.disabled = false,
+    this.width = 250,
+    this.height = 40,
     this.borderRadius = 20,
     this.animate = true,
     this.vibrate = true,
@@ -32,19 +35,19 @@ class AsyncButton extends StatelessWidget {
     this.foregroundColor = Colors.blueAccent,
     this.backgroundColor = Colors.blue,
     this.loadingIndicatorColor = Colors.white,
+    this.constraints,
   });
 
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(_AsyncButtonController(), tag: _tag);
-    return CustomButton(
+
+    return AnimatedButton(
       onPressed:
-          () => controller.handleOnPressed(
-            onPressed ?? () async {},
-            showLoadingIndicator,
-          ),
+          () => controller.handleOnPressed(onPressed, showLoadingIndicator),
       backgroundColor: foregroundColor,
       shadowColor: backgroundColor,
+      constraints: constraints,
       height: height,
       width: width,
       animate: animate,
@@ -77,13 +80,13 @@ class _AsyncButtonController extends GetxController {
           isLoading = true;
           update();
 
-         await onPressed();
+          onPressed();
         } finally {
           isLoading = false;
           update();
         }
       } else {
-         onPressed();
+        onPressed();
       }
     }
   }

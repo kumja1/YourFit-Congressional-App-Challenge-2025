@@ -24,7 +24,6 @@ class HomeScreen extends StatelessWidget {
                 BottomNavigationBarItem(
                   icon: Icon(Icons.map),
 
-
                   label: "Roadmap",
                 ),
                 BottomNavigationBarItem(
@@ -40,7 +39,7 @@ class HomeScreen extends StatelessWidget {
 
 class _HomeScreenController extends GetxController {
   final List<Widget> screens = const [RoadmapScreen(), SignUpScreen()];
-  int currentIndex = 0;
+  int currentIndex = 1;
 
   void setIndex(int value) {
     currentIndex = value;

@@ -10,7 +10,7 @@ class Router {
       page: () => const SplashScreen(),
       middlewares: [AuthMiddleware()],
     ),
-    GetPage(name: Routes.landing, page: () => const LandingScreen()),
+    GetPage(name: Routes.landing, page: () => const HomeScreen()),
     GetPage(name: Routes.signIn, page: () => const SignInScreen()),
     GetPage(name: Routes.signUp, page: () => const SignUpScreen()),
     GetPage(
