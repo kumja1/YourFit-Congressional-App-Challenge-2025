@@ -18,7 +18,7 @@ class UserService {
       weight: weight,
       height: height,
       caloriesBurned: 0,
-      exerciseData: {},
+      monthData: {},
       milesTraveled: 0,
     );
 
@@ -26,9 +26,9 @@ class UserService {
     return user;
   }
 
-  Future<bool> saveUser(UserData user) async {
+  Future<bool> updateUser(UserData user) async {
     try {
-      await _supabase.from("user_data").update(user.toJson()).eq("id", user.id);
+      await _supabase.from("user_data").update(user.toMap()).eq("id", user.id);
       return true;
     } catch (e) {
       return false;
@@ -38,7 +38,7 @@ class UserService {
   Future<UserData?> getUser(String id) async {
     try {
       var response = await _supabase.from("user_data").select().eq("id", id);
-      return UserData.fromJson(response.first);
+      return UserData.fromMap(response.first);
     } catch (e) {
       return null;
     }

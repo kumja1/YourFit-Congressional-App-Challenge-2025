@@ -39,10 +39,7 @@ class AuthService extends GetxService {
     });
   }
 
-  Future<AuthResponse> signInWithPassword(
-    String email,
-    String password,
-  ) async {
+  Future<AuthResponse> signInWithPassword(String email, String password) async {
     return await _tryCatch(() async {
       final response = await _auth.signInWithPassword(
         email: email,
@@ -50,23 +47,24 @@ class AuthService extends GetxService {
       );
 
       if (response.user == null) {
-        return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
+        return AuthResponse(
+          code: AuthCode.error,
+          error: AuthError.userNotFound,
+        );
       }
 
-      currentUser.value = await _userService.getUser(response.user!.id);
       return AuthResponse(code: AuthCode.success, error: null);
-
-      });
+    });
   }
 
-  Future<AuthResponse> signUpWithPassword(
-    String email,
-    String password,
-  ) async {
+  Future<AuthResponse> signUpWithPassword(String email, String password) async {
     return await _tryCatch(() async {
       var response = await _auth.signUp(email: email, password: password);
       if (response.user == null) {
-        return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
+        return AuthResponse(
+          code: AuthCode.error,
+          error: AuthError.userNotFound,
+        );
       }
 
       return AuthResponse(code: AuthCode.success, error: null);
@@ -90,9 +88,7 @@ class AuthService extends GetxService {
     });
   }
 
-  Future<AuthResponse> resetPassword(
-    String newPassword,
-  ) async {
+  Future<AuthResponse> resetPassword(String newPassword) async {
     return await _tryCatch(() async {
       await _auth.updateUser(UserAttributes(password: newPassword));
       return AuthResponse(code: AuthCode.success, error: null);
@@ -103,7 +99,10 @@ class AuthService extends GetxService {
     return await _tryCatch(() async {
       final session = await _auth.refreshSession();
       if (session.user == null) {
-        return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
+        return AuthResponse(
+          code: AuthCode.error,
+          error: AuthError.userNotFound,
+        );
       }
 
       currentUser.value = await _userService.getUser(session.user!.id);
@@ -111,23 +110,25 @@ class AuthService extends GetxService {
     });
   }
 
-  Future<AuthResponse> signInWithOAuth(
-    OAuthProvider provider,
-  ) async =>
+  Future<AuthResponse> signInWithOAuth(OAuthProvider provider) async =>
       kIsWeb
           ? _signInWithWebOAuth(provider)
           : switch (provider) {
             (OAuthProvider.google) => await _signInWithGoogleOAuth(),
-            _ => AuthResponse(code: AuthCode.error, error: AuthError.invalidOAuthProvider),
+            _ => AuthResponse(
+              code: AuthCode.error,
+              error: AuthError.invalidOAuthProvider,
+            ),
           };
 
-  Future<AuthResponse> _signInWithWebOAuth(
-    OAuthProvider provider,
-  ) async {
+  Future<AuthResponse> _signInWithWebOAuth(OAuthProvider provider) async {
     return await _tryCatch(() async {
       var success = await _auth.signInWithOAuth(provider, redirectTo: null);
       if (!success) {
-        return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
+        return AuthResponse(
+          code: AuthCode.error,
+          error: AuthError.userNotFound,
+        );
       }
 
       return AuthResponse(code: AuthCode.success, error: null);
@@ -149,7 +150,10 @@ class AuthService extends GetxService {
       var account = await googleSignIn.signIn();
 
       if (account == null) {
-        return AuthResponse(code: AuthCode.error, error: AuthError.googleSignInError);
+        return AuthResponse(
+          code: AuthCode.error,
+          error: AuthError.googleSignInError,
+        );
       }
 
       var authentication = await account.authentication;
@@ -157,7 +161,10 @@ class AuthService extends GetxService {
       var accessToken = authentication.accessToken;
 
       if (idToken == null || accessToken == null) {
-        return AuthResponse(code: AuthCode.error, error: AuthError.googleSignInError);
+        return AuthResponse(
+          code: AuthCode.error,
+          error: AuthError.googleSignInError,
+        );
       }
 
       await _auth.signInWithIdToken(
