@@ -1,10 +1,6 @@
-import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_utils/src/get_utils/get_utils.dart';
 
 mixin InputValidationMixin {
-  final RxString email = ''.obs;
-  final RxString password = ''.obs;
-
   String? validateEmail(String? value) {
     if (GetUtils.isNullOrBlank(value)!) {
       return "Email is required";
@@ -15,14 +11,14 @@ mixin InputValidationMixin {
 
   String? validatePassword(
     String? value, {
-    int minLength = 8,
+    int minLength = 1,
     bool upper = false,
     bool lower = false,
     bool numeric = false,
     bool special = false,
   }) => validateString(
     value,
-    stringType: "Password",
+    valueType: "Password",
     lower: lower,
     minLength: minLength,
     numeric: numeric,
@@ -32,35 +28,40 @@ mixin InputValidationMixin {
 
   String? validateString(
     String? value, {
-    String? stringType = "Value",
-    int minLength = 8,
-    bool upper = true,
-    bool lower = true,
-    bool numeric = true,
-    bool special = true,
+    String? valueType = "Value",
+    int minLength = 1,
+    bool space = false,
+    bool upper = false,
+    bool lower = false,
+    bool numeric = false,
+    bool special = false,
   }) {
     if (GetUtils.isNullOrBlank(value)!) {
-      return "$stringType is required";
+      return "$valueType is required";
     }
 
     if (GetUtils.isLengthLessThan(value, minLength)) {
-      return "$stringType length must be at least $minLength";
+      return "$valueType length must be at least $minLength";
     }
 
     if (upper && !GetUtils.hasCapitalletter(value!)) {
-      return "$stringType must contain at least one uppercase letter";
+      return "$valueType must contain at least one uppercase letter";
     }
 
     if (lower && !GetUtils.hasMatch(value!, r'[a-z]')) {
-      return "$stringType must contain at least one lowercase letter";
+      return "$valueType must contain at least one lowercase letter";
     }
 
-    if (numeric && !GetUtils.hasMatch(value!, r'[0-9]')) {
-      return "$stringType must contain at least one number";
+    if (space && !GetUtils.hasMatch(value, r'^\S+ \S+(?: \S+)*$')) {
+      return "$valueType must contain a space between each word";
+    }
+
+    if (numeric && !GetUtils.isNum(value!)) {
+      return "$valueType must be contain only numbers";
     }
 
     if (special && !GetUtils.hasMatch(value!, r'[!@#$%^&*(),.?":{}|<>]')) {
-      return "$stringType must contain at least one special character";
+      return "$valueType must contain at least one special character";
     }
 
     return null;

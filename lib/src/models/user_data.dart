@@ -1,8 +1,10 @@
 import 'package:dart_mappable/dart_mappable.dart';
-import 'package:yourfit/src/models/exercise_data.dart';
 import 'package:yourfit/src/models/month_data.dart';
 
 part 'user_data.mapper.dart';
+
+@MappableEnum()
+enum UserGender { male, female }
 
 @MappableClass()
 class UserData with UserDataMappable {
@@ -14,27 +16,33 @@ class UserData with UserDataMappable {
 
   late String lastName;
 
+  late UserGender gender;
+
   late int age;
 
-  late double height;
+  late DateTime dob;
+
+  late int height;
 
   late double weight;
 
-  late double caloriesBurned;
+  late double totalCaloriesBurned;
 
   late double milesTraveled;
 
-  late Map<String, MonthData> monthData;
+  late Map<DateTime, MonthData> exerciseData;
 
   UserData({
     required this.firstName,
     required this.lastName,
+    required this.gender,
+    required this.dob,
     required this.age,
     required this.height,
     required this.weight,
-    required this.caloriesBurned,
+    required this.totalCaloriesBurned,
     required this.milesTraveled,
-    required this.monthData,
+    required this.exerciseData,
   });
 
   static UserData fromMap(Map<String, dynamic> map) =>

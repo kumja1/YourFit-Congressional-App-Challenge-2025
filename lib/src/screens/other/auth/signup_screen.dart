@@ -1,7 +1,7 @@
-import 'package:animated_snack_bar/animated_snack_bar.dart';
-import 'package:date_field/date_field.dart';
+import 'package:const_date_time/const_date_time.dart';
+import 'package:date_picker_plus/date_picker_plus.dart';
+import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthResponse;
 import 'package:yourfit/src/models/auth/auth_response.dart';
@@ -9,10 +9,9 @@ import 'package:yourfit/src/models/auth/new_user_auth_response.dart';
 import 'package:yourfit/src/routing/routes.dart';
 import 'package:yourfit/src/services/index.dart';
 import 'package:yourfit/src/utils/constants/icons.dart';
-import 'package:yourfit/src/utils/functions/show_snackbar.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form_text_field.dart';
-import 'package:yourfit/src/widgets/oauth_button.dart';
+import 'package:yourfit/src/widgets/buttons/oauth_button.dart';
 
 class SignUpScreen extends StatelessWidget {
   const SignUpScreen({super.key});
@@ -22,97 +21,107 @@ class SignUpScreen extends StatelessWidget {
     final controller = Get.put(_SignUpScreenController());
 
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height,
-            ),
-            child: Center(
-              child: AuthForm(
-                formKey: controller.formKey,
-                showForgetPassword: false,
-                // title: const Text(
-                // "Create your account",
-                // style: TextStyle(fontSize: 30),
-                // ).paddingSymmetric(vertical: 40),
-                oauthButtons: [
-                  OAuthButton(
-                    icon: googleIcon,
-                    onPressed:
-                        () => controller.createAccount(
-                          provider: OAuthProvider.google,
-                        ),
-                  ),
-                ],
-                fields: [
-                  AuthFormTextField(
-                    labelText: "Email",
-                    onChanged: (value) => controller.email.value = value,
-                    validator: controller.validateEmail,
-                  ),
-
-                  AuthFormTextField(
-                    labelText: "Password",
-                    onChanged: (value) => controller.password.value = value,
-                    validator: (value) => controller.validatePassword(value),
-                    isPassword: true,
-                  ),
-
-                  AuthFormTextField(
-                    labelText: "Name",
-                    onChanged: (value) => controller.name.value = value,
-                  ),
-
-                  AuthFormTextField(
-                    labelText: "Age",
-                    onChanged: (value) => controller.age.value = value,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  ),
-
-                  DateTimeFormField(),
-                ],
-                onSubmitPressed: () async => controller.createAccount(),
-                submitButtonChild: const Text(
-                  "Create Account",
-                  style: TextStyle(color: Colors.white),
-                ),
-                onBottomButtonPressed:
-                    () => Get.rootDelegate.toNamed(Routes.signIn),
-                bottomButtonChild: const Text(
-                  "Existing User? Sign in",
-                  style: TextStyle(color: Colors.black26),
-                ),
-              ),
+      body: AuthForm(
+        formKey: controller.formKey,
+        // title: const Text(
+        // "Create your account",
+        // style: TextStyle(fontSize: 30),
+        // ).paddingSymmetric(vertical: 40),
+        oauthButtons: [
+          OAuthButton(
+            icon: googleIcon,
+            onPressed: () =>
+                controller.createAccount(provider: OAuthProvider.google),
+          ),
+        ],
+        fields: [
+          AuthFormTextField(
+            labelText: "Name",
+            keyboardType: TextInputType.name,
+            onChanged: (value) => controller.name = value,
+            validator: (value) => controller.validateString(
+              value,
+              space: true,
+              valueType: "Name",
             ),
           ),
+          AuthFormTextField(
+            labelText: "Email",
+            onChanged: (value) => controller.email = value,
+            validator: controller.validateEmail,
+          ),
+          Obx(
+            () => AuthFormTextField(
+              labelText: "Password",
+              onChanged: (value) => controller.password.value = value,
+              validator: controller.validatePassword,
+              isPassword: controller.password.value.isEmpty ? false : true,
+            ),
+          ),
+        ],
+        onSubmitPressed: () async => controller.createAccount(),
+        submitButtonChild: const Text(
+          "Create Account",
+          style: TextStyle(color: Colors.white),
         ),
-      ),
+        onBottomButtonPressed: () => Get.rootDelegate.toNamed(Routes.signIn),
+        bottomButtonChild: const Text(
+          "Existing User? Sign in",
+          style: TextStyle(color: Colors.black26),
+        ),
+      ).center(),
     );
   }
 }
 
 class _SignUpScreenController extends AuthFormController {
-  final RxString name = ''.obs;
-  final RxString age = ''.obs;
+  String name = "";
 
   final UserService _userService = Get.find();
 
   Future<void> createAccount({OAuthProvider? provider}) async {
     if (provider != null) {
       AuthResponse response = await signInWithOAuth(provider);
-      if (response is NewUserAuthResponse) {}
+      if (response is! NewUserAuthResponse) {
+        return;
+      }
+
+      await _userService.createUserFromData(response.newUser);
+      return;
     }
+
     if (!validateForm()) {
       return;
     }
 
     final nameParts = name.split(" ");
-    if (nameParts.isEmpty || nameParts.any((s) => s.isEmpty)) {
-      showSnackbar("Name is invalid", AnimatedSnackBarType.error);
-      return;
-    }
-
-    // _userService.createUser(nameParts[0], lastName, weight, height, age)
   }
+
+  Future<DateTime?> showDateDialog(
+    BuildContext context,
+    DateTime? _,
+  ) async => await showDatePickerDialog(
+    context: context,
+    maxDate: const ConstDateTime(3000),
+    minDate: const ConstDateTime(1900, 12, 31),
+    initialDate: DateTime.now(),
+    centerLeadingDate: true,
+    daysOfTheWeekTextStyle: const TextStyle(
+      color: Colors.black26,
+      fontSize: 14,
+    ),
+    enabledCellsTextStyle: const TextStyle(color: Colors.black26, fontSize: 14),
+    currentDateTextStyle: const TextStyle(color: Colors.white, fontSize: 14),
+    currentDateDecoration: const BoxDecoration(
+      shape: BoxShape.circle,
+      color: Colors.black26,
+    ),
+    selectedCellDecoration: const BoxDecoration(
+      shape: BoxShape.circle,
+      color: Colors.blue,
+    ),
+    leadingDateTextStyle: const TextStyle(fontSize: 20),
+    slidersColor: Colors.black,
+    splashRadius: 20,
+  );
 }

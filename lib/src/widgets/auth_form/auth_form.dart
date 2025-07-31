@@ -9,8 +9,8 @@ import 'package:yourfit/src/services/auth_service.dart';
 import 'package:yourfit/src/utils/constants/auth/auth_code.dart';
 import 'package:yourfit/src/utils/functions/show_snackbar.dart';
 import 'package:yourfit/src/utils/mixins/input_validation_mixin.dart';
-import 'package:yourfit/src/widgets/animated_button.dart';
-import 'package:yourfit/src/widgets/async_button.dart';
+import 'package:yourfit/src/widgets/buttons/animated_button.dart';
+import 'package:yourfit/src/widgets/buttons/async_animated_button.dart';
 
 class AuthForm extends StatelessWidget {
   final List<Widget>? oauthButtons;
@@ -20,37 +20,33 @@ class AuthForm extends StatelessWidget {
 
   final Color? submitButtonForegroundColor;
   final Color? submitButtonBackgroundColor;
-  final Future Function() onSubmitPressed;
+  final Future Function()? onSubmitPressed;
   final Function()? onBottomButtonPressed;
-  final Function()? onForgetPasswordPressed;
-  final Widget submitButtonChild;
+  final EdgeInsets? submitButtonPadding;
+  final Widget? submitButtonChild;
   final Widget? bottomButtonChild;
   final Widget? title;
-  final Widget? forgetPassword;
 
   final bool showTitle;
   final bool showFields;
-  final bool showForgetPassword;
   final bool showBottomButton;
   final bool showSubmitButton;
   final bool showOAuth;
 
   const AuthForm({
     super.key,
-    required this.onSubmitPressed,
-    required this.submitButtonChild,
+    this.onSubmitPressed,
+    this.submitButtonChild,
     this.showFields = true,
-    this.showForgetPassword = true,
     this.showBottomButton = true,
     this.showSubmitButton = true,
     this.showTitle = true,
     this.showOAuth = true,
     this.fieldsSpacing = 10,
+    this.submitButtonPadding,
     this.onBottomButtonPressed,
-    this.onForgetPasswordPressed,
     this.fields,
     this.title,
-    this.forgetPassword,
     this.submitButtonBackgroundColor,
     this.submitButtonForegroundColor,
     this.oauthButtons,
@@ -87,53 +83,37 @@ class AuthForm extends StatelessWidget {
             if (showFields && fields != null)
               Form(
                 key: formKey,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
+                autovalidateMode: AutovalidateMode.onUnfocus,
                 child: Column(spacing: fieldsSpacing, children: fields!),
               ),
 
-            if (showSubmitButton) ...[
-              const SizedBox(height: 20),
-              AsyncButton(
-                isThreeD: true,
-                backgroundColor:
-                    submitButtonBackgroundColor ?? Colors.blueAccent,
-                foregroundColor: submitButtonForegroundColor ?? Colors.blue,
-                animate: true,
-                showLoadingIndicator: true,
-                borderRadius: 50,
-                onPressed: onSubmitPressed,
-                child: submitButtonChild,
+            if (showSubmitButton && submitButtonChild != null) ...[
+              Padding(
+                padding:
+                    submitButtonPadding ??
+                    const EdgeInsets.symmetric(vertical: 20),
+                child: AsyncAnimatedButton(
+                  isThreeD: true,
+                  backgroundColor:
+                      submitButtonBackgroundColor ?? Colors.blueAccent,
+                  foregroundColor: submitButtonForegroundColor ?? Colors.blue,
+                  animate: true,
+                  showLoadingIndicator: true,
+                  borderRadius: 50,
+                  onPressed: onSubmitPressed,
+                  child: submitButtonChild!,
+                ),
               ),
-            ],
-
-            if (showForgetPassword) ...[
-              const SizedBox(height: 5),
-              forgetPassword ??
-                  TextButton(
-                    onPressed: onForgetPasswordPressed,
-                    child: const Text(
-                      "Forgot Password?",
-                      style: TextStyle(
-                        color: Colors.black26,
-                        decorationColor: Colors.black26,
-                        decoration: TextDecoration.underline,
-                        decorationThickness: 2,
-                      ),
-                    ),
-                  ),
             ],
           ],
         ),
         if (showBottomButton) ...[
-          Align(
-            alignment: Alignment.bottomCenter,
+          Positioned.fill(
             child: AnimatedButton(
               width: 250,
               height: 40,
-              isThreeD: true,
               shadowColor: Colors.black12,
               backgroundColor: Colors.white,
-              animate: true,
               borderRadius: 50,
               onPressed: onBottomButtonPressed,
               child:
@@ -153,6 +133,8 @@ class AuthForm extends StatelessWidget {
 class AuthFormController extends GetxController with InputValidationMixin {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final AuthService authService = Get.find();
+  String email = '';
+  RxString password = ''.obs;
 
   Future<void> _handleSignInResponse(AuthResponse response) async {
     if (response.code == AuthCode.error) {
@@ -161,7 +143,7 @@ class AuthFormController extends GetxController with InputValidationMixin {
     }
 
     if (response.code == AuthCode.success) {
-      await Get.toNamed(Routes.home);
+      await Get.toNamed(Routes.main);
     }
   }
 
@@ -171,7 +153,7 @@ class AuthFormController extends GetxController with InputValidationMixin {
     }
 
     AuthResponse response = await authService.signInWithPassword(
-      email.value,
+      email,
       password.value,
     );
     await _handleSignInResponse(response);
@@ -181,8 +163,9 @@ class AuthFormController extends GetxController with InputValidationMixin {
   Future<AuthResponse> signInWithOAuth(OAuthProvider provider) async {
     AuthResponse response = await authService.signInWithOAuth(provider);
 
-    await Future.doWhile(() => !authService.isSignedIn);
-    await _handleSignInResponse(response);
+    await Future.doWhile(
+      () => !authService.isSignedIn,
+    ).then((_) async => await _handleSignInResponse(response));
     return response;
   }
 

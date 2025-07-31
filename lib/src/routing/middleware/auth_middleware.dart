@@ -10,9 +10,9 @@ class AuthMiddleware extends GetMiddleware {
   Future<GetNavConfig?> redirectDelegate(GetNavConfig route) async {
     final response = await _authService.refreshSession();
     if (response.code == AuthCode.error) {
-      return GetNavConfig.fromRoute(Routes.landing);
+      return GetNavConfig.fromRoute(Routes.welcome);
     }
 
-    return GetNavConfig.fromRoute(Routes.home);
+    return GetNavConfig.fromRoute(Routes.main);
   }
 }

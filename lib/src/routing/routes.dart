@@ -1,17 +1,15 @@
 class Routes {
-  static const home = "/main/home";
+  static const main = "/main";
 
   static const signIn = "/auth/signin";
 
   static const signUp = "/auth/signup";
 
-  static const forgetPassword = "/auth/forget_password";
+  static const passwordReset = "/auth/password_reset";
 
-  static const resetPassword = "/auth/reset_password";
+  static const welcome = "/welcome";
 
-  static const landing = "/landing";
+  static const onboarding = "/onboarding";
 
-  static const onboarding = "/getting_started";
-
-  static const initial = "/";
+  static const splash = "/";
 }

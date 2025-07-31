@@ -1,15 +1,21 @@
 import 'package:const_date_time/const_date_time.dart';
 import 'package:date_picker_plus/date_picker_plus.dart';
 import 'package:extensions_plus/extensions_plus.dart'
-    show DateTimeExtension, WidgetExtension;
-import 'package:flutter/material.dart';
+    show WidgetExtension, DateTimeExtension;
+import 'package:flutter/material.dart' hide AnimatedList;
 import 'package:get/get.dart'
-    show Get, GetBuilder, Inst, GetxController, GetNavigation, Rx;
+    show
+        Get,
+        GetBuilder,
+        Inst,
+        GetxController,
+        GetSingleTickerProviderStateMixin,
+        GetNavigation;
 import 'package:table_calendar/table_calendar.dart';
-import 'package:yourfit/src/models/user_data.dart';
+import 'package:yourfit/src/models/exercise_data.dart';
 import 'package:yourfit/src/services/auth_service.dart';
-
-import '../../models/month_data.dart';
+import 'package:yourfit/src/widgets/animated_list.dart';
+import 'package:yourfit/src/widgets/buttons/animated_button.dart';
 
 class RoadmapScreen extends StatelessWidget {
   const RoadmapScreen({super.key});
@@ -17,18 +23,6 @@ class RoadmapScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(_RoadmapScreenController());
-    final containerDecoration = const BoxDecoration(
-      border: Border.fromBorderSide(
-        BorderSide(
-          color: Colors.black12,
-          width: 1.5,
-          strokeAlign: BorderSide.strokeAlignInside,
-          style: BorderStyle.solid,
-        ),
-      ),
-      borderRadius: BorderRadius.all(Radius.circular(10)),
-    );
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -36,71 +30,89 @@ class RoadmapScreen extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 10, top: 30),
           child: Container(
             width: 400,
-            decoration: containerDecoration,
-            child: TableCalendar(
-              calendarFormat: CalendarFormat.month,
-              focusedDay: DateTime.now(),
-              firstDay: const ConstDateTime(2024),
-              lastDay: const ConstDateTime(2050),
-              formatAnimationDuration: const Duration(milliseconds: 880),
-              formatAnimationCurve: Curves.elasticInOut,
-              calendarStyle: const CalendarStyle(
-                weekendTextStyle: TextStyle(color: Colors.black26),
-                defaultTextStyle: TextStyle(color: Colors.black26),
-                todayDecoration: BoxDecoration(
+            decoration: const BoxDecoration(
+              border: Border.fromBorderSide(
+                BorderSide(
                   color: Colors.black12,
-                  shape: BoxShape.circle,
+                  width: 1.5,
+                  strokeAlign: BorderSide.strokeAlignInside,
+                  style: BorderStyle.solid,
                 ),
-                outsideDaysVisible: false,
               ),
-              startingDayOfWeek: StartingDayOfWeek.sunday,
-              headerStyle: const HeaderStyle(
-                formatButtonVisible: false,
-                titleCentered: true,
-                leftChevronVisible: false,
-                rightChevronVisible: false,
-                headerPadding: EdgeInsets.only(bottom: 15, top: 10),
-              ),
-              daysOfWeekStyle: const DaysOfWeekStyle(
-                weekendStyle: TextStyle(color: Colors.black26),
-                weekdayStyle: TextStyle(color: Colors.black26),
+              borderRadius: BorderRadius.all(Radius.circular(10)),
+            ),
+            child: GetBuilder<_RoadmapScreenController>(
+              init: _RoadmapScreenController(),
+              builder: (controller) => TableCalendar(
+                calendarFormat: CalendarFormat.month,
+                focusedDay: DateTime.now(),
+                firstDay: const ConstDateTime(2024),
+                lastDay: const ConstDateTime(2050),
+                rowHeight: 50,
+                formatAnimationDuration: const Duration(milliseconds: 880),
+                formatAnimationCurve: Curves.elasticInOut,
+                calendarStyle: const CalendarStyle(
+                  weekendTextStyle: TextStyle(color: Colors.black26),
+                  defaultTextStyle: TextStyle(color: Colors.black26),
+                  todayDecoration: BoxDecoration(
+                    color: Colors.black12,
+                    shape: BoxShape.circle,
+                  ),
+                  outsideDaysVisible: false,
+                  selectedDecoration: BoxDecoration(
+                    color: Colors.blue,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                startingDayOfWeek: StartingDayOfWeek.sunday,
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                  headerPadding: EdgeInsets.only(bottom: 15, top: 10),
+                ),
+                daysOfWeekStyle: const DaysOfWeekStyle(
+                  weekendStyle: TextStyle(color: Colors.black26),
+                  weekdayStyle: TextStyle(color: Colors.black26),
+                ),
               ),
             ),
           ),
         ),
         Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
+          spacing: 20,
           children: [
             Container(
-              decoration: containerDecoration,
               height: 50,
-              child: Row(
-                children: [
-                  Image.asset("icons/calorie.png"),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: GetBuilder<_RoadmapScreenController>(
-                      builder: (controller) => Text.rich(
-                        TextSpan(
-                          text:
-                              "${controller.currentExerciseData?.totalCaloriesBurned ?? 0} kcals burned",
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              width: 190,
+              decoration: const BoxDecoration(
+                border: BoxBorder.fromBorderSide(
+                  BorderSide(color: Colors.black12, width: 1.5),
+                ),
+                borderRadius: BorderRadius.all(Radius.circular(10)),
               ),
+              child: Text("O"),
+            ),
+            Container(
+              height: 50,
+              width: 190,
+              decoration: const BoxDecoration(
+                border: BoxBorder.fromBorderSide(
+                  BorderSide(color: Colors.black12, width: 1.5),
+                ),
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+              ),
+              child: Text("O"),
             ),
           ],
-        ),
+        ).paddingOnly(bottom: 50),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             GetBuilder<_RoadmapScreenController>(
               builder: (controller) => Text(
-                controller.selectedDate.isToday
-                    ? "Today"
-                    : controller.selectedDate.format(format: "MMMMEEEEd"),
+                controller.daySectionTitle,
                 style: const TextStyle(fontSize: 20),
               ),
             ),
@@ -114,26 +126,44 @@ class RoadmapScreen extends StatelessWidget {
               icon: const Icon(Icons.chevron_right_rounded),
             ),
           ],
-        ).paddingOnly(bottom: 10),
+        ).paddingOnly(bottom: 15),
+        GetBuilder<_RoadmapScreenController>(
+          builder: (controller) => AnimatedList(
+            key: UniqueKey(),
+            duration: const Duration(milliseconds: 800),
+            switchOutCurve: Curves.easeInOut,
+            itemBuilder: (_, i) => AnimatedButton(
+              height: 80,
+              width: 400,
+              shadowColor: Colors.black12,
+              backgroundColor: Colors.white,
+              borderRadius: 10,
+              onPressed: () {},
+              key: UniqueKey(),
+              child: Text("Hello"),
+            ).paddingOnly(bottom: 10),
+            itemCount: 4,
+          ),
+        ),
       ],
     ).center().scrollable();
   }
 }
 
-class _RoadmapScreenController extends GetxController {
-  final Rx<UserData?> currentUser = Get.find<AuthService>().currentUser;
+class _RoadmapScreenController extends GetxController
+    with GetSingleTickerProviderStateMixin {
+  final AuthService authService = Get.find<AuthService>();
+  List<ExerciseData> selectedDateExercises = [];
 
-  MonthData? get currentExerciseData =>
-      currentUser.value?.monthData[selectedDate.monthName()];
-
-  DateTime selectedDate = DateTime.now();
+  String daySectionTitle = "Today";
 
   void selectDate() async {
     final pick = await showDatePickerDialog(
       context: Get.context!,
-      minDate: currentUser.value?.createdAt ?? const ConstDateTime(1970),
+      minDate:
+          authService.currentUser.value?.createdAt ?? const ConstDateTime(1970),
       maxDate: const ConstDateTime(2050),
-      initialDate: selectedDate,
+      initialDate: DateTime.now(),
       centerLeadingDate: true,
       daysOfTheWeekTextStyle: const TextStyle(
         color: Colors.black26,
@@ -160,8 +190,7 @@ class _RoadmapScreenController extends GetxController {
     if (pick == null) {
       return;
     }
-
-    selectedDate = pick;
+    daySectionTitle = pick.isToday ? "Today" : pick.format(format: "MMMMEEEEd");
     update();
   }
 }

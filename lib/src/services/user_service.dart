@@ -1,34 +1,41 @@
+import 'package:extensions_plus/extensions_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 import 'package:yourfit/src/models/user_data.dart';
 
 class UserService {
-  final _supabase = Supabase.instance.client;
+  final _userTable = Supabase.instance.client.from("user_data");
 
   Future<UserData> createUser(
     String firstName,
     String lastName,
     double weight,
-    double height,
-    int age,
+    int height,
+    DateTime dob,
+    UserGender gender,
   ) async {
     UserData user = UserData(
       firstName: firstName,
       lastName: lastName,
-      age: age,
+      gender: gender,
+      dob: dob,
+      age: dob.age,
       weight: weight,
       height: height,
-      caloriesBurned: 0,
-      monthData: {},
+      totalCaloriesBurned: 0,
+      exerciseData: {},
       milesTraveled: 0,
     );
 
-    await _supabase.from("user_data").insert(user.toJson());
+    return await createUserFromData(user);
+  }
+
+  Future<UserData> createUserFromData(UserData user) async {
     return user;
   }
 
   Future<bool> updateUser(UserData user) async {
     try {
-      await _supabase.from("user_data").update(user.toMap()).eq("id", user.id);
+      await _userTable.update(user.toMap()).eq("id", user.id);
       return true;
     } catch (e) {
       return false;
@@ -37,22 +44,10 @@ class UserService {
 
   Future<UserData?> getUser(String id) async {
     try {
-      var response = await _supabase.from("user_data").select().eq("id", id);
+      var response = await _userTable.select().eq("id", id);
       return UserData.fromMap(response.first);
     } catch (e) {
       return null;
-    }
-  }
-
-  Future<bool> hasUser(String firstName, String lastName) async {
-    try {
-      await _supabase.from("user_data").select("first_name, last_name").match({
-        "first_name": firstName,
-        "last_name": lastName,
-      });
-      return true;
-    } catch (e) {
-      return false;
     }
   }
 }

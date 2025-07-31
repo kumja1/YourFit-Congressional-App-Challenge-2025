@@ -1,26 +1,25 @@
+import 'package:custom_button_builder/custom_button_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:yourfit/src/widgets/animated_button.dart';
 
-class AsyncButton extends StatelessWidget {
+class AsyncAnimatedButton extends StatelessWidget {
   final Future Function()? onPressed;
   final Widget child;
   final bool disabled;
   final bool showLoadingIndicator;
   final double? width;
   final double? height;
-  final BoxConstraints? constraints;
   final double borderRadius;
   final bool animate;
   final bool vibrate;
   final bool isThreeD;
   final Color loadingIndicatorColor;
-  final Color foregroundColor;
-  final Color backgroundColor;
+  final Color? foregroundColor;
+  final Color? backgroundColor;
 
   final String _tag = UniqueKey().toString();
 
-  AsyncButton({
+  AsyncAnimatedButton({
     super.key,
     required this.child,
     this.onPressed,
@@ -32,40 +31,35 @@ class AsyncButton extends StatelessWidget {
     this.animate = true,
     this.vibrate = true,
     this.isThreeD = true,
-    this.foregroundColor = Colors.blueAccent,
-    this.backgroundColor = Colors.blue,
+    this.foregroundColor,
+    this.backgroundColor,
     this.loadingIndicatorColor = Colors.white,
-    this.constraints,
   });
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(_AsyncButtonController(), tag: _tag);
-
-    return AnimatedButton(
-      onPressed:
-          () => controller.handleOnPressed(onPressed, showLoadingIndicator),
-      backgroundColor: foregroundColor,
-      shadowColor: backgroundColor,
-      constraints: constraints,
+    final controller = Get.put(_AsyncAnimatedButtonController(), tag: _tag);
+    return CustomButton(
+      onPressed: () =>
+          controller.handleOnPressed(onPressed, showLoadingIndicator),
+      backgroundColor: foregroundColor ?? Colors.blue[600],
+      shadowColor: backgroundColor ?? Colors.blue,
       height: height,
       width: width,
       animate: animate,
       isThreeD: isThreeD,
       borderRadius: borderRadius,
-      child: GetBuilder<_AsyncButtonController>(
+      child: GetBuilder<_AsyncAnimatedButtonController>(
         tag: _tag,
-        builder:
-            (controller) =>
-                controller.isLoading
-                    ? CircularProgressIndicator(color: loadingIndicatorColor)
-                    : child,
+        builder: (controller) => controller.isLoading
+            ? CircularProgressIndicator(color: loadingIndicatorColor)
+            : child,
       ),
     );
   }
 }
 
-class _AsyncButtonController extends GetxController {
+class _AsyncAnimatedButtonController extends GetxController {
   bool isLoading = false;
 
   Future<void> handleOnPressed(

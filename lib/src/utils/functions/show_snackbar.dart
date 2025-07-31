@@ -1,5 +1,4 @@
 import 'package:animated_snack_bar/animated_snack_bar.dart';
-import 'package:flutter/animation.dart';
 import 'package:get/get.dart';
 
 void showSnackbar(
@@ -17,7 +16,5 @@ void showSnackbar(
     mobileSnackBarPosition: MobileSnackBarPosition.top,
     duration: duration,
     snackBarStrategy: RemoveSnackBarStrategy(),
-    desktopSnackBarPosition: DesktopSnackBarPosition.topCenter,
-    animationCurve: Curves.easeInOutCubic,
   ).show(Get.context!);
 }

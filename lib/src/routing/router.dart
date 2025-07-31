@@ -6,21 +6,17 @@ import 'package:yourfit/src/screens/index.dart';
 class Router {
   static final screens = [
     GetPage(
-      name: Routes.initial,
+      name: Routes.splash,
       page: () => const SplashScreen(),
       middlewares: [AuthMiddleware()],
     ),
-    GetPage(name: Routes.landing, page: () => const HomeScreen()),
+    GetPage(name: Routes.welcome, page: () => const WelcomeScreen()),
+    GetPage(name: Routes.main, page: () => const MainScreen()),
     GetPage(name: Routes.signIn, page: () => const SignInScreen()),
     GetPage(name: Routes.signUp, page: () => const SignUpScreen()),
     GetPage(
-      name: Routes.forgetPassword,
-      page: () => const ForgetPasswordScreen(),
+      name: Routes.passwordReset,
+      page: () => const PasswordResetScreen(),
     ),
-    GetPage(
-      name: Routes.resetPassword,
-      page: () => const ResetPasswordScreen(),
-    ),
-    GetPage(name: Routes.home, page: () => const HomeScreen()),
   ];
 }

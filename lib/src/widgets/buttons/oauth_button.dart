@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:yourfit/src/widgets/async_button.dart';
+
+import 'async_animated_button.dart';
 
 class OAuthButton extends StatelessWidget {
   final Widget icon;
@@ -7,7 +8,6 @@ class OAuthButton extends StatelessWidget {
   final Text? label;
   final double? width;
   final double? height;
-  final BoxConstraints? constraints;
   final double borderRadius;
   final Color foregroundColor;
   final Color backgroundColor;
@@ -19,7 +19,6 @@ class OAuthButton extends StatelessWidget {
     this.label,
     this.width = 130,
     this.height = 40,
-    this.constraints,
     this.borderRadius = 20,
     this.foregroundColor = Colors.white,
     this.backgroundColor = Colors.black12,
@@ -27,7 +26,7 @@ class OAuthButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AsyncButton(
+    return AsyncAnimatedButton(
       animate: true,
       vibrate: true,
       isThreeD: true,
@@ -36,7 +35,6 @@ class OAuthButton extends StatelessWidget {
       foregroundColor: foregroundColor,
       width: width,
       height: height,
-      constraints: constraints,
       showLoadingIndicator: true,
       loadingIndicatorColor: Colors.grey,
       onPressed: onPressed,
