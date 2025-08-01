@@ -10,9 +10,11 @@ import 'package:get/get.dart'
         Inst,
         GetxController,
         GetSingleTickerProviderStateMixin,
-        GetNavigation;
+        GetNavigation,
+        Rx;
 import 'package:table_calendar/table_calendar.dart';
 import 'package:yourfit/src/models/exercise_data.dart';
+import 'package:yourfit/src/models/user_data.dart';
 import 'package:yourfit/src/services/auth_service.dart';
 import 'package:yourfit/src/widgets/animated_list.dart';
 import 'package:yourfit/src/widgets/buttons/animated_button.dart';
@@ -92,7 +94,7 @@ class RoadmapScreen extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.all(Radius.circular(10)),
               ),
-              child: Text("O"),
+              child: const Center(child: Text("0")),
             ),
             Container(
               height: 50,
@@ -103,7 +105,7 @@ class RoadmapScreen extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.all(Radius.circular(10)),
               ),
-              child: Text("O"),
+              child: const Center(child: Text("0")),
             ),
           ],
         ).paddingOnly(bottom: 50),
@@ -112,7 +114,7 @@ class RoadmapScreen extends StatelessWidget {
           children: [
             GetBuilder<_RoadmapScreenController>(
               builder: (controller) => Text(
-                controller.daySectionTitle,
+                controller.selectedDateName,
                 style: const TextStyle(fontSize: 20),
               ),
             ),
@@ -139,10 +141,9 @@ class RoadmapScreen extends StatelessWidget {
               backgroundColor: Colors.white,
               borderRadius: 10,
               onPressed: () {},
-              key: UniqueKey(),
-              child: Text("Hello"),
+              child: Text(controller.selectedDateExercises[i].name),
             ).paddingOnly(bottom: 10),
-            itemCount: 4,
+            itemCount: controller.selectedDateExercises.length,
           ),
         ),
       ],
@@ -152,16 +153,15 @@ class RoadmapScreen extends StatelessWidget {
 
 class _RoadmapScreenController extends GetxController
     with GetSingleTickerProviderStateMixin {
-  final AuthService authService = Get.find<AuthService>();
+  final Rx<UserData?> currentUser = Get.find<AuthService>().currentUser;
   List<ExerciseData> selectedDateExercises = [];
 
-  String daySectionTitle = "Today";
+  String selectedDateName = "Today";
 
   void selectDate() async {
     final pick = await showDatePickerDialog(
       context: Get.context!,
-      minDate:
-          authService.currentUser.value?.createdAt ?? const ConstDateTime(1970),
+      minDate: currentUser.value?.createdAt ?? const ConstDateTime(1970),
       maxDate: const ConstDateTime(2050),
       initialDate: DateTime.now(),
       centerLeadingDate: true,
@@ -190,7 +190,15 @@ class _RoadmapScreenController extends GetxController
     if (pick == null) {
       return;
     }
-    daySectionTitle = pick.isToday ? "Today" : pick.format(format: "MMMMEEEEd");
+
+    selectedDateName = pick.isToday
+        ? "Today"
+        : pick.format(format: "MMMMEEEEd");
+
+    if (currentUser.value != null) {
+      selectedDateExercises =
+          currentUser.value!.exerciseData[pick]!.days[pick.day]!.exercises;
+    }
     update();
   }
 }
