@@ -1,11 +1,8 @@
 import 'package:const_date_time/const_date_time.dart';
 import 'package:date_picker_plus/date_picker_plus.dart';
-import 'package:datetime_picker_formfield_new/datetime_picker_formfield.dart';
 import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 import 'package:yourfit/src/models/user_data.dart';
 import 'package:yourfit/src/utils/extensions/widget_extension.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form.dart';
@@ -23,16 +20,8 @@ class UserInfoOnboardingScreen extends OnboardingScreen {
     return AuthForm(
       formKey: _controller.formKey,
       showSubmitButton: false,
+      showBottomButton: false,
       fields: [
-        SizedBox(
-          width: 360,
-          child: DateTimeField(
-            onShowPicker: _controller.showDateDialog,
-            decoration: const InputDecoration(labelText: "Date of Birth"),
-            onChanged: (value) => _controller.dob = value,
-            format: DateFormat.yMMMMEEEEd(),
-          ),
-        ),
         DropdownButtonFormField(
           icon: Icon(Icons.arrow_drop_down_rounded, color: Colors.blue),
           items: const [
@@ -41,19 +30,23 @@ class UserInfoOnboardingScreen extends OnboardingScreen {
           ],
           decoration: const InputDecoration(labelText: "Gender"),
           onChanged: (value) => _controller.gender = value,
-          validator: (value) => _controller.validateString(value?.toValue()),
+          validator: (value) =>
+              _controller.validateString(value?.toValue(), valueType: "Gender"),
         ).sized(width: 360),
         AuthFormTextField(
           labelText: "Weight",
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          onChanged: (value) => _controller.weight = double.parse(value),
+          onChanged: (value) =>
+              _controller.weight = double.tryParse(value) ?? 0,
+          validator: (value) =>
+              _controller.validateString(value, valueType: "Weight"),
         ),
         AuthFormTextField(
           labelText: "Height",
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          onChanged: (value) => _controller.height = int.parse(value),
+          onChanged: (value) => _controller.height = int.tryParse(value) ?? 0,
+          validator: (value) =>
+              _controller.validateString(value, valueType: "Height"),
         ),
       ],
     ).center();
@@ -61,9 +54,9 @@ class UserInfoOnboardingScreen extends OnboardingScreen {
 
   @override
   Map<String, dynamic> getData() => {
-    "dob": _controller.dob,
     "weight": _controller.weight,
     "height": _controller.height,
+    "gender": _controller.gender,
   };
 
   @override
@@ -71,7 +64,6 @@ class UserInfoOnboardingScreen extends OnboardingScreen {
 }
 
 class _InformationOnboardingScreenController extends AuthFormController {
-  DateTime? dob;
   UserGender? gender;
   double weight = 0;
   int height = 0;

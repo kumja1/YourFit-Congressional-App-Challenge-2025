@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:yourfit/src/screens/other/getting_started/getting_started_screen.dart';
+import 'package:yourfit/src/screens/other/onboarding/welcome_screen.dart';
 import 'package:yourfit/src/screens/tabs/roadmap_screen.dart';
 
 class MainScreen extends StatelessWidget {
@@ -33,7 +33,7 @@ class MainScreen extends StatelessWidget {
 }
 
 class _MainScreenController extends GetxController {
-  final List<Widget> screens = const [RoadmapScreen(), GettingStartedScreen()];
+  final List<Widget> screens = const [RoadmapScreen(), WelcomeScreen()];
   int currentIndex = 0;
 
   void setIndex(int value) {

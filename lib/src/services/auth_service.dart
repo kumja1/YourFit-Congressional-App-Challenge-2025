@@ -193,6 +193,7 @@ class AuthService extends GetxService {
               weight: 0,
               totalCaloriesBurned: 0,
               milesTraveled: 0,
+              activityLevel: UserPhysicalActivity.minimal,
               exerciseData: {},
             ),
           );

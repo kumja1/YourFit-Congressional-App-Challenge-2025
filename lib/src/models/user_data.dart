@@ -6,6 +6,20 @@ part 'user_data.mapper.dart';
 @MappableEnum()
 enum UserGender { male, female }
 
+@MappableEnum()
+enum UserPhysicalActivity {
+  minimal("Minimal"),
+  light("Light"),
+  moderate("Moderate"),
+  intense("Intense");
+
+  const UserPhysicalActivity(this.level);
+  final String level;
+
+  @override
+  String toString() => level;
+}
+
 @MappableClass()
 class UserData with UserDataMappable {
   late final String id;
@@ -30,6 +44,8 @@ class UserData with UserDataMappable {
 
   late double milesTraveled;
 
+  late UserPhysicalActivity activityLevel;
+
   late Map<DateTime, MonthData> exerciseData;
 
   UserData({
@@ -42,6 +58,7 @@ class UserData with UserDataMappable {
     required this.weight,
     required this.totalCaloriesBurned,
     required this.milesTraveled,
+    required this.activityLevel,
     required this.exerciseData,
   });
 

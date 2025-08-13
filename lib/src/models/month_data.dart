@@ -1,6 +1,5 @@
 import 'package:dart_mappable/dart_mappable.dart';
 import 'package:extensions_plus/extensions_plus.dart';
-import 'package:yourfit/src/models/exercise_data.dart';
 
 import 'day_data.dart';
 

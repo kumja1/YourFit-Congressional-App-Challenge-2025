@@ -52,6 +52,61 @@ extension UserGenderMapperExtension on UserGender {
   }
 }
 
+class UserPhysicalActivityMapper extends EnumMapper<UserPhysicalActivity> {
+  UserPhysicalActivityMapper._();
+
+  static UserPhysicalActivityMapper? _instance;
+  static UserPhysicalActivityMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = UserPhysicalActivityMapper._());
+    }
+    return _instance!;
+  }
+
+  static UserPhysicalActivity fromValue(dynamic value) {
+    ensureInitialized();
+    return MapperContainer.globals.fromValue(value);
+  }
+
+  @override
+  UserPhysicalActivity decode(dynamic value) {
+    switch (value) {
+      case r'minimal':
+        return UserPhysicalActivity.minimal;
+      case r'light':
+        return UserPhysicalActivity.light;
+      case r'moderate':
+        return UserPhysicalActivity.moderate;
+      case r'intense':
+        return UserPhysicalActivity.intense;
+      default:
+        throw MapperException.unknownEnumValue(value);
+    }
+  }
+
+  @override
+  dynamic encode(UserPhysicalActivity self) {
+    switch (self) {
+      case UserPhysicalActivity.minimal:
+        return r'minimal';
+      case UserPhysicalActivity.light:
+        return r'light';
+      case UserPhysicalActivity.moderate:
+        return r'moderate';
+      case UserPhysicalActivity.intense:
+        return r'intense';
+    }
+  }
+}
+
+extension UserPhysicalActivityMapperExtension on UserPhysicalActivity {
+  String toValue() {
+    UserPhysicalActivityMapper.ensureInitialized();
+    return MapperContainer.globals.toValue<UserPhysicalActivity>(this)
+        as String;
+  }
+}
+
 class UserDataMapper extends ClassMapperBase<UserData> {
   UserDataMapper._();
 
@@ -60,6 +115,7 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = UserDataMapper._());
       UserGenderMapper.ensureInitialized();
+      UserPhysicalActivityMapper.ensureInitialized();
       MonthDataMapper.ensureInitialized();
     }
     return _instance!;
@@ -91,6 +147,9 @@ class UserDataMapper extends ClassMapperBase<UserData> {
   static double _$milesTraveled(UserData v) => v.milesTraveled;
   static const Field<UserData, double> _f$milesTraveled =
       Field('milesTraveled', _$milesTraveled);
+  static UserPhysicalActivity _$activityLevel(UserData v) => v.activityLevel;
+  static const Field<UserData, UserPhysicalActivity> _f$activityLevel =
+      Field('activityLevel', _$activityLevel);
   static Map<DateTime, MonthData> _$exerciseData(UserData v) => v.exerciseData;
   static const Field<UserData, Map<DateTime, MonthData>> _f$exerciseData =
       Field('exerciseData', _$exerciseData);
@@ -112,6 +171,7 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     #weight: _f$weight,
     #totalCaloriesBurned: _f$totalCaloriesBurned,
     #milesTraveled: _f$milesTraveled,
+    #activityLevel: _f$activityLevel,
     #exerciseData: _f$exerciseData,
     #id: _f$id,
     #createdAt: _f$createdAt,
@@ -128,6 +188,7 @@ class UserDataMapper extends ClassMapperBase<UserData> {
         weight: data.dec(_f$weight),
         totalCaloriesBurned: data.dec(_f$totalCaloriesBurned),
         milesTraveled: data.dec(_f$milesTraveled),
+        activityLevel: data.dec(_f$activityLevel),
         exerciseData: data.dec(_f$exerciseData));
   }
 
@@ -193,6 +254,7 @@ abstract class UserDataCopyWith<$R, $In extends UserData, $Out>
       double? weight,
       double? totalCaloriesBurned,
       double? milesTraveled,
+      UserPhysicalActivity? activityLevel,
       Map<DateTime, MonthData>? exerciseData});
   UserDataCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -221,6 +283,7 @@ class _UserDataCopyWithImpl<$R, $Out>
           double? weight,
           double? totalCaloriesBurned,
           double? milesTraveled,
+          UserPhysicalActivity? activityLevel,
           Map<DateTime, MonthData>? exerciseData}) =>
       $apply(FieldCopyWithData({
         if (firstName != null) #firstName: firstName,
@@ -233,6 +296,7 @@ class _UserDataCopyWithImpl<$R, $Out>
         if (totalCaloriesBurned != null)
           #totalCaloriesBurned: totalCaloriesBurned,
         if (milesTraveled != null) #milesTraveled: milesTraveled,
+        if (activityLevel != null) #activityLevel: activityLevel,
         if (exerciseData != null) #exerciseData: exerciseData
       }));
   @override
@@ -247,6 +311,7 @@ class _UserDataCopyWithImpl<$R, $Out>
       totalCaloriesBurned:
           data.get(#totalCaloriesBurned, or: $value.totalCaloriesBurned),
       milesTraveled: data.get(#milesTraveled, or: $value.milesTraveled),
+      activityLevel: data.get(#activityLevel, or: $value.activityLevel),
       exerciseData: data.get(#exerciseData, or: $value.exerciseData));
 
   @override

@@ -24,7 +24,7 @@ class YourFitApp extends StatelessWidget {
         labelStyle: WidgetStateTextStyle.resolveWith(
           (states) => states.contains(WidgetState.error)
               ? const TextStyle(color: Colors.red)
-              : const TextStyle(color: Colors.black26),
+              : const TextStyle(color: Colors.black12),
         ),
         floatingLabelStyle: WidgetStateTextStyle.resolveWith(
           (states) => states.contains(WidgetState.error)
@@ -38,7 +38,7 @@ class YourFitApp extends StatelessWidget {
           borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
         errorBorder: const OutlineInputBorder(
-          borderSide: BorderSide(width: 1.7, color: Colors.red),
+          borderSide: BorderSide(width: 1.5, color: Colors.red),
           borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
         focusedErrorBorder: const OutlineInputBorder(
@@ -46,7 +46,7 @@ class YourFitApp extends StatelessWidget {
           borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
         enabledBorder: const OutlineInputBorder(
-          borderSide: BorderSide(width: 1.7, color: Colors.black12),
+          borderSide: BorderSide(width: 1.5, color: Colors.black12),
           borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
       ),

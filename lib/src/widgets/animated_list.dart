@@ -23,8 +23,9 @@ class AnimatedList extends StatelessWidget {
     duration: duration,
     switchOutCurve: switchOutCurve,
     switchInCurve: switchInCurve,
+    offset: 1.5,
     child: ColumnBuilder(
-      key: key,
+      key: UniqueKey(),
       itemBuilder: itemBuilder,
       itemCount: itemCount,
     ),

@@ -1,8 +1,10 @@
 import 'package:const_date_time/const_date_time.dart';
 import 'package:date_picker_plus/date_picker_plus.dart';
+import 'package:datetime_picker_formfield_new/datetime_picker_formfield.dart';
 import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthResponse;
 import 'package:yourfit/src/models/auth/auth_response.dart';
 import 'package:yourfit/src/models/auth/new_user_auth_response.dart';
@@ -29,7 +31,7 @@ class SignUpScreen extends StatelessWidget {
         // ).paddingSymmetric(vertical: 40),
         oauthButtons: [
           OAuthButton(
-            icon: googleIcon,
+            icon: AppIcons.googleIcon,
             onPressed: () =>
                 controller.createAccount(provider: OAuthProvider.google),
           ),
@@ -43,6 +45,16 @@ class SignUpScreen extends StatelessWidget {
               value,
               space: true,
               valueType: "Name",
+            ),
+          ),
+          SizedBox(
+            width: 360,
+            child: DateTimeField(
+              onShowPicker: controller.showDateDialog,
+              decoration: const InputDecoration(labelText: "Date of Birth"),
+              onChanged: (value) => controller.dob = value,
+              format: DateFormat.yMMMMEEEEd(),
+              resetIcon: const Icon(Icons.close_rounded, color: Colors.blue),
             ),
           ),
           AuthFormTextField(
@@ -76,17 +88,25 @@ class SignUpScreen extends StatelessWidget {
 
 class _SignUpScreenController extends AuthFormController {
   String name = "";
+  DateTime? dob;
 
   final UserService _userService = Get.find();
 
   Future<void> createAccount({OAuthProvider? provider}) async {
+    Map<String, dynamic> data = Get.arguments;
+
     if (provider != null) {
       AuthResponse response = await signInWithOAuth(provider);
       if (response is! NewUserAuthResponse) {
         return;
       }
 
-      await _userService.createUserFromData(response.newUser);
+      await _userService.createUserFromData(
+        response.newUser,
+        weight: data["weight"],
+        height: data["height"],
+        gender: data["gender"],
+      );
       return;
     }
 
@@ -95,6 +115,17 @@ class _SignUpScreenController extends AuthFormController {
     }
 
     final nameParts = name.split(" ");
+    _userService.createUser(
+      nameParts[0],
+      nameParts[1],
+      data["weight"],
+      data["height"],
+      dob!,
+      data["gender"],
+      data["activityLevel"],
+    );
+
+    await Get.rootDelegate.toNamed(Routes.main);
   }
 
   Future<DateTime?> showDateDialog(

@@ -18,6 +18,7 @@ import 'package:yourfit/src/models/user_data.dart';
 import 'package:yourfit/src/services/auth_service.dart';
 import 'package:yourfit/src/widgets/animated_list.dart';
 import 'package:yourfit/src/widgets/buttons/animated_button.dart';
+import 'package:yourfit/src/widgets/text_icon.dart';
 
 class RoadmapScreen extends StatelessWidget {
   const RoadmapScreen({super.key});
@@ -105,7 +106,13 @@ class RoadmapScreen extends StatelessWidget {
                 ),
                 borderRadius: BorderRadius.all(Radius.circular(10)),
               ),
-              child: const Center(child: Text("0")),
+              child: const Center(
+                child: TextIcon(
+                  text: Text("0"),
+                  icon: Icon(Icons.add),
+                  helperText: "Calories burned",
+                ),
+              ),
             ),
           ],
         ).paddingOnly(bottom: 50),
@@ -131,9 +138,9 @@ class RoadmapScreen extends StatelessWidget {
         ).paddingOnly(bottom: 15),
         GetBuilder<_RoadmapScreenController>(
           builder: (controller) => AnimatedList(
-            key: UniqueKey(),
-            duration: const Duration(milliseconds: 800),
-            switchOutCurve: Curves.easeInOut,
+            duration: const Duration(milliseconds: 805),
+            switchInCurve: Curves.easeIn,
+            switchOutCurve: Curves.easeOut,
             itemBuilder: (_, i) => AnimatedButton(
               height: 80,
               width: 400,
@@ -141,9 +148,12 @@ class RoadmapScreen extends StatelessWidget {
               backgroundColor: Colors.white,
               borderRadius: 10,
               onPressed: () {},
-              child: Text(controller.selectedDateExercises[i].name),
+              child: Text(
+                "Pull Ups x 3",
+                style: TextStyle(color: Colors.blue),
+              ).align(Alignment.topLeft),
             ).paddingOnly(bottom: 10),
-            itemCount: controller.selectedDateExercises.length,
+            itemCount: 4, //controller.selectedDateExercises.length,
           ),
         ),
       ],

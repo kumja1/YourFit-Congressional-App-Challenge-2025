@@ -31,7 +31,7 @@ class AuthFormTextField extends GetWidget {
     this.height,
     this.passwordChild,
     this.initialValue,
-    this.labelStyle = const TextStyle(color: Colors.black26),
+    this.labelStyle = const TextStyle(color: Colors.black12),
     this.floatingLabelStyle = const TextStyle(color: Colors.blue),
   });
 

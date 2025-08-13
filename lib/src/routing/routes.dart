@@ -9,7 +9,7 @@ class Routes {
 
   static const welcome = "/welcome";
 
-  static const onboarding = "/onboarding";
+  static const landing = "/landing";
 
   static const splash = "/";
 }

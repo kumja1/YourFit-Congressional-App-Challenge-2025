@@ -4,8 +4,8 @@ import 'package:get/get.dart';
 import 'package:yourfit/src/routing/routes.dart';
 import 'package:yourfit/src/widgets/buttons/animated_button.dart';
 
-class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
+class LandingScreen extends StatelessWidget {
+  const LandingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,8 +18,7 @@ class WelcomeScreen extends StatelessWidget {
           const Text(
             "Welcome",
             style: TextStyle(fontSize: 50, color: Colors.black),
-          ),
-          Spacer(),
+          ).align(Alignment.center).expanded(),
           AnimatedButton(
             borderRadius: 20,
             onPressed: () => Get.rootDelegate.toNamed(Routes.signUp),
@@ -33,7 +32,7 @@ class WelcomeScreen extends StatelessWidget {
             backgroundColor: Colors.white,
             shadowColor: Colors.black12,
             onPressed: () => Get.rootDelegate.toNamed(Routes.signIn),
-            child: Text("Sign In", style: TextStyle(color: Colors.black26)),
+            child: Text("Sign In", style: TextStyle(color: Colors.blue)),
           ),
           const SizedBox(height: 20),
         ],

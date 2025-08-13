@@ -25,7 +25,7 @@ class SignInScreen extends StatelessWidget {
         // ).paddingSymmetric(vertical: 40),
         oauthButtons: [
           OAuthButton(
-            icon: googleIcon,
+            icon: AppIcons.googleIcon,
             onPressed: () async =>
                 controller.signInWithOAuth(OAuthProvider.google),
           ),
