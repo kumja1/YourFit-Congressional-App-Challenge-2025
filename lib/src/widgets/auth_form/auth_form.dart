@@ -73,7 +73,7 @@ class AuthForm extends StatelessWidget {
                 child: TextDivider(
                   text: Text(
                     "OR",
-                    style: TextStyle(color: Colors.black26),
+                    style: TextStyle(color: Colors.black12),
                     textAlign: TextAlign.center,
                   ),
                   color: Colors.black12,
@@ -120,7 +120,7 @@ class AuthForm extends StatelessWidget {
                   bottomButtonChild ??
                   const Text(
                     "New User? Create an Account",
-                    style: TextStyle(color: Colors.black26),
+                    style: TextStyle(color: Colors.black12),
                   ),
             ).paddingOnly(bottom: 10),
           ),

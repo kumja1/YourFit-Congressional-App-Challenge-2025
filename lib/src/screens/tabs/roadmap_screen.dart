@@ -1,3 +1,4 @@
+import 'package:auto_route/annotations.dart';
 import 'package:const_date_time/const_date_time.dart';
 import 'package:date_picker_plus/date_picker_plus.dart';
 import 'package:extensions_plus/extensions_plus.dart'
@@ -20,6 +21,7 @@ import 'package:yourfit/src/widgets/animated_list.dart';
 import 'package:yourfit/src/widgets/buttons/animated_button.dart';
 import 'package:yourfit/src/widgets/text_icon.dart';
 
+@RoutePage()
 class RoadmapScreen extends StatelessWidget {
   const RoadmapScreen({super.key});
 

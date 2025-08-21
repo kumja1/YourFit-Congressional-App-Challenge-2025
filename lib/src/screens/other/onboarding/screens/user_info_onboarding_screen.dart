@@ -38,15 +38,21 @@ class UserInfoOnboardingScreen extends OnboardingScreen {
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onChanged: (value) =>
               _controller.weight = double.tryParse(value) ?? 0,
-          validator: (value) =>
-              _controller.validateString(value, valueType: "Weight"),
+          validator: (value) => _controller.validateString(
+            value,
+            valueType: "Weight",
+            numeric: true,
+          ),
         ),
         AuthFormTextField(
           labelText: "Height",
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onChanged: (value) => _controller.height = int.tryParse(value) ?? 0,
-          validator: (value) =>
-              _controller.validateString(value, valueType: "Height"),
+          validator: (value) => _controller.validateString(
+            value,
+            valueType: "Height",
+            numeric: true,
+          ),
         ),
       ],
     ).center();

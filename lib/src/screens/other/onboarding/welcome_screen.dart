@@ -1,3 +1,4 @@
+import 'package:auto_route/annotations.dart';
 import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide WidgetPaddingX;
@@ -9,6 +10,7 @@ import 'package:yourfit/src/screens/other/onboarding/screens/user_info_onboardin
 import 'package:yourfit/src/widgets/buttons/animated_button.dart';
 import 'package:yourfit/src/widgets/onboarding_screen.dart';
 
+@RoutePage()
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
@@ -24,19 +26,20 @@ class WelcomeScreen extends StatelessWidget {
       showDoneButton: false,
       showNextButton: false,
       isProgress: false,
-      globalHeader: Row(
-        spacing: 2,
+      globalHeader: Stack(
         children: [
           GetBuilder<_WelcomeScreenController>(
             builder: (controller) => IconButton(
+              constraints: BoxConstraints.tightFor(width: 29.5, height: 29.5),
+              iconSize: 30,
               onPressed: () =>
                   controller.onboardingKey.currentState?.previous(),
               icon: Icon(
                 Icons.keyboard_arrow_left_rounded,
-                color: Colors.black26,
+                color: Colors.black12,
               ),
             ).showIf(controller.currentIndex >= 1),
-          ),
+          ).align(Alignment.centerLeft).fill(),
           GetBuilder<_WelcomeScreenController>(
             builder: (controller) => StepProgressIndicator(
               size: 10,
@@ -49,7 +52,7 @@ class WelcomeScreen extends StatelessWidget {
               selectedColor: Colors.blue,
               progressDirection: TextDirection.ltr,
             ),
-          ).paddingAll(20).expanded(),
+          ).paddingOnly(left: 30, right: 30, top: 20),
         ],
       ),
       globalFooter: SizedBox(
@@ -97,7 +100,7 @@ class _WelcomeScreenController extends GetxController {
       setCurrentIndex(currentIndex + 1);
       onboardingKey.currentState?.next();
       if (currentIndex == pages.length) {
-        await Get.rootDelegate.toNamed(
+        await Get.rootDelegate.offAndToNamed(
           Routes.signUp,
           arguments: onboardingData,
         );

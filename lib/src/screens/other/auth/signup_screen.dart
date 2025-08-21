@@ -1,3 +1,4 @@
+import 'package:auto_route/annotations.dart';
 import 'package:const_date_time/const_date_time.dart';
 import 'package:date_picker_plus/date_picker_plus.dart';
 import 'package:datetime_picker_formfield_new/datetime_picker_formfield.dart';
@@ -15,6 +16,7 @@ import 'package:yourfit/src/widgets/auth_form/auth_form.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form_text_field.dart';
 import 'package:yourfit/src/widgets/buttons/oauth_button.dart';
 
+@RoutePage()
 class SignUpScreen extends StatelessWidget {
   const SignUpScreen({super.key});
 
@@ -79,7 +81,7 @@ class SignUpScreen extends StatelessWidget {
         onBottomButtonPressed: () => Get.rootDelegate.toNamed(Routes.signIn),
         bottomButtonChild: const Text(
           "Existing User? Sign in",
-          style: TextStyle(color: Colors.black26),
+          style: TextStyle(color: Colors.black12),
         ),
       ).center(),
     );

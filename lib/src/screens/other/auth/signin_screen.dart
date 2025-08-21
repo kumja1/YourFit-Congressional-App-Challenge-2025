@@ -1,3 +1,4 @@
+import 'package:auto_route/annotations.dart';
 import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -8,6 +9,7 @@ import 'package:yourfit/src/widgets/auth_form/auth_form.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form_text_field.dart';
 import 'package:yourfit/src/widgets/buttons/oauth_button.dart';
 
+@RoutePage()
 class SignInScreen extends StatelessWidget {
   const SignInScreen({super.key});
 

@@ -1,24 +1,12 @@
-
+import 'package:auto_route/annotations.dart';
 import 'package:flutter/widgets.dart';
 
-class SplashScreen extends StatefulWidget {
+@RoutePage()
+class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
   @override
-  _SplashScreenState createState() => _SplashScreenState();
-}
-
-
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-  }
-  
-  @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('Splash Screen'),
-    );
+    return const Center(child: Text('Splash Screen'));
   }
 }

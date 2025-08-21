@@ -1,9 +1,11 @@
+import 'package:auto_route/annotations.dart';
 import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:yourfit/src/routing/routes.dart';
 import 'package:yourfit/src/widgets/buttons/animated_button.dart';
 
+@RoutePage()
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
 

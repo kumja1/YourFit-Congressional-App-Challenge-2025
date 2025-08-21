@@ -1,4 +1,5 @@
 import 'package:animated_snack_bar/animated_snack_bar.dart';
+import 'package:auto_route/annotations.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:yourfit/src/models/auth/auth_response.dart';
@@ -8,6 +9,7 @@ import 'package:yourfit/src/utils/functions/show_snackbar.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form_text_field.dart';
 
+@RoutePage()
 class PasswordResetScreen extends StatelessWidget {
   const PasswordResetScreen({super.key});
 
