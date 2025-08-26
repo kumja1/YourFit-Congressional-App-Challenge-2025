@@ -1,24 +1,26 @@
-import 'package:get/get_navigation/src/routes/get_route.dart';
-import 'package:yourfit/src/routing/middleware/auth_middleware.dart';
+import 'package:auto_route/auto_route.dart';
+import 'package:yourfit/src/routing/router.gr.dart';
 import 'package:yourfit/src/routing/routes.dart';
-import 'package:yourfit/src/screens/index.dart';
-import 'package:yourfit/src/screens/other/onboarding/welcome_screen.dart';
 
-class Router {
-  static final screens = [
-    GetPage(
-      name: Routes.splash,
-      page: () => const SplashScreen(),
-      middlewares: [AuthMiddleware()],
+@AutoRouterConfig()
+class AppRouter extends RootStackRouter {
+  
+  @override
+  List<AutoRoute> get routes => [
+    AutoRoute(page: SplashRoute.page, path: Routes.splash),
+    AutoRoute(page: LandingRoute.page, path: Routes.landing),
+    AutoRoute(page: WelcomeRoute.page, path: Routes.welcome),
+    AutoRoute(page: SignInRoute.page, path: Routes.signIn),
+    AutoRoute(page: SignUpRoute.page, path: Routes.signUp),
+    AutoRoute(page: PasswordResetRoute.page, path: Routes.passwordReset),
+    AutoRoute(
+      page: MainRoute.page,
+      path: Routes.main,
+      children: [
+        AutoRoute(page: RoadmapRoute.page, path: "roadmap"),
+        AutoRoute(page: WorkoutsRoute.page, path: "workouts"),
+        AutoRoute(page: ProfileRoute.page, path:"profile")
+      ],
     ),
-    GetPage(name: Routes.landing, page: () => const LandingScreen()),
-    GetPage(name: Routes.signIn, page: () => const SignInScreen()),
-    GetPage(name: Routes.welcome, page: () => const WelcomeScreen()),
-    GetPage(name: Routes.signUp, page: () => const SignUpScreen()),
-    GetPage(
-      name: Routes.passwordReset,
-      page: () => const PasswordResetScreen(),
-    ),
-    GetPage(name: Routes.main, page: () => const MainScreen()),
   ];
 }

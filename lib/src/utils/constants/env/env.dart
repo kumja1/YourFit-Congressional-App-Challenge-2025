@@ -8,4 +8,6 @@ class Env {
   static final String supabaseKey = _Env.supabaseKey;
   @EnviedField(varName: "SUPABASE_URL")
   static final String supabaseUrl = _Env.supabaseUrl;
+  @EnviedField(varName: "GEMINI_KEY")
+  static final String geminiKey = _Env.geminiKey;
 }

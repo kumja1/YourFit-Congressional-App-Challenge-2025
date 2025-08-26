@@ -1,4 +1,4 @@
-import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -41,7 +41,7 @@ class SignInScreen extends StatelessWidget {
           AuthFormTextField(
             labelText: "Password",
             isPassword: true,
-            onChanged: (value) => controller.password.value = value,
+            onChanged: (value) => controller.password = value,
             validator: controller.validatePassword,
             passwordChild: TextButton(
               onPressed: () => Get.rootDelegate.toNamed(Routes.passwordReset),
@@ -60,7 +60,7 @@ class SignInScreen extends StatelessWidget {
           style: TextStyle(color: Colors.white),
         ),
         onSubmitPressed: () => controller.signInWithPassword(),
-        onBottomButtonPressed: () => Get.rootDelegate.toNamed(Routes.signUp),
+        onBottomButtonPressed: () => context.router.pushPath(Routes.welcome),
       ).center(),
     );
   }

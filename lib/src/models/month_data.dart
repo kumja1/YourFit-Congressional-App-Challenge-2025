@@ -13,4 +13,10 @@ class MonthData with MonthDataMappable {
       days.values.sum((day) => day.caloriesBurned).toDouble();
 
   MonthData({required this.days});
+
+  factory MonthData.fromJson(String json) =>
+      MonthDataMapper.fromJson(json);
+
+  factory MonthData.fromMap(Map<String, dynamic> map) =>
+      MonthDataMapper.fromMap(map);
 }

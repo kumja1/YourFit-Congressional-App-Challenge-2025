@@ -93,11 +93,9 @@ class AuthForm extends StatelessWidget {
                     submitButtonPadding ??
                     const EdgeInsets.symmetric(vertical: 20),
                 child: AsyncAnimatedButton(
-                  isThreeD: true,
                   backgroundColor:
                       submitButtonBackgroundColor ?? Colors.blueAccent,
                   foregroundColor: submitButtonForegroundColor ?? Colors.blue,
-                  animate: true,
                   showLoadingIndicator: true,
                   borderRadius: 50,
                   onPressed: onSubmitPressed,
@@ -134,7 +132,7 @@ class AuthFormController extends GetxController with InputValidationMixin {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final AuthService authService = Get.find();
   String email = '';
-  RxString password = ''.obs;
+  String password = '';
 
   Future<void> _handleSignInResponse(AuthResponse response) async {
     if (response.code == AuthCode.error) {
@@ -154,7 +152,7 @@ class AuthFormController extends GetxController with InputValidationMixin {
 
     AuthResponse response = await authService.signInWithPassword(
       email,
-      password.value,
+      password,
     );
     await _handleSignInResponse(response);
     return response;

@@ -16,4 +16,5 @@ Future<void> initServices() async {
   );
   Get.lazyPut(() => AuthService());
   Get.lazyPut(() => UserService());
+  Get.lazyPut(() => ExerciseService());
 }

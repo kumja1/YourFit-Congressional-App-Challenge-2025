@@ -9,4 +9,10 @@ class DayData with DayDataMappable {
   final double caloriesBurned;
 
   DayData({required this.exercises, required this.caloriesBurned});
+
+  factory DayData.fromJson(String json) =>
+      DayDataMapper.fromJson(json);
+
+  factory DayData.fromMap(Map<String, dynamic> map) =>
+      DayDataMapper.fromMap(map);
 }

@@ -60,14 +60,10 @@ class RoadmapScreen extends StatelessWidget {
                   weekendTextStyle: TextStyle(color: Colors.black26),
                   defaultTextStyle: TextStyle(color: Colors.black26),
                   todayDecoration: BoxDecoration(
-                    color: Colors.black12,
-                    shape: BoxShape.circle,
-                  ),
-                  outsideDaysVisible: false,
-                  selectedDecoration: BoxDecoration(
                     color: Colors.blue,
                     shape: BoxShape.circle,
                   ),
+                  outsideDaysVisible: false,
                 ),
                 startingDayOfWeek: StartingDayOfWeek.sunday,
                 headerStyle: const HeaderStyle(
@@ -151,7 +147,7 @@ class RoadmapScreen extends StatelessWidget {
               borderRadius: 10,
               onPressed: () {},
               child: Text(
-                "Pull Ups x 3",
+                "Pull Ups x 1000",
                 style: TextStyle(color: Colors.blue),
               ).align(Alignment.topLeft),
             ).paddingOnly(bottom: 10),

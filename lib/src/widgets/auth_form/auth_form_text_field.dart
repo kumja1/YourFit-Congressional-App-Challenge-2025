@@ -10,7 +10,6 @@ class AuthFormTextField extends GetWidget {
   final TextStyle? floatingLabelStyle;
   final bool isPassword;
   final Color passwordVisibilityColor;
-  final String? initialValue;
   final String? Function(String? value)? validator;
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType? keyboardType;
@@ -30,7 +29,6 @@ class AuthFormTextField extends GetWidget {
     this.width = 360,
     this.height,
     this.passwordChild,
-    this.initialValue,
     this.labelStyle = const TextStyle(color: Colors.black12),
     this.floatingLabelStyle = const TextStyle(color: Colors.blue),
   });

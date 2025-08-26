@@ -1,10 +1,11 @@
-import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide WidgetPaddingX;
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
-import 'package:yourfit/src/routing/routes.dart';
+import 'package:yourfit/src/routing/router.dart';
+import 'package:yourfit/src/routing/router.gr.dart';
 import 'package:yourfit/src/screens/other/onboarding/screens/activity_level_onboarding_screen.dart';
 import 'package:yourfit/src/screens/other/onboarding/screens/user_info_onboarding_screen.dart';
 import 'package:yourfit/src/widgets/buttons/animated_button.dart';
@@ -32,8 +33,7 @@ class WelcomeScreen extends StatelessWidget {
             builder: (controller) => IconButton(
               constraints: BoxConstraints.tightFor(width: 29.5, height: 29.5),
               iconSize: 30,
-              onPressed: () =>
-                  controller.onboardingKey.currentState?.previous(),
+              onPressed: () => controller.previous(),
               icon: Icon(
                 Icons.keyboard_arrow_left_rounded,
                 color: Colors.black12,
@@ -68,6 +68,8 @@ class WelcomeScreen extends StatelessWidget {
 
 class _WelcomeScreenController extends GetxController {
   final onboardingKey = GlobalKey<IntroductionScreenState>();
+  final AppRouter router = Get.find();
+
   final List<OnboardingScreen> pages = const [
     UserInfoOnboardingScreen(),
     ActivityLevelOnboardingScreen(),
@@ -78,6 +80,7 @@ class _WelcomeScreenController extends GetxController {
   Map<String, dynamic> onboardingData = {};
 
   void setCurrentIndex(int index) {
+    if (index > pages.length || index <= 0) return;
     previousIndex = currentIndex;
     currentIndex = index;
     update();
@@ -94,17 +97,19 @@ class _WelcomeScreenController extends GetxController {
     onboardingKey.currentState?.dispose();
   }
 
-  void next() async {
+  Future<void> next() async {
     bool progress = pages[currentIndex].canProgress();
     if (progress) {
-      setCurrentIndex(currentIndex + 1);
       onboardingKey.currentState?.next();
+      setCurrentIndex(currentIndex + 1);
       if (currentIndex == pages.length) {
-        await Get.rootDelegate.offAndToNamed(
-          Routes.signUp,
-          arguments: onboardingData,
-        );
+        router.popAndPush(SignUpRoute(onboardingData: onboardingData));
       }
     }
+  }
+
+  void previous() {
+    setCurrentIndex(currentIndex - 1);
+    onboardingKey.currentState?.previous();
   }
 }

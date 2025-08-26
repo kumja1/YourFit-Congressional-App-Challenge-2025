@@ -20,7 +20,7 @@ enum UserPhysicalActivity {
   String toString() => level;
 }
 
-@MappableClass()
+@MappableClass(caseStyle: CaseStyle.snakeCase)
 class UserData with UserDataMappable {
   late final String id;
 
@@ -36,7 +36,7 @@ class UserData with UserDataMappable {
 
   late DateTime dob;
 
-  late int height;
+  late double height;
 
   late double weight;
 
@@ -44,7 +44,7 @@ class UserData with UserDataMappable {
 
   late double milesTraveled;
 
-  late UserPhysicalActivity activityLevel;
+  late UserPhysicalActivity physicalActivity;
 
   late Map<DateTime, MonthData> exerciseData;
 
@@ -58,10 +58,12 @@ class UserData with UserDataMappable {
     required this.weight,
     required this.totalCaloriesBurned,
     required this.milesTraveled,
-    required this.activityLevel,
+    required this.physicalActivity,
     required this.exerciseData,
   });
 
-  static UserData fromMap(Map<String, dynamic> map) =>
+  factory UserData.fromJson(String json) => UserDataMapper.fromJson(json);
+
+  factory UserData.fromMap(Map<String, dynamic> map) =>
       UserDataMapper.fromMap(map);
 }

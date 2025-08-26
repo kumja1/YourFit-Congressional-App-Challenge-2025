@@ -9,26 +9,31 @@ class UserService {
     String firstName,
     String lastName,
     double weight,
-    int height,
+    double height,
     DateTime dob,
     UserGender gender,
     UserPhysicalActivity activityLevel,
   ) async {
-    UserData user = UserData(
-      firstName: firstName,
-      lastName: lastName,
-      gender: gender,
-      dob: dob,
-      age: dob.age,
-      weight: weight,
-      height: height,
-      activityLevel: activityLevel,
-      totalCaloriesBurned: 0,
-      exerciseData: {},
-      milesTraveled: 0,
-    );
+    try {
+      UserData user = UserData(
+        firstName: firstName,
+        lastName: lastName,
+        gender: gender,
+        dob: dob,
+        age: dob.age,
+        weight: weight,
+        height: height,
+        physicalActivity: activityLevel,
+        totalCaloriesBurned: 0,
+        exerciseData: {},
+        milesTraveled: 0,
+      );
 
-    return await createUserFromData(user);
+      return await createUserFromData(user);
+    } catch (e) {
+      print(e);
+      rethrow;
+    }
   }
 
   Future<UserData> createUserFromData(
@@ -36,10 +41,10 @@ class UserService {
     String? firstName,
     String? lastName,
     double? weight,
-    int? height,
+    double? height,
     DateTime? dob,
     UserGender? gender,
-    UserPhysicalActivity? activityLevel,
+    UserPhysicalActivity? physicalActivity,
   }) async {
     user = user.copyWith(
       firstName: firstName,
@@ -49,10 +54,10 @@ class UserService {
       dob: dob,
       age: dob?.age,
       gender: gender,
-      activityLevel: activityLevel,
+      physicalActivity: physicalActivity,
     );
 
-    _userTable.insert(user.toMap());
+    await _userTable.insert(user.toMap());
     return user;
   }
 

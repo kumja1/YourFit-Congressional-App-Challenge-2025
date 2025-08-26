@@ -1,7 +1,9 @@
 import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:yourfit/src/routing/router.dart';
 import 'package:yourfit/src/routing/routes.dart';
 import 'package:yourfit/src/widgets/buttons/animated_button.dart';
 
@@ -18,12 +20,12 @@ class LandingScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Text(
-            "Welcome",
+            "Get Started",
             style: TextStyle(fontSize: 50, color: Colors.black),
           ).align(Alignment.center).expanded(),
           AnimatedButton(
             borderRadius: 20,
-            onPressed: () => Get.rootDelegate.toNamed(Routes.signUp),
+            onPressed: () => context.router.pushPath(Routes.welcome),
             child: const Text(
               "Continue",
               style: TextStyle(color: Colors.white),
@@ -33,7 +35,7 @@ class LandingScreen extends StatelessWidget {
             borderRadius: 20,
             backgroundColor: Colors.white,
             shadowColor: Colors.black12,
-            onPressed: () => Get.rootDelegate.toNamed(Routes.signIn),
+            onPressed: () => context.router.pushPath(Routes.signIn),
             child: Text("Sign In", style: TextStyle(color: Colors.blue)),
           ),
           const SizedBox(height: 20),

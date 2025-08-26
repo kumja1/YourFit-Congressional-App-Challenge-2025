@@ -33,7 +33,7 @@ class PasswordResetScreen extends StatelessWidget {
           fields: [
             AuthFormTextField(
               onChanged: (value) => resetPassword
-                  ? controller.password.value = value
+                  ? controller.password = value
                   : controller.email = value,
               labelText: resetPassword ? "New Password" : "Email",
               validator: resetPassword ? null : controller.validateEmail,
@@ -63,7 +63,7 @@ class _PasswordResetScreenController extends AuthFormController {
       return;
     }
 
-    AuthResponse response = await authService.resetPassword(password.value);
+    AuthResponse response = await authService.resetPassword(password);
     if (response.code == AuthCode.error) {
       showSnackbar(response.error!, AnimatedSnackBarType.error);
       return;

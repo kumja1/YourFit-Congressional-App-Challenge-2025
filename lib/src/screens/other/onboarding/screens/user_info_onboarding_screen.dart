@@ -45,7 +45,7 @@ class UserInfoOnboardingScreen extends OnboardingScreen {
           ),
         ),
         AuthFormTextField(
-          labelText: "Height",
+          labelText: "Height (inches)",
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onChanged: (value) => _controller.height = int.tryParse(value) ?? 0,
           validator: (value) => _controller.validateString(

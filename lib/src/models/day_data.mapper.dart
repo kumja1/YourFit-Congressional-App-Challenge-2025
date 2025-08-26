@@ -1,5 +1,6 @@
 // coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, unnecessary_cast, override_on_non_overriding_member
 // ignore_for_file: strict_raw_type, inference_failure_on_untyped_parameter
@@ -22,11 +23,15 @@ class DayDataMapper extends ClassMapperBase<DayData> {
   final String id = 'DayData';
 
   static List<ExerciseData> _$exercises(DayData v) => v.exercises;
-  static const Field<DayData, List<ExerciseData>> _f$exercises =
-      Field('exercises', _$exercises);
+  static const Field<DayData, List<ExerciseData>> _f$exercises = Field(
+    'exercises',
+    _$exercises,
+  );
   static double _$caloriesBurned(DayData v) => v.caloriesBurned;
-  static const Field<DayData, double> _f$caloriesBurned =
-      Field('caloriesBurned', _$caloriesBurned);
+  static const Field<DayData, double> _f$caloriesBurned = Field(
+    'caloriesBurned',
+    _$caloriesBurned,
+  );
 
   @override
   final MappableFields<DayData> fields = const {
@@ -36,8 +41,9 @@ class DayDataMapper extends ClassMapperBase<DayData> {
 
   static DayData _instantiate(DecodingData data) {
     return DayData(
-        exercises: data.dec(_f$exercises),
-        caloriesBurned: data.dec(_f$caloriesBurned));
+      exercises: data.dec(_f$exercises),
+      caloriesBurned: data.dec(_f$caloriesBurned),
+    );
   }
 
   @override
@@ -54,18 +60,23 @@ class DayDataMapper extends ClassMapperBase<DayData> {
 
 mixin DayDataMappable {
   String toJson() {
-    return DayDataMapper.ensureInitialized()
-        .encodeJson<DayData>(this as DayData);
+    return DayDataMapper.ensureInitialized().encodeJson<DayData>(
+      this as DayData,
+    );
   }
 
   Map<String, dynamic> toMap() {
-    return DayDataMapper.ensureInitialized()
-        .encodeMap<DayData>(this as DayData);
+    return DayDataMapper.ensureInitialized().encodeMap<DayData>(
+      this as DayData,
+    );
   }
 
   DayDataCopyWith<DayData, DayData, DayData> get copyWith =>
       _DayDataCopyWithImpl<DayData, DayData>(
-          this as DayData, $identity, $identity);
+        this as DayData,
+        $identity,
+        $identity,
+      );
   @override
   String toString() {
     return DayDataMapper.ensureInitialized().stringifyValue(this as DayData);
@@ -73,8 +84,10 @@ mixin DayDataMappable {
 
   @override
   bool operator ==(Object other) {
-    return DayDataMapper.ensureInitialized()
-        .equalsValue(this as DayData, other);
+    return DayDataMapper.ensureInitialized().equalsValue(
+      this as DayData,
+      other,
+    );
   }
 
   @override
@@ -90,8 +103,12 @@ extension DayDataValueCopy<$R, $Out> on ObjectCopyWith<$R, DayData, $Out> {
 
 abstract class DayDataCopyWith<$R, $In extends DayData, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  ListCopyWith<$R, ExerciseData,
-      ExerciseDataCopyWith<$R, ExerciseData, ExerciseData>> get exercises;
+  ListCopyWith<
+    $R,
+    ExerciseData,
+    ExerciseDataCopyWith<$R, ExerciseData, ExerciseData>
+  >
+  get exercises;
   $R call({List<ExerciseData>? exercises, double? caloriesBurned});
   DayDataCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -105,22 +122,31 @@ class _DayDataCopyWithImpl<$R, $Out>
   late final ClassMapperBase<DayData> $mapper =
       DayDataMapper.ensureInitialized();
   @override
-  ListCopyWith<$R, ExerciseData,
-          ExerciseDataCopyWith<$R, ExerciseData, ExerciseData>>
-      get exercises => ListCopyWith($value.exercises,
-          (v, t) => v.copyWith.$chain(t), (v) => call(exercises: v));
+  ListCopyWith<
+    $R,
+    ExerciseData,
+    ExerciseDataCopyWith<$R, ExerciseData, ExerciseData>
+  >
+  get exercises => ListCopyWith(
+    $value.exercises,
+    (v, t) => v.copyWith.$chain(t),
+    (v) => call(exercises: v),
+  );
   @override
-  $R call({List<ExerciseData>? exercises, double? caloriesBurned}) =>
-      $apply(FieldCopyWithData({
-        if (exercises != null) #exercises: exercises,
-        if (caloriesBurned != null) #caloriesBurned: caloriesBurned
-      }));
+  $R call({List<ExerciseData>? exercises, double? caloriesBurned}) => $apply(
+    FieldCopyWithData({
+      if (exercises != null) #exercises: exercises,
+      if (caloriesBurned != null) #caloriesBurned: caloriesBurned,
+    }),
+  );
   @override
   DayData $make(CopyWithData data) => DayData(
-      exercises: data.get(#exercises, or: $value.exercises),
-      caloriesBurned: data.get(#caloriesBurned, or: $value.caloriesBurned));
+    exercises: data.get(#exercises, or: $value.exercises),
+    caloriesBurned: data.get(#caloriesBurned, or: $value.caloriesBurned),
+  );
 
   @override
   DayDataCopyWith<$R2, DayData, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t) =>
       _DayDataCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
+

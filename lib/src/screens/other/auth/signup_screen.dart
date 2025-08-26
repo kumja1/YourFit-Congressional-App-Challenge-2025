@@ -1,4 +1,5 @@
-import 'package:auto_route/annotations.dart';
+import 'package:animated_snack_bar/animated_snack_bar.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:const_date_time/const_date_time.dart';
 import 'package:date_picker_plus/date_picker_plus.dart';
 import 'package:datetime_picker_formfield_new/datetime_picker_formfield.dart';
@@ -9,16 +10,22 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthResponse;
 import 'package:yourfit/src/models/auth/auth_response.dart';
 import 'package:yourfit/src/models/auth/new_user_auth_response.dart';
+import 'package:yourfit/src/routing/router.dart';
 import 'package:yourfit/src/routing/routes.dart';
 import 'package:yourfit/src/services/index.dart';
+import 'package:yourfit/src/utils/constants/auth/auth_code.dart';
 import 'package:yourfit/src/utils/constants/icons.dart';
+import 'package:yourfit/src/utils/extensions/widget_extension.dart';
+import 'package:yourfit/src/utils/functions/show_snackbar.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form_text_field.dart';
 import 'package:yourfit/src/widgets/buttons/oauth_button.dart';
 
 @RoutePage()
 class SignUpScreen extends StatelessWidget {
-  const SignUpScreen({super.key});
+  final Map<String, dynamic> onboardingData;
+
+  const SignUpScreen({super.key, required this.onboardingData});
 
   @override
   Widget build(BuildContext context) {
@@ -34,8 +41,10 @@ class SignUpScreen extends StatelessWidget {
         oauthButtons: [
           OAuthButton(
             icon: AppIcons.googleIcon,
-            onPressed: () =>
-                controller.createAccount(provider: OAuthProvider.google),
+            onPressed: () => controller.createAccount(
+              onboardingData,
+              provider: OAuthProvider.google,
+            ),
           ),
         ],
         fields: [
@@ -49,41 +58,37 @@ class SignUpScreen extends StatelessWidget {
               valueType: "Name",
             ),
           ),
-          SizedBox(
-            width: 360,
-            child: DateTimeField(
-              onShowPicker: controller.showDateDialog,
-              decoration: const InputDecoration(labelText: "Date of Birth"),
-              onChanged: (value) => controller.dob = value,
-              format: DateFormat.yMMMMEEEEd(),
-              resetIcon: const Icon(Icons.close_rounded, color: Colors.blue),
-            ),
-          ),
+          DateTimeField(
+            onShowPicker: controller.showDateDialog,
+            decoration: const InputDecoration(labelText: "Date of Birth"),
+            onChanged: (value) => controller.dob = value,
+            format: DateFormat.yMMMMEEEEd(),
+            resetIcon: const Icon(Icons.close_rounded, color: Colors.blue),
+          ).sized(width: 360),
           AuthFormTextField(
             labelText: "Email",
             onChanged: (value) => controller.email = value,
             validator: controller.validateEmail,
           ),
-          Obx(
-            () => AuthFormTextField(
-              labelText: "Password",
-              onChanged: (value) => controller.password.value = value,
-              validator: controller.validatePassword,
-              isPassword: controller.password.value.isEmpty ? false : true,
-            ),
+          AuthFormTextField(
+            labelText: "Password",
+            onChanged: (value) => controller.password = value,
+            validator: controller.validatePassword,
+            isPassword: controller.password.isEmpty ? false : true,
           ),
         ],
-        onSubmitPressed: () async => controller.createAccount(),
+        onSubmitPressed: () async =>
+            await controller.createAccount(onboardingData),
         submitButtonChild: const Text(
           "Create Account",
           style: TextStyle(color: Colors.white),
         ),
-        onBottomButtonPressed: () => Get.rootDelegate.toNamed(Routes.signIn),
+        onBottomButtonPressed: () => context.router.pushPath(Routes.signIn),
         bottomButtonChild: const Text(
           "Existing User? Sign in",
           style: TextStyle(color: Colors.black12),
         ),
-      ).center(),
+      ).center().scrollable(),
     );
   }
 }
@@ -92,42 +97,65 @@ class _SignUpScreenController extends AuthFormController {
   String name = "";
   DateTime? dob;
 
-  final UserService _userService = Get.find();
+  final UserService userService = Get.find();
+  final AppRouter router = Get.find();
 
-  Future<void> createAccount({OAuthProvider? provider}) async {
-    Map<String, dynamic> data = Get.arguments;
+  Future<void> createAccount(
+    Map<String, dynamic> data, {
+    OAuthProvider? provider,
+  }) async {
+    try {
+      if (provider != null) {
+        AuthResponse response = await signInWithOAuth(provider);
+        if (response is! NewUserAuthResponse) {
+          return;
+        }
 
-    if (provider != null) {
-      AuthResponse response = await signInWithOAuth(provider);
-      if (response is! NewUserAuthResponse) {
+        if (response.code == AuthCode.error) {
+          showSnackbar(response.error!, AnimatedSnackBarType.error);
+          return;
+        }
+
+        await userService.createUserFromData(
+          response.newUser,
+          weight: data["weight"],
+          height: data["height"],
+          gender: data["gender"],
+        );
         return;
       }
 
-      await _userService.createUserFromData(
-        response.newUser,
-        weight: data["weight"],
-        height: data["height"],
-        gender: data["gender"],
+      if (!validateForm()) {
+        print("form not valid");
+        return;
+      }
+
+      AuthResponse response = await authService.signUpWithPassword(
+        email,
+        password,
       );
-      return;
+      print("user signup");
+      if (response.code == AuthCode.error) {
+        print(response.error!);
+        showSnackbar(response.error!, AnimatedSnackBarType.error);
+        return;
+      }
+      print("user created");
+      final nameParts = name.split(" ");
+      await userService.createUser(
+        nameParts[0],
+        nameParts[1],
+        data["weight"],
+        data["height"],
+        dob!,
+        data["gender"],
+        data["activityLevel"],
+      );
+      router.replacePath(Routes.main);
+    } catch (e) {
+      print(e);
+      showSnackbar(e.toString(), AnimatedSnackBarType.error);
     }
-
-    if (!validateForm()) {
-      return;
-    }
-
-    final nameParts = name.split(" ");
-    _userService.createUser(
-      nameParts[0],
-      nameParts[1],
-      data["weight"],
-      data["height"],
-      dob!,
-      data["gender"],
-      data["activityLevel"],
-    );
-
-    await Get.rootDelegate.toNamed(Routes.main);
   }
 
   Future<DateTime?> showDateDialog(

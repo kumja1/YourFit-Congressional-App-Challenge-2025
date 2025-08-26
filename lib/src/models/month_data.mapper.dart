@@ -1,5 +1,6 @@
 // coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// dart format off
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, unnecessary_cast, override_on_non_overriding_member
 // ignore_for_file: strict_raw_type, inference_failure_on_untyped_parameter
@@ -22,12 +23,21 @@ class MonthDataMapper extends ClassMapperBase<MonthData> {
   final String id = 'MonthData';
 
   static Map<int, DayData> _$days(MonthData v) => v.days;
-  static const Field<MonthData, Map<int, DayData>> _f$days =
-      Field('days', _$days);
+  static const Field<MonthData, Map<int, DayData>> _f$days = Field(
+    'days',
+    _$days,
+  );
+  static double _$caloriesBurned(MonthData v) => v.caloriesBurned;
+  static const Field<MonthData, double> _f$caloriesBurned = Field(
+    'caloriesBurned',
+    _$caloriesBurned,
+    mode: FieldMode.member,
+  );
 
   @override
   final MappableFields<MonthData> fields = const {
     #days: _f$days,
+    #caloriesBurned: _f$caloriesBurned,
   };
 
   static MonthData _instantiate(DecodingData data) {
@@ -48,28 +58,36 @@ class MonthDataMapper extends ClassMapperBase<MonthData> {
 
 mixin MonthDataMappable {
   String toJson() {
-    return MonthDataMapper.ensureInitialized()
-        .encodeJson<MonthData>(this as MonthData);
+    return MonthDataMapper.ensureInitialized().encodeJson<MonthData>(
+      this as MonthData,
+    );
   }
 
   Map<String, dynamic> toMap() {
-    return MonthDataMapper.ensureInitialized()
-        .encodeMap<MonthData>(this as MonthData);
+    return MonthDataMapper.ensureInitialized().encodeMap<MonthData>(
+      this as MonthData,
+    );
   }
 
   MonthDataCopyWith<MonthData, MonthData, MonthData> get copyWith =>
       _MonthDataCopyWithImpl<MonthData, MonthData>(
-          this as MonthData, $identity, $identity);
+        this as MonthData,
+        $identity,
+        $identity,
+      );
   @override
   String toString() {
-    return MonthDataMapper.ensureInitialized()
-        .stringifyValue(this as MonthData);
+    return MonthDataMapper.ensureInitialized().stringifyValue(
+      this as MonthData,
+    );
   }
 
   @override
   bool operator ==(Object other) {
-    return MonthDataMapper.ensureInitialized()
-        .equalsValue(this as MonthData, other);
+    return MonthDataMapper.ensureInitialized().equalsValue(
+      this as MonthData,
+      other,
+    );
   }
 
   @override
@@ -100,8 +118,11 @@ class _MonthDataCopyWithImpl<$R, $Out>
       MonthDataMapper.ensureInitialized();
   @override
   MapCopyWith<$R, int, DayData, DayDataCopyWith<$R, DayData, DayData>>
-      get days => MapCopyWith(
-          $value.days, (v, t) => v.copyWith.$chain(t), (v) => call(days: v));
+  get days => MapCopyWith(
+    $value.days,
+    (v, t) => v.copyWith.$chain(t),
+    (v) => call(days: v),
+  );
   @override
   $R call({Map<int, DayData>? days}) =>
       $apply(FieldCopyWithData({if (days != null) #days: days}));
@@ -111,6 +132,7 @@ class _MonthDataCopyWithImpl<$R, $Out>
 
   @override
   MonthDataCopyWith<$R2, MonthData, $Out2> $chain<$R2, $Out2>(
-          Then<$Out2, $R2> t) =>
-      _MonthDataCopyWithImpl<$R2, $Out2>($value, $cast, t);
+    Then<$Out2, $R2> t,
+  ) => _MonthDataCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
+

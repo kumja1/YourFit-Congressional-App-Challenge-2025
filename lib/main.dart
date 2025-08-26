@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide Router;
 import 'package:get/get.dart';
 import 'package:yourfit/src/routing/router.dart';
+import 'package:yourfit/src/routing/router.dart';
 import 'package:yourfit/src/utils/functions/init_services.dart';
 
 void main() async {
@@ -11,9 +12,11 @@ void main() async {
 class YourFitApp extends StatelessWidget {
   const YourFitApp({super.key});
 
+  AppRouter get router => Get.put(AppRouter());
+
   @override
-  Widget build(BuildContext context) => GetMaterialApp.router(
-    getPages: Router.screens,
+  Widget build(BuildContext context) => MaterialApp.router(
+    routerConfig: router.config(),
     title: 'YourFit',
     debugShowCheckedModeBanner: false,
     theme: ThemeData(

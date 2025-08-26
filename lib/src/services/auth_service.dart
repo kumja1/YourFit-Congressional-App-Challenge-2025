@@ -63,7 +63,7 @@ class AuthService extends GetxService {
     String email,
     String password,
   ) async => await _tryCatch(() async {
-    var response = await _auth.signUp(email: email, password: password);
+    final response = await _auth.signUp(email: email, password: password);
     if (response.user == null) {
       return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
     }
@@ -193,7 +193,7 @@ class AuthService extends GetxService {
               weight: 0,
               totalCaloriesBurned: 0,
               milesTraveled: 0,
-              activityLevel: UserPhysicalActivity.minimal,
+              physicalActivity: UserPhysicalActivity.minimal,
               exerciseData: {},
             ),
           );
