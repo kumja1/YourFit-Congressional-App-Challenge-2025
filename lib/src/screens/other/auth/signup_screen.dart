@@ -122,6 +122,7 @@ class _SignUpScreenController extends AuthFormController {
           height: data["height"],
           gender: data["gender"],
         );
+        router.replacePath(Routes.main);
         return;
       }
 
