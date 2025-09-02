@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'package:auto_route/annotations.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'package:yourfit/src/controllers/profile_controller.dart'; // <-- use the shared controller
+import 'package:yourfit/src/controllers/profile_controller.dart';
 
 @RoutePage()
 class ProfileScreen extends StatefulWidget {
@@ -15,199 +16,380 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   late final ProfileController profile;
 
+  int xp = 0;
+  int streak = 0;
+  int total = 0;
+  List<String> badges = [];
+  bool loadingStats = true;
+
   @override
   void initState() {
     super.initState();
     profile = Get.isRegistered<ProfileController>()
         ? Get.find<ProfileController>()
         : Get.put(ProfileController(), permanent: true);
+    _loadStats();
+  }
+
+  Future<void> _loadStats() async {
+    final prefs = await SharedPreferences.getInstance();
+    final ctx = profile.toContext();
+    final uid =
+        (ctx['uid'] ?? ctx['email'] ?? ctx['user_id'] ?? '').toString().trim();
+    final key = uid.isEmpty ? 'local' : uid;
+
+    xp = prefs.getInt('xp_$key') ?? 0;
+    streak = prefs.getInt('streak_$key') ?? 0;
+    total = prefs.getInt('total_$key') ?? 0;
+    badges = prefs.getStringList('badges_$key') ?? [];
+
+    setState(() => loadingStats = false);
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final surface = theme.colorScheme.surface;
+    final onSurface = theme.colorScheme.onSurface;
+    final primary = theme.colorScheme.primary;
+
     return GetBuilder<ProfileController>(
       builder: (_) {
         final initials = _initials(profile.firstName, profile.lastName);
+        final name = _fullName(profile.firstName, profile.lastName);
+
         return Scaffold(
-          appBar: AppBar(title: const Text('Profile'), centerTitle: true),
-          body: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  Card(
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(color: Colors.black12),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 40,
-                            child: Text(
-                              initials,
-                              style: const TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _fullName(
-                                    profile.firstName,
-                                    profile.lastName,
-                                  ),
-                                  style: const TextStyle(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
-                                  children: [
-                                    _pill(_val(profile.age, suffix: ' yrs')),
-                                    _pill(
-                                      _val(profile.heightCm, suffix: ' cm'),
-                                    ),
-                                    _pill(
-                                      _val(profile.weightKg, suffix: ' kg'),
-                                    ),
-                                    _pill(profile.gender ?? '—'),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            onPressed: _editBasics,
-                            icon: const Icon(Icons.edit),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _sectionCard(
-                    title: 'Goal',
-                    trailing: IconButton(
-                      onPressed: _editGoal,
-                      icon: const Icon(Icons.edit),
-                    ),
-                    child: Text(
-                      profile.goal ?? '—',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _sectionCard(
-                    title: 'Training',
-                    trailing: IconButton(
-                      onPressed: _editTraining,
-                      icon: const Icon(Icons.edit),
-                    ),
-                    child: LayoutBuilder(
-                      builder: (context, c) {
-                        final twoCols = c.maxWidth >= 520;
-                        final items = <Widget>[
-                          _kvTile('Activity', profile.activityLevel ?? '—'),
-                          _kvTile('Experience', profile.experience ?? '—'),
-                          _kvTile(
-                            'Days / week',
-                            profile.daysPerWeek != null
-                                ? '${profile.daysPerWeek}'
-                                : '—',
-                          ),
-                          _kvTile('Intensity', profile.intensity ?? '—'),
-                        ];
-                        if (twoCols) {
-                          return GridView.count(
-                            crossAxisCount: 2,
-                            childAspectRatio: 3.6,
-                            mainAxisSpacing: 10,
-                            crossAxisSpacing: 10,
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            children: items,
-                          );
-                        }
-                        return Column(
-                          children: items
-                              .map(
-                                (w) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 10),
-                                  child: w,
-                                ),
-                              )
-                              .toList(),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _sectionCard(
-                    title: 'Equipment & Injuries',
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          onPressed: _editEquipRemote,
+          backgroundColor: theme.colorScheme.surface,
+          appBar: AppBar(
+            title: const Text('Profile'),
+            centerTitle: true,
+            elevation: 0,
+          ),
+          body: RefreshIndicator(
+            onRefresh: _loadStats,
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                _HeaderHero(
+                  initials: initials,
+                  name: name,
+                  subtitle: profile.goal ?? 'Set your goal',
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  child: Column(
+                    children: [
+                      loadingStats
+                          ? _loadingCard(context)
+                          : _statsCard(context),
+                      const SizedBox(height: 16),
+                      _sectionCard(
+                        context,
+                        title: 'Training',
+                        trailing: IconButton(
+                          onPressed: _editTraining,
                           icon: const Icon(Icons.edit),
+                          tooltip: 'Edit training',
                         ),
-                        IconButton(
-                          onPressed: _editInjuries,
-                          icon: const Icon(Icons.healing),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _tagGroup('Equipment', profile.equipment),
-                        const SizedBox(height: 12),
-                        _tagGroup('Injuries', profile.injuries),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Card(
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: Colors.black12),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Text(
-                        const JsonEncoder.withIndent(
-                          '  ',
-                        ).convert(profile.toContext()),
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 12,
+                        child: LayoutBuilder(
+                          builder: (c, cons) {
+                            final twoCols = cons.maxWidth >= 520;
+                            final items = <Widget>[
+                              _kvTile('Activity', profile.activityLevel ?? '—'),
+                              _kvTile('Experience', profile.experience ?? '—'),
+                              _kvTile(
+                                'Days / week',
+                                profile.daysPerWeek?.toString() ?? '—',
+                              ),
+                              _kvTile('Intensity', profile.intensity ?? '—'),
+                            ];
+                            if (twoCols) {
+                              return GridView.count(
+                                crossAxisCount: 2,
+                                childAspectRatio: 3.6,
+                                mainAxisSpacing: 10,
+                                crossAxisSpacing: 10,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                children: items,
+                              );
+                            }
+                            return Column(
+                              children: items
+                                  .map((w) => Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 10),
+                                        child: w,
+                                      ))
+                                  .toList(),
+                            );
+                          },
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      _sectionCard(
+                        context,
+                        title: 'Basics',
+                        trailing: IconButton(
+                          onPressed: _editBasics,
+                          icon: const Icon(Icons.edit),
+                          tooltip: 'Edit basics',
+                        ),
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _pill(_val(profile.age, suffix: ' yrs')),
+                            _pill(_val(profile.heightCm, suffix: ' cm')),
+                            _pill(_val(profile.weightKg, suffix: ' kg')),
+                            _pill(profile.gender ?? '—'),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _sectionCard(
+                        context,
+                        title: 'Equipment & Injuries',
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              onPressed: _editEquipRemote,
+                              icon: const Icon(Icons.edit),
+                              tooltip: 'Edit equipment',
+                            ),
+                            IconButton(
+                              onPressed: _editInjuries,
+                              icon: const Icon(Icons.healing),
+                              tooltip: 'Edit injuries',
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _tagGroup('Equipment', profile.equipment),
+                            const SizedBox(height: 12),
+                            _tagGroup('Injuries', profile.injuries),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _sectionCard(
+                        context,
+                        title: 'Profile Context',
+                        trailing: IconButton(
+                          onPressed: _editGoal,
+                          icon: const Icon(Icons.flag_outlined),
+                          tooltip: 'Edit goal',
+                        ),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black12),
+                            color: theme.colorScheme.surfaceVariant
+                                .withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            const JsonEncoder.withIndent('  ')
+                                .convert(profile.toContext()),
+                            style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _loadingCard(BuildContext context) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.black12),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+    );
+  }
+
+  Widget _statsCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final lvl = 1 + xp ~/ 100;
+    final pct = ((xp % 100) / 100).clamp(0.0, 1.0);
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            theme.colorScheme.primary.withOpacity(0.08),
+            theme.colorScheme.primaryContainer.withOpacity(0.12),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: Colors.black12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                _metricPill(
+                  icon: Icons.workspace_premium,
+                  label: 'Level',
+                  value: 'Lvl $lvl',
+                ),
+                const SizedBox(width: 10),
+                _metricPill(
+                  icon: Icons.local_fire_department,
+                  label: 'Streak',
+                  value: '$streak days',
+                ),
+                const Spacer(),
+                Text(
+                  '$xp XP',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: pct,
+                minHeight: 12,
+                backgroundColor: theme.colorScheme.surfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '${(pct * 100).round()}% to next (${100 - (xp % 100)} XP)',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(child: _tileCard(context, 'Completed', '$total')),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _tileCard(
+                    context,
+                    'Badges',
+                    badges.isEmpty ? '—' : '${badges.length}',
+                  ),
+                ),
+              ],
+            ),
+            if (badges.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: badges
+                      .map(
+                        (b) => Chip(
+                          label: Text(b),
+                          avatar: const Icon(Icons.verified, size: 16),
+                          side: const BorderSide(color: Colors.black12),
+                          backgroundColor:
+                              theme.colorScheme.surface.withOpacity(0.9),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            ],
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _loadStats,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Refresh'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _metricPill({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.7),
+        border: Border.all(color: Colors.black12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16),
+          const SizedBox(width: 6),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tileCard(BuildContext context, String label, String value) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border.all(color: Colors.black12),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+        ],
+      ),
     );
   }
 
@@ -218,25 +400,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   String _fullName(String? first, String? last) {
-    final parts = [
-      first,
-      last,
-    ].where((e) => (e ?? '').trim().isNotEmpty).toList();
+    final parts = [first, last]
+        .where((e) => (e ?? '').trim().isNotEmpty)
+        .toList();
     return parts.isEmpty ? '—' : parts.join(' ');
   }
 
   String _val(num? v, {String suffix = ''}) => (v == null) ? '—' : '$v$suffix';
 
-  Widget _sectionCard({
+  Widget _sectionCard(
+    BuildContext context, {
     required String title,
     required Widget child,
     Widget? trailing,
   }) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
+    final theme = Theme.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border.all(color: Colors.black12),
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: Colors.black12),
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
@@ -245,13 +428,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             Row(
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                Text(title,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w800)),
                 const Spacer(),
                 if (trailing != null) trailing,
               ],
@@ -266,7 +445,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _pill(String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         border: Border.all(color: Colors.black12),
         color: Colors.grey.shade100,
@@ -274,7 +453,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -290,7 +469,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Row(
         children: [
           SizedBox(
-            width: 110,
+            width: 120,
             child: Text(
               label,
               style: TextStyle(
@@ -305,7 +484,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Text(
               value,
               textAlign: TextAlign.right,
-              style: const TextStyle(fontWeight: FontWeight.w700),
+              style: const TextStyle(fontWeight: FontWeight.w800),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               softWrap: true,
@@ -320,13 +499,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.grey.shade700,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        Text(label,
+            style: TextStyle(
+                color: Colors.grey.shade700, fontWeight: FontWeight.w700)),
         const SizedBox(height: 8),
         tags.isEmpty
             ? const Text('—')
@@ -337,7 +512,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     .map(
                       (e) => Chip(
                         label: Text(e),
-                        side: BorderSide(color: Colors.black12),
+                        side: const BorderSide(color: Colors.black12),
                         backgroundColor: Colors.grey.shade100,
                       ),
                     )
@@ -395,9 +570,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       onSave: () async {
-        profile.firstName = first.text.trim().isEmpty
-            ? null
-            : first.text.trim();
+        profile.firstName =
+            first.text.trim().isEmpty ? null : first.text.trim();
         profile.lastName = last.text.trim().isEmpty ? null : last.text.trim();
         profile.gender = gender;
         profile.age = int.tryParse(age.text.trim());
@@ -405,6 +579,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         profile.weightKg = int.tryParse(weight.text.trim());
         await profile.persist();
         profile.update();
+        await _loadStats();
       },
     );
   }
@@ -418,6 +593,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         profile.goal = goal.text.trim().isEmpty ? null : goal.text.trim();
         await profile.persist();
         profile.update();
+        await _loadStats();
       },
     );
   }
@@ -476,21 +652,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
         profile.intensity = intensity;
         await profile.persist();
         profile.update();
+        await _loadStats();
       },
     );
   }
 
-  void _editEquipRemote() async {
-    await editEquipmentRemote(
-      context,
-      initial: profile.equipment,
-      onSave: (list) async {
-        profile.equipment = list;
-        await profile.persist();
-        profile.update();
-        setState(() {});
-      },
+  Future<void> _editEquipRemote() async {
+    final result = await showModalBottomSheet<List<String>>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 12,
+          top: 12,
+        ),
+        child: _EquipmentPickerRemote(initialSelected: profile.equipment),
+      ),
     );
+    if (result != null) {
+      profile.equipment = result;
+      await profile.persist();
+      profile.update();
+      setState(() {});
+    }
   }
 
   void _editInjuries() {
@@ -533,7 +723,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 title,
                 style: const TextStyle(
                   fontSize: 18,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 12),
@@ -610,6 +800,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
           onChanged: (v) {
             if (v != null) onChanged(v);
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _HeaderHero extends StatelessWidget {
+  final String initials;
+  final String name;
+  final String subtitle;
+  const _HeaderHero({
+    required this.initials,
+    required this.name,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final grad = LinearGradient(
+      colors: [
+        theme.colorScheme.primary,
+        theme.colorScheme.secondary,
+      ],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+
+    return Container(
+      decoration: BoxDecoration(gradient: grad),
+      padding: const EdgeInsets.fromLTRB(16, 22, 16, 22),
+      child: SafeArea(
+        bottom: false,
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 34,
+              backgroundColor: Colors.white,
+              child: Text(
+                initials,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.2,
+                      )),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.white.withOpacity(0.9),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.more_horiz, color: Colors.white),
+            ),
+          ],
         ),
       ),
     );
@@ -721,10 +986,8 @@ class _EquipmentPickerRemoteState extends State<_EquipmentPickerRemote> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: const [
-            Text(
-              'Edit equipment',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
+            Text('Edit equipment',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             SizedBox(height: 16),
             CircularProgressIndicator(),
           ],
@@ -737,12 +1000,10 @@ class _EquipmentPickerRemoteState extends State<_EquipmentPickerRemote> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Edit equipment',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-            ),
+            const Text('Edit equipment',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
-            Text('Failed to load catalog:'),
+            const Text('Failed to load catalog:'),
             Text('$_error', style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 12),
             OutlinedButton(onPressed: _load, child: const Text('Retry')),
@@ -756,10 +1017,8 @@ class _EquipmentPickerRemoteState extends State<_EquipmentPickerRemote> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            'Edit equipment',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-          ),
+          const Text('Edit equipment',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
           const SizedBox(height: 12),
           Autocomplete<String>(
             optionsBuilder: (TextEditingValue v) => _optionsFor(v.text),
@@ -848,7 +1107,8 @@ class _EquipmentPickerRemoteState extends State<_EquipmentPickerRemote> {
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
-                  onPressed: () => Navigator.pop(context, _selected.toList()),
+                  onPressed: () =>
+                      Navigator.pop(context, _selected.toList()),
                   child: const Text('Save'),
                 ),
               ),

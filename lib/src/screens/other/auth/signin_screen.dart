@@ -59,7 +59,10 @@ class SignInScreen extends StatelessWidget {
           "Sign In",
           style: TextStyle(color: Colors.white),
         ),
-        onSubmitPressed: () => controller.signInWithPassword(),
+        onSubmitPressed: () async {
+          await controller.signInWithPassword();
+          context.router.pushPath(Routes.main);
+        },
         onBottomButtonPressed: () => context.router.pushPath(Routes.welcome),
       ).center(),
     );

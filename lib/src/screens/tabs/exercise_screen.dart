@@ -99,6 +99,15 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Workouts'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () => ctrl.openSettings(),
+          ),
+        ],
+      ),
       floatingActionButton: GetBuilder<WorkoutsCtrl>(
         builder: (c) => FloatingActionButton.extended(
           onPressed: () => c.generate(),
@@ -142,6 +151,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     progress: c.xpProgress,
                     streak: c.streak,
                     badges: c.badges,
+                    suspicious: c.suspiciousCount,
                   ),
                   const SizedBox(height: 12),
                   Expanded(
@@ -160,7 +170,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                             itemBuilder: (_, i) {
                               final it = c.dayData!.exercises[i];
                               final done = c.isDone(i);
-                              final prog = c.progressFor(i);
+                              final p = c.progressFor(i);
                               return FutureBuilder<ExerciseInfo?>(
                                 future: c.fetchInfo(it),
                                 builder: (context, snap) {
@@ -176,16 +186,20 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                                       ),
                                       child: ExpansionTile(
                                         leading: GestureDetector(
-                                          onTap: () => c.openTimer(i),
+                                          onTap: () => c.openExec(i),
                                           child: Stack(
                                             alignment: Alignment.center,
                                             children: [
-                                              CircularProgressIndicator(
-                                                value: prog.setsTotal == 0
-                                                    ? 0
-                                                    : prog.setsDone /
-                                                          prog.setsTotal,
-                                                strokeWidth: 3,
+                                              SizedBox(
+                                                height: 32,
+                                                width: 32,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      value: p.total == 0
+                                                          ? 0
+                                                          : p.done / p.total,
+                                                      strokeWidth: 3,
+                                                    ),
                                               ),
                                               CircleAvatar(
                                                 radius: 16,
@@ -195,7 +209,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                                                 child: Icon(
                                                   done
                                                       ? Icons.check
-                                                      : Icons.timer,
+                                                      : Icons.timer_off,
                                                   size: 18,
                                                   color: done
                                                       ? Colors.white
@@ -213,7 +227,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                                           ),
                                         ),
                                         subtitle: Text(
-                                          '${it.qty}  •  Set ${prog.setsDone + 1 > prog.setsTotal ? prog.setsTotal : prog.setsDone + 1}/${prog.setsTotal}',
+                                          '${it.qty} • Set ${p.done + 1 > p.total ? p.total : p.done + 1}/${p.total}',
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w700,
                                           ),
@@ -267,18 +281,18 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                                             child: Row(
                                               children: [
                                                 Expanded(
-                                                  child: FilledButton.icon(
-                                                    onPressed: () =>
-                                                        c.openTimer(i),
-                                                    icon: const Icon(
-                                                      Icons.play_arrow,
-                                                    ),
-                                                    label: Text(
+                                                  child: FilledButton(
+                                                    onPressed: done
+                                                        ? null
+                                                        : () => c.openExec(i),
+                                                    child: Text(
                                                       done
                                                           ? 'Completed'
-                                                          : (prog.running
-                                                                ? 'Running...'
-                                                                : 'Start Set'),
+                                                          : (c.settings.useTimer
+                                                                ? 'Start Timer'
+                                                                : (p.active
+                                                                      ? 'Continue'
+                                                                      : 'Start')),
                                                     ),
                                                   ),
                                                 ),
@@ -326,6 +340,7 @@ class _Header extends StatelessWidget {
   final double progress;
   final int streak;
   final List<String> badges;
+  final int suspicious;
   const _Header({
     super.key,
     required this.level,
@@ -334,6 +349,7 @@ class _Header extends StatelessWidget {
     required this.progress,
     required this.streak,
     required this.badges,
+    required this.suspicious,
   });
   @override
   Widget build(BuildContext context) {
@@ -394,26 +410,56 @@ class _Header extends StatelessWidget {
               style: const TextStyle(fontSize: 12, color: Colors.black54),
             ),
             const SizedBox(height: 10),
-            if (badges.isNotEmpty)
-              SizedBox(
-                height: 36,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: badges.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (_, i) => Container(
+            Row(
+              children: [
+                if (badges.isNotEmpty)
+                  Expanded(
+                    child: SizedBox(
+                      height: 36,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: badges.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (_, i) => Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black12),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(badges[i]),
+                        ),
+                      ),
+                    ),
+                  ),
+                if (suspicious > 0)
+                  Container(
+                    margin: const EdgeInsets.only(left: 8),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.black12),
+                      color: Colors.orange.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: Colors.orange),
                     ),
-                    child: Text(badges[i]),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.warning_amber_rounded,
+                          size: 16,
+                          color: Colors.orange,
+                        ),
+                        const SizedBox(width: 6),
+                        Text('$suspicious suspicious'),
+                      ],
+                    ),
                   ),
-                ),
-              ),
+              ],
+            ),
           ],
         ),
       ),
@@ -421,33 +467,41 @@ class _Header extends StatelessWidget {
   }
 }
 
-class SetProgress {
-  final int setsTotal;
-  final int setsDone;
-  final bool running;
-  final int secondsLeft;
-  const SetProgress({
-    required this.setsTotal,
-    required this.setsDone,
-    required this.running,
-    required this.secondsLeft,
+class ExecProgress {
+  final int total;
+  final int done;
+  final bool active;
+  final int secLeft;
+  const ExecProgress({
+    required this.total,
+    required this.done,
+    required this.active,
+    required this.secLeft,
   });
 }
 
-class TimerState {
-  int setsTotal;
-  int setsDone;
-  int perSetSec;
-  bool running;
-  int secondsLeft;
+class ExecState {
+  int total;
+  int done;
+  int perSec;
+  bool active;
+  int secLeft;
+  DateTime? startedAt;
   Timer? t;
-  TimerState({
-    required this.setsTotal,
-    required this.setsDone,
-    required this.perSetSec,
-    required this.running,
-    required this.secondsLeft,
+  ExecState({
+    required this.total,
+    required this.done,
+    required this.perSec,
+    required this.active,
+    required this.secLeft,
+    this.startedAt,
   });
+}
+
+class SettingsData {
+  bool useTimer;
+  bool strict;
+  SettingsData({required this.useTimer, required this.strict});
 }
 
 class WorkoutsCtrl extends GetxController {
@@ -459,10 +513,12 @@ class WorkoutsCtrl extends GetxController {
   String? lastError;
   ExerciseService? svc;
   final Map<String, ExerciseInfo?> _cache = {};
-  final Map<int, TimerState> _timers = {};
+  final Map<int, ExecState> _exec = {};
+  SettingsData settings = SettingsData(useTimer: false, strict: true);
   int xp = 0;
   int totalDone = 0;
   int streak = 0;
+  int suspiciousCount = 0;
   String? lastPerfectDay;
   List<String> badges = [];
   Set<int> _doneToday = {};
@@ -473,15 +529,23 @@ class WorkoutsCtrl extends GetxController {
     svc = Get.isRegistered<ExerciseService>()
         ? Get.find<ExerciseService>()
         : null;
-    _loadProgress();
+    _loadAll();
   }
 
   @override
   void onClose() {
-    for (final s in _timers.values) {
+    for (final s in _exec.values) {
       s.t?.cancel();
     }
     super.onClose();
+  }
+
+  String get accountKey {
+    final ctx = profile.toContext();
+    final uid = (ctx['uid'] ?? ctx['email'] ?? ctx['user_id'] ?? '')
+        .toString()
+        .trim();
+    return uid.isEmpty ? 'local' : uid;
   }
 
   String get todayKey {
@@ -495,20 +559,15 @@ class WorkoutsCtrl extends GetxController {
 
   bool isDone(int index) => _doneToday.contains(index);
 
-  SetProgress progressFor(int index) {
-    final s = _timers[index];
+  ExecProgress progressFor(int index) {
+    final s = _exec[index];
     if (s == null)
-      return const SetProgress(
-        setsTotal: 0,
-        setsDone: 0,
-        running: false,
-        secondsLeft: 0,
-      );
-    return SetProgress(
-      setsTotal: s.setsTotal,
-      setsDone: s.setsDone,
-      running: s.running,
-      secondsLeft: s.secondsLeft,
+      return const ExecProgress(total: 0, done: 0, active: false, secLeft: 0);
+    return ExecProgress(
+      total: s.total,
+      done: s.done,
+      active: s.active,
+      secLeft: s.secLeft,
     );
   }
 
@@ -527,13 +586,14 @@ class WorkoutsCtrl extends GetxController {
         if (svc != null) await svc!.getExercises(user);
       } catch (_) {}
       final ctx = profile.toContext();
-      final dd = await callGemini(buildWorkoutPrompt(ctx));
-      dayData = dd ?? fallbackPlan(ctx);
-      if (dayData!.exercises.isEmpty) dayData = fallbackPlan(ctx);
+      final dd = await _callGemini(buildWorkoutPrompt(ctx));
+      dayData = dd ?? _fallback(ctx);
+      if (dayData!.exercises.isEmpty) dayData = _fallback(ctx);
       if ((dayData?.exercises.length ?? 0) == 0)
         throw Exception('No workouts generated');
       await _ensureTodayState();
-      _initTimers();
+      _initExec();
+      await _saveStats();
     } catch (e) {
       lastError = e.toString();
     }
@@ -541,17 +601,18 @@ class WorkoutsCtrl extends GetxController {
     update();
   }
 
-  void _initTimers() {
-    _timers.clear();
+  void _initExec() {
+    _exec.clear();
     final list = dayData?.exercises ?? [];
     for (int i = 0; i < list.length; i++) {
-      final parsed = _parseQty(list[i].qty);
-      _timers[i] = TimerState(
-        setsTotal: parsed.item1,
-        setsDone: 0,
-        perSetSec: parsed.item2,
-        running: false,
-        secondsLeft: parsed.item2,
+      final p = _parseQty(list[i].qty);
+      _exec[i] = ExecState(
+        total: p.item1,
+        done: 0,
+        perSec: p.item2,
+        active: false,
+        secLeft: p.item2,
+        startedAt: null,
       );
     }
   }
@@ -560,25 +621,25 @@ class WorkoutsCtrl extends GetxController {
     final q = qty.toLowerCase().replaceAll(' ', '');
     int sets = 1;
     int perSec = 45;
-    final rxSetsReps = RegExp(r'^(\d+)x(\d+)$');
-    final rxSetsSec = RegExp(r'^(\d+)x(\d+)s$');
-    final rxOnlySec = RegExp(r'^(\d+)s$');
-    final m1 = rxSetsSec.firstMatch(q);
+    final r1 = RegExp(r'^(\d+)x(\d+)$');
+    final r2 = RegExp(r'^(\d+)x(\d+)s$');
+    final r3 = RegExp(r'^(\d+)s$');
+    final m2 = r2.firstMatch(q);
+    if (m2 != null) {
+      sets = int.tryParse(m2.group(1) ?? '') ?? 3;
+      perSec = int.tryParse(m2.group(2) ?? '') ?? 45;
+      return Tuple2(sets, perSec);
+    }
+    final m3 = r3.firstMatch(q);
+    if (m3 != null) {
+      sets = 1;
+      perSec = int.tryParse(m3.group(1) ?? '') ?? 45;
+      return Tuple2(sets, perSec);
+    }
+    final m1 = r1.firstMatch(q);
     if (m1 != null) {
       sets = int.tryParse(m1.group(1) ?? '') ?? 3;
-      perSec = int.tryParse(m1.group(2) ?? '') ?? 45;
-      return Tuple2(sets, perSec);
-    }
-    final m2 = rxOnlySec.firstMatch(q);
-    if (m2 != null) {
-      sets = 1;
-      perSec = int.tryParse(m2.group(1) ?? '') ?? 45;
-      return Tuple2(sets, perSec);
-    }
-    final m3 = rxSetsReps.firstMatch(q);
-    if (m3 != null) {
-      sets = int.tryParse(m3.group(1) ?? '') ?? 3;
-      final reps = int.tryParse(m3.group(2) ?? '') ?? 10;
+      final reps = int.tryParse(m1.group(2) ?? '') ?? 10;
       perSec = (reps * 3).clamp(20, 90);
       return Tuple2(sets, perSec);
     }
@@ -587,8 +648,8 @@ class WorkoutsCtrl extends GetxController {
 
   Future<ExerciseInfo?> fetchInfo(ExerciseItem it) async {
     if (_cache.containsKey(it.name)) return _cache[it.name];
-    final ai = await aiSummary(it.name);
-    final img = await lookupImage(it.name);
+    final ai = await _aiSummary(it.name);
+    final img = await _lookupImage(it.name);
     final info = ExerciseInfo(
       name: ai['canonical_name']?.toString().isNotEmpty == true
           ? ai['canonical_name'].toString()
@@ -605,7 +666,7 @@ class WorkoutsCtrl extends GetxController {
     return info;
   }
 
-  Future<Map<String, dynamic>> aiSummary(String name) async {
+  Future<Map<String, dynamic>> _aiSummary(String name) async {
     final payload = {
       "contents": [
         {
@@ -667,12 +728,12 @@ Output schema:
             as List? ??
         const [];
     final text = parts.map((p) => p['text']?.toString() ?? '').join();
-    final map = parseJson(text);
+    final map = _parseJson(text);
     if (map is Map<String, dynamic>) return map;
     return {};
   }
 
-  Future<String?> lookupImage(String query) async {
+  Future<String?> _lookupImage(String query) async {
     try {
       final q = Uri.encodeQueryComponent(query);
       final uri = Uri.parse(
@@ -698,7 +759,7 @@ Output schema:
     }
   }
 
-  Future<DayData?> callGemini(String prompt) async {
+  Future<DayData?> _callGemini(String prompt) async {
     final uri = Uri.parse(
       'https://generativelanguage.googleapis.com/v1beta/models/$kModel:generateContent?key=$kGeminiApiKey',
     );
@@ -753,7 +814,7 @@ Output schema:
                 as List? ??
             const [];
         final text = parts.map((p) => p['text']?.toString() ?? '').join();
-        final obj = parseJson(text);
+        final obj = _parseJson(text);
         if (obj is Map<String, dynamic>) {
           final dd = DayData.fromJson(obj);
           if (dd.exercises.isNotEmpty) return dd;
@@ -768,7 +829,7 @@ Output schema:
     return null;
   }
 
-  dynamic parseJson(String raw) {
+  dynamic _parseJson(String raw) {
     final t = raw.trim();
     final cleaned = t
         .replaceAll('```json', '')
@@ -779,13 +840,13 @@ Output schema:
     try {
       return jsonDecode(cleaned);
     } catch (_) {}
-    final obj = extractJson(cleaned);
+    final obj = _extractJson(cleaned);
     if (obj != null) {
       try {
         return jsonDecode(obj);
       } catch (_) {}
     }
-    final workoutsObj = extractWorkoutsJson(cleaned);
+    final workoutsObj = _extractWorkoutsJson(cleaned);
     if (workoutsObj != null) {
       try {
         return jsonDecode(workoutsObj);
@@ -794,7 +855,7 @@ Output schema:
     return null;
   }
 
-  String? extractJson(String s) {
+  String? _extractJson(String s) {
     int i = s.indexOf('{');
     if (i < 0) return null;
     int depth = 0;
@@ -812,7 +873,7 @@ Output schema:
     return null;
   }
 
-  String? extractWorkoutsJson(String s) {
+  String? _extractWorkoutsJson(String s) {
     final k = s.indexOf('"workouts"');
     if (k < 0) return null;
     int lb = s.indexOf('[', k);
@@ -835,9 +896,9 @@ Output schema:
     return null;
   }
 
-  Future<void> openTimer(int index) async {
+  Future<void> openExec(int index) async {
     if (dayData == null) return;
-    final s = _timers[index];
+    final s = _exec[index];
     if (s == null) return;
     await showModalBottomSheet(
       context: getContext(),
@@ -846,100 +907,138 @@ Output schema:
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (ctx) => _TimerSheet(
+      builder: (ctx) => _ExecSheet(
         name: dayData!.exercises[index].name,
         qty: dayData!.exercises[index].qty,
         state: s,
-        onStart: () => startSet(index),
-        onCancel: () => cancelTimer(index),
-        onSkip: () => skipToNextSet(index),
+        settings: settings,
+        onStart: () => _start(index),
+        onHoldComplete: () => _holdComplete(index),
+        onCancel: () => _cancel(index),
+        onSkip: () => _skip(index),
       ),
     );
     update();
   }
 
-  void startSet(int index) {
-    final s = _timers[index];
+  void _start(int index) {
+    final s = _exec[index];
     if (s == null) return;
-    if (s.running) return;
-    if (s.setsDone >= s.setsTotal) return;
-    s.running = true;
-    if (s.secondsLeft <= 0) s.secondsLeft = s.perSetSec;
-    s.t?.cancel();
-    s.t = Timer.periodic(const Duration(seconds: 1), (tt) {
-      if (s.secondsLeft > 0) {
-        s.secondsLeft -= 1;
-        update();
-      } else {
-        tt.cancel();
-        s.t = null;
-        s.running = false;
-        s.setsDone += 1;
-        s.secondsLeft = s.perSetSec;
-        update();
-        _checkExerciseComplete(index);
-      }
-    });
+    if (s.active) return;
+    if (s.done >= s.total) return;
+    s.active = true;
+    s.startedAt = DateTime.now();
+    if (settings.useTimer) {
+      if (s.secLeft <= 0) s.secLeft = s.perSec;
+      s.t?.cancel();
+      s.t = Timer.periodic(const Duration(seconds: 1), (tt) {
+        if (s.secLeft > 0) {
+          s.secLeft -= 1;
+          update();
+        } else {
+          tt.cancel();
+          s.t = null;
+          s.active = false;
+          s.done += 1;
+          s.secLeft = s.perSec;
+          update();
+          _finishSet(index, enforced: true);
+        }
+      });
+    } else {
+      s.secLeft = s.perSec;
+      update();
+    }
+  }
+
+  void _holdComplete(int index) {
+    final s = _exec[index];
+    if (s == null) return;
+    if (!s.active) return;
+    final elapsed = s.startedAt == null
+        ? 0
+        : DateTime.now().difference(s.startedAt!).inSeconds;
+    final minDwell = settings.strict
+        ? (s.perSec * 0.75).round()
+        : (s.perSec * 0.5).round();
+    if (settings.useTimer) return;
+    if (elapsed < minDwell) {
+      suspiciousCount += 1;
+      _toast('Too fast');
+      update();
+      _saveStats();
+      return;
+    }
+    s.active = false;
+    s.done += 1;
+    s.secLeft = s.perSec;
+    _finishSet(index, enforced: false);
     update();
   }
 
-  void cancelTimer(int index) {
-    final s = _timers[index];
+  void _cancel(int index) {
+    final s = _exec[index];
     if (s == null) return;
     s.t?.cancel();
     s.t = null;
-    s.running = false;
+    s.active = false;
     update();
   }
 
-  void skipToNextSet(int index) {
-    final s = _timers[index];
+  void _skip(int index) {
+    final s = _exec[index];
     if (s == null) return;
-    if (s.setsDone < s.setsTotal) {
+    if (s.done < s.total) {
       s.t?.cancel();
       s.t = null;
-      s.running = false;
-      s.setsDone += 1;
-      s.secondsLeft = s.perSetSec;
+      s.active = false;
+      s.done += 1;
+      s.secLeft = s.perSec;
+      _finishSet(index, enforced: true);
       update();
-      _checkExerciseComplete(index);
     }
   }
 
   void resetExercise(int index) async {
-    final s = _timers[index];
+    final s = _exec[index];
     if (dayData == null || s == null) return;
     s.t?.cancel();
     s.t = null;
-    final parsed = _parseQty(dayData!.exercises[index].qty);
-    s.setsTotal = parsed.item1;
-    s.setsDone = 0;
-    s.perSetSec = parsed.item2;
-    s.running = false;
-    s.secondsLeft = parsed.item2;
+    final p = _parseQty(dayData!.exercises[index].qty);
+    s.total = p.item1;
+    s.done = 0;
+    s.perSec = p.item2;
+    s.active = false;
+    s.secLeft = p.item2;
     if (_doneToday.remove(index)) {
       await _saveDoneToday();
+      await _saveStats();
     }
     update();
   }
 
-  void _checkExerciseComplete(int index) async {
-    final s = _timers[index];
+  void _finishSet(int index, {required bool enforced}) async {
+    final s = _exec[index];
     if (s == null) return;
-    if (s.setsDone >= s.setsTotal) {
+    if (s.done >= s.total) {
       if (!_doneToday.contains(index)) {
+        final fast = s.startedAt == null
+            ? false
+            : DateTime.now().difference(s.startedAt!).inSeconds <
+                  (s.perSec * 0.5);
+        if (settings.strict && fast) suspiciousCount += 1;
         _doneToday.add(index);
-        await _saveDoneToday();
         xp += 10;
         totalDone += 1;
-        await _saveTotals();
-        unlockBadges();
-        updateStreak();
+        await _saveDoneToday();
+        await _saveStats();
+        _unlockBadges();
+        _updateStreak();
       }
     }
   }
 
-  void updateStreak() async {
+  void _updateStreak() async {
     final len = dayData?.exercises.length ?? 0;
     if (len == 0) return;
     if (_doneToday.length == len) {
@@ -968,11 +1067,12 @@ Output schema:
       if (streak >= 30 && !badges.contains('30-Day Streak'))
         badges.add('30-Day Streak');
       await _saveBadges();
-      await _saveTotals();
+      await _saveStats();
     }
+    update();
   }
 
-  void unlockBadges() async {
+  void _unlockBadges() async {
     if (totalDone >= 1 && !badges.contains('First Rep'))
       badges.add('First Rep');
     if (totalDone >= 10 && !badges.contains('x10')) badges.add('x10');
@@ -981,7 +1081,7 @@ Output schema:
     await _saveBadges();
   }
 
-  DayData fallbackPlan(Map<String, dynamic> ctx) {
+  DayData _fallback(Map<String, dynamic> ctx) {
     final days = (ctx['days_per_week'] is int && ctx['days_per_week'] > 0)
         ? ctx['days_per_week'] as int
         : 3;
@@ -995,14 +1095,43 @@ Output schema:
     return DayData(exercises: base.take(days >= 4 ? 5 : 4).toList());
   }
 
-  Future<void> _loadProgress() async {
+  Future<void> openSettings() async {
+    await showModalBottomSheet(
+      context: getContext(),
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => _SettingsSheet(
+        data: settings,
+        onChanged: (d) async {
+          settings = d;
+          await _saveSettings();
+          update();
+        },
+      ),
+    );
+  }
+
+  void _toast(String msg) {
+    ScaffoldMessenger.of(getContext()).showSnackBar(
+      SnackBar(content: Text(msg), duration: const Duration(seconds: 1)),
+    );
+  }
+
+  Future<void> _loadAll() async {
     final prefs = await SharedPreferences.getInstance();
-    xp = prefs.getInt('gf_xp') ?? 0;
-    totalDone = prefs.getInt('gf_total') ?? 0;
-    streak = prefs.getInt('gf_streak') ?? 0;
-    lastPerfectDay = prefs.getString('gf_lastPerfect');
-    badges = prefs.getStringList('gf_badges') ?? [];
-    final todayList = prefs.getStringList('gf_done_${todayKey}') ?? [];
+    final p = accountKey;
+    xp = prefs.getInt('xp_$p') ?? 0;
+    totalDone = prefs.getInt('total_$p') ?? 0;
+    streak = prefs.getInt('streak_$p') ?? 0;
+    lastPerfectDay = prefs.getString('lastPerfect_$p');
+    badges = prefs.getStringList('badges_$p') ?? [];
+    suspiciousCount = prefs.getInt('susp_$p') ?? 0;
+    final useTimer = prefs.getBool('useTimer_$p') ?? false;
+    final strict = prefs.getBool('strict_$p') ?? true;
+    settings = SettingsData(useTimer: useTimer, strict: strict);
+    final todayList = prefs.getStringList('done_${p}_$todayKey') ?? [];
     _doneToday = todayList
         .map((e) => int.tryParse(e) ?? -1)
         .where((e) => e >= 0)
@@ -1010,31 +1139,43 @@ Output schema:
     update();
   }
 
-  Future<void> _saveTotals() async {
+  Future<void> _saveStats() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('gf_xp', xp);
-    await prefs.setInt('gf_total', totalDone);
-    await prefs.setInt('gf_streak', streak);
+    final p = accountKey;
+    await prefs.setInt('xp_$p', xp);
+    await prefs.setInt('total_$p', totalDone);
+    await prefs.setInt('streak_$p', streak);
+    await prefs.setInt('susp_$p', suspiciousCount);
     if (lastPerfectDay != null)
-      await prefs.setString('gf_lastPerfect', lastPerfectDay!);
+      await prefs.setString('lastPerfect_$p', lastPerfectDay!);
   }
 
   Future<void> _saveBadges() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('gf_badges', badges);
+    final p = accountKey;
+    await prefs.setStringList('badges_$p', badges);
   }
 
   Future<void> _saveDoneToday() async {
     final prefs = await SharedPreferences.getInstance();
+    final p = accountKey;
     await prefs.setStringList(
-      'gf_done_${todayKey}',
+      'done_${p}_$todayKey',
       _doneToday.map((e) => e.toString()).toList(),
     );
   }
 
+  Future<void> _saveSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final p = accountKey;
+    await prefs.setBool('useTimer_$p', settings.useTimer);
+    await prefs.setBool('strict_$p', settings.strict);
+  }
+
   Future<void> _ensureTodayState() async {
     final prefs = await SharedPreferences.getInstance();
-    final todayList = prefs.getStringList('gf_done_${todayKey}') ?? [];
+    final p = accountKey;
+    final todayList = prefs.getStringList('done_${p}_$todayKey') ?? [];
     _doneToday = todayList
         .map((e) => int.tryParse(e) ?? -1)
         .where((e) => e >= 0)
@@ -1042,34 +1183,36 @@ Output schema:
   }
 }
 
-class _TimerSheet extends StatefulWidget {
+class _ExecSheet extends StatefulWidget {
   final String name;
   final String qty;
-  final TimerState state;
+  final ExecState state;
+  final SettingsData settings;
   final VoidCallback onStart;
+  final VoidCallback onHoldComplete;
   final VoidCallback onCancel;
   final VoidCallback onSkip;
-  const _TimerSheet({
+  const _ExecSheet({
     required this.name,
     required this.qty,
     required this.state,
+    required this.settings,
     required this.onStart,
+    required this.onHoldComplete,
     required this.onCancel,
     required this.onSkip,
   });
   @override
-  State<_TimerSheet> createState() => _TimerSheetState();
+  State<_ExecSheet> createState() => _ExecSheetState();
 }
 
-class _TimerSheetState extends State<_TimerSheet> {
+class _ExecSheetState extends State<_ExecSheet> {
   @override
   Widget build(BuildContext context) {
     final s = widget.state;
-    final mm = (s.secondsLeft ~/ 60).toString().padLeft(2, '0');
-    final ss = (s.secondsLeft % 60).toString().padLeft(2, '0');
-    final pct = s.perSetSec == 0
-        ? 0.0
-        : (s.perSetSec - s.secondsLeft) / s.perSetSec;
+    final mm = (s.secLeft ~/ 60).toString().padLeft(2, '0');
+    final ss = (s.secLeft % 60).toString().padLeft(2, '0');
+    final pct = s.perSec == 0 ? 0.0 : (s.perSec - s.secLeft) / s.perSec;
     return Padding(
       padding: EdgeInsets.only(
         left: 16,
@@ -1077,71 +1220,144 @@ class _TimerSheetState extends State<_TimerSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 16,
         top: 12,
       ),
-      child: StatefulBuilder(
-        builder: (ctx, setLocal) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                widget.name,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '${widget.qty} • Set ${s.setsDone + 1 > s.setsTotal ? s.setsTotal : s.setsDone + 1}/${s.setsTotal}',
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                height: 140,
-                width: 140,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      height: 140,
-                      width: 140,
-                      child: CircularProgressIndicator(
-                        value: pct.clamp(0.0, 1.0),
-                        strokeWidth: 8,
-                      ),
-                    ),
-                    Text(
-                      '$mm:$ss',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            widget.name,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '${widget.qty} • Set ${s.done + 1 > s.total ? s.total : s.done + 1}/${s.total}',
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 16),
+          if (widget.settings.useTimer)
+            SizedBox(
+              height: 140,
+              width: 140,
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: s.running ? null : widget.onStart,
-                      icon: const Icon(Icons.play_arrow),
-                      label: Text(s.running ? 'Running' : 'Start'),
+                  SizedBox(
+                    height: 140,
+                    width: 140,
+                    child: CircularProgressIndicator(
+                      value: pct.clamp(0.0, 1.0),
+                      strokeWidth: 8,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: s.running ? widget.onCancel : widget.onSkip,
-                      icon: Icon(s.running ? Icons.stop : Icons.skip_next),
-                      label: Text(s.running ? 'Cancel' : 'Skip Set'),
+                  Text(
+                    '$mm:$ss',
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ],
               ),
+            ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: s.active ? null : widget.onStart,
+                  icon: const Icon(Icons.play_arrow),
+                  label: Text(
+                    s.active
+                        ? 'Running'
+                        : (widget.settings.useTimer ? 'Start Timer' : 'Start'),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: s.active ? widget.onCancel : widget.onSkip,
+                  icon: Icon(s.active ? Icons.stop : Icons.skip_next),
+                  label: Text(s.active ? 'Cancel' : 'Skip Set'),
+                ),
+              ),
             ],
-          );
-        },
+          ),
+          const SizedBox(height: 8),
+          if (!widget.settings.useTimer)
+            GestureDetector(
+              onLongPress: widget.onHoldComplete,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: s.active ? Colors.green : Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Long-press to complete',
+                  style: TextStyle(
+                    color: s.active ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsSheet extends StatefulWidget {
+  final SettingsData data;
+  final ValueChanged<SettingsData> onChanged;
+  const _SettingsSheet({required this.data, required this.onChanged});
+  @override
+  State<_SettingsSheet> createState() => _SettingsSheetState();
+}
+
+class _SettingsSheetState extends State<_SettingsSheet> {
+  late bool useTimer = widget.data.useTimer;
+  late bool strict = widget.data.strict;
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        16,
+        12,
+        16,
+        MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Workout Settings',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 12),
+          SwitchListTile(
+            value: useTimer,
+            onChanged: (v) => setState(() => useTimer = v),
+            title: const Text('Use timer per set'),
+          ),
+          SwitchListTile(
+            value: strict,
+            onChanged: (v) => setState(() => strict = v),
+            title: const Text('Strict mode (harder anti-cheese)'),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: () => widget.onChanged(
+                SettingsData(useTimer: useTimer, strict: strict),
+              ),
+              child: const Text('Save'),
+            ),
+          ),
+        ],
       ),
     );
   }
