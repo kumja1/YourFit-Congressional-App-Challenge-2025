@@ -69,6 +69,7 @@ dependencies:
   langchain_google: ^0.6.5+2
   langchain_supabase: ^0.1.2+2
   http: ^1.5.0
+  share_plus: ^11.1.0
 
 dev_dependencies:
 
