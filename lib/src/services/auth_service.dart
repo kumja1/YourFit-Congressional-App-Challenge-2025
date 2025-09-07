@@ -16,7 +16,7 @@ import 'package:yourfit/src/utils/constants/variables.dart';
 class AuthService extends GetxService {
   final GoTrueClient _auth = supabaseClient.auth;
   final UserService _userService = Get.find();
-  final Rx<UserData?> currentUser = Rx(null);
+  final Rx<UserData?> currentUser = Rx<UserData?>(null);
 
   bool get isSignedIn => currentUser.value != null;
 
@@ -31,12 +31,10 @@ class AuthService extends GetxService {
             event.session!.user.id,
           );
           break;
-
         case AuthChangeEvent.passwordRecovery:
         case AuthChangeEvent.signedOut:
           currentUser.value = null;
           break;
-
         default:
           break;
       }
@@ -51,11 +49,9 @@ class AuthService extends GetxService {
       email: email,
       password: password,
     );
-
     if (response.user == null) {
       return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
     }
-
     return AuthResponse(code: AuthCode.success, error: null);
   });
 
@@ -63,11 +59,23 @@ class AuthService extends GetxService {
     String email,
     String password,
   ) async => await _tryCatch(() async {
-    final response = await _auth.signUp(email: email, password: password);
-    if (response.user == null) {
+    final adminResponse = await supabaseClient.auth.admin.createUser(
+      AdminUserAttributes(
+        email: email,
+        password: password,
+        emailConfirm: false,
+      ),
+    );
+    if (adminResponse.user == null) {
       return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
     }
-
+    final loginResponse = await _auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+    if (loginResponse.user == null) {
+      return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
+    }
     return AuthResponse(code: AuthCode.success, error: null);
   });
 
@@ -95,30 +103,51 @@ class AuthService extends GetxService {
     if (session.user == null) {
       return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
     }
-
     return AuthResponse(code: AuthCode.success, error: null);
   });
 
-  Future<AuthResponse> signInWithOAuth(OAuthProvider provider) async => kIsWeb
-      ? _signInWithWebOAuth(provider)
-      : switch (provider) {
-          (OAuthProvider.google) => await _signInWithGoogleOAuth(),
-          _ => AuthResponse(
-            code: AuthCode.error,
-            error: AuthError.invalidOAuthProvider,
-          ),
-        };
+  Future<AuthResponse> signInWithOAuth(OAuthProvider provider) async =>
+      kIsWeb ? _signInWithWebOAuth(provider) : _signInWithMobileOAuth(provider);
 
-  Future<AuthResponse> _signInWithWebOAuth(OAuthProvider provider) async =>
+  Future<AuthResponse> _signInWithWebOAuth(
+    OAuthProvider provider,
+  ) async => await _tryCatch(() async {
+    final origin = Uri.base; 
+    final redirect = Uri(
+      scheme: origin.scheme,
+      host: origin.host,
+      port: (origin.hasPort && origin.port != 80 && origin.port != 443)
+          ? origin.port
+          : null,
+      path: '/',
+      fragment: 'main', // -> /#/main
+    ).toString();
+
+    final ok = await _auth.signInWithOAuth(
+      provider,
+      redirectTo: redirect,
+      queryParams: const {'prompt': 'consent'},
+    );
+    if (!ok) {
+      return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
+    }
+    return AuthResponse(code: AuthCode.success, error: null);
+  });
+
+  Future<AuthResponse> _signInWithMobileOAuth(OAuthProvider provider) async =>
       await _tryCatch(() async {
-        var success = await _auth.signInWithOAuth(provider, redirectTo: null);
-        if (!success) {
+        // Must match your Android/iOS deep link (Manifest/Info.plist)
+        const mobileRedirect = 'com.app.yourfit://app/auth#/main';
+        final ok = await _auth.signInWithOAuth(
+          provider,
+          redirectTo: mobileRedirect,
+        );
+        if (!ok) {
           return AuthResponse(
             code: AuthCode.error,
             error: AuthError.userNotFound,
           );
         }
-
         return AuthResponse(code: AuthCode.success, error: null);
       });
 
@@ -144,7 +173,6 @@ class AuthService extends GetxService {
             error: AuthError.googleSignInError,
           );
         }
-
         if (authentication.idToken == null) {
           return AuthResponse(
             code: AuthCode.error,
@@ -158,9 +186,10 @@ class AuthService extends GetxService {
           accessToken: authorization.accessToken,
         );
 
-        bool hasUser = response.user?.lastSignInAt == null;
+        final existingUser = await _userService.getUser(response.user!.id);
+        final bool isNewUser = existingUser == null;
 
-        if (!hasUser) {
+        if (isNewUser) {
           final peopleApi = PeopleServiceApi(
             authorization.authClient(scopes: scopes),
           );
@@ -184,9 +213,9 @@ class AuthService extends GetxService {
           final dobDateTime = DateTime.parse(dob.date.toString());
           return NewUserAuthResponse(
             newUser: UserData(
-              firstName: name.givenName!,
-              lastName: name.familyName!,
-              gender: UserGenderMapper.fromValue(gender.value!),
+              firstName: name.givenName ?? '',
+              lastName: name.familyName ?? '',
+              gender: UserGenderMapper.fromValue(gender.value ?? 'male'),
               dob: dobDateTime,
               age: dobDateTime.age,
               height: 0,

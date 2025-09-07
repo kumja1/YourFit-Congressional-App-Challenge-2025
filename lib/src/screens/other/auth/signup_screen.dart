@@ -77,8 +77,8 @@ class SignUpScreen extends StatelessWidget {
             isPassword: controller.password.isEmpty ? false : true,
           ),
         ],
-        onSubmitPressed: () async =>
-            await controller.createAccount(onboardingData),
+        onSubmitPressed: () async => await controller.createAccount(onboardingData),
+        
         submitButtonChild: const Text(
           "Create Account",
           style: TextStyle(color: Colors.white),
@@ -122,6 +122,7 @@ class _SignUpScreenController extends AuthFormController {
           height: data["height"],
           gender: data["gender"],
         );
+        router.replacePath(Routes.main);
         return;
       }
 

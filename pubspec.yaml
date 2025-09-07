@@ -35,7 +35,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   flutter_animate: ^4.5.2
-  supabase_flutter: ^2.9.1
+  firebase_core: ^3.0.0
+  firebase_auth: ^5.0.0
+  cloud_firestore: ^5.0.0
   animated_snack_bar: ^0.4.0
   envied: ^1.1.1
   text_divider: ^1.0.0
@@ -68,6 +70,8 @@ dependencies:
   langchain_google: ^0.6.5+2
   langchain_supabase: ^0.1.2+2
   http: ^1.5.0
+  share_plus: ^11.1.0
+  supabase_flutter: ^2.10.0
 
 dev_dependencies:
 

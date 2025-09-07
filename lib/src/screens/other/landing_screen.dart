@@ -1,9 +1,6 @@
-import 'package:auto_route/annotations.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:yourfit/src/routing/router.dart';
 import 'package:yourfit/src/routing/routes.dart';
 import 'package:yourfit/src/widgets/buttons/animated_button.dart';
 

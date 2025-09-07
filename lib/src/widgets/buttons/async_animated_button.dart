@@ -66,22 +66,20 @@ class _AsyncAnimatedButtonController extends GetxController {
     Future Function()? onPressed,
     bool loadingAnimation,
   ) async {
-    {
-      if (onPressed == null) return;
+    if (onPressed == null) return;
 
-      if (loadingAnimation) {
-        try {
-          isLoading = true;
-          update();
+    if (loadingAnimation) {
+      try {
+        isLoading = true;
+        update();
 
-          onPressed();
-        } finally {
-          isLoading = false;
-          update();
-        }
-      } else {
-        onPressed();
+        await onPressed();
+      } finally {
+        isLoading = false;
+        update();
       }
+    } else {
+      await onPressed();
     }
   }
 }
