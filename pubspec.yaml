@@ -63,7 +63,6 @@ dependencies:
   extension_google_sign_in_as_googleapis_auth: ^3.0.0
   choice: ^2.3.2
   auto_route: ^10.1.2
-  zard: ^0.0.18
   langchain: ^0.7.9
   langchain_community: ^0.3.4+2
   langchain_google: ^0.6.5+2

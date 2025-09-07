@@ -15,7 +15,7 @@ class ActivityLevelOnboardingScreen extends OnboardingScreen {
   Widget build(BuildContext context) {
     return GetBuilder<_ActivityLevelOnboardingScreenController>(
       init: _ActivityLevelOnboardingScreenController(),
-      builder: (_) => InlineChoice<UserPhysicalActivity>.single(
+      builder: (_) => InlineChoice<UserPhysicalFitness>.single(
         value: _controller.selectedChoice,
         onChanged: _controller.setChoice,
         itemCount: _controller.choices.length,
@@ -50,15 +50,15 @@ class ActivityLevelOnboardingScreen extends OnboardingScreen {
 
 class _ActivityLevelOnboardingScreenController extends GetxController {
   final choices = [
-    UserPhysicalActivity.minimal,
-    UserPhysicalActivity.light,
-    UserPhysicalActivity.moderate,
-    UserPhysicalActivity.intense,
+    UserPhysicalFitness.minimal,
+    UserPhysicalFitness.light,
+    UserPhysicalFitness.moderate,
+    UserPhysicalFitness.extreme,
   ];
 
-  UserPhysicalActivity? selectedChoice;
+  UserPhysicalFitness? selectedChoice;
 
-  void setChoice(UserPhysicalActivity? value) {
+  void setChoice(UserPhysicalFitness? value) {
     selectedChoice = value;
     update();
   }

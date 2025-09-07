@@ -5,6 +5,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:yourfit/src/models/day_data.dart';
+import 'package:yourfit/src/models/exercise_data.dart';
 import 'package:yourfit/src/models/user_data.dart';
 import 'package:yourfit/src/services/index.dart';
 import 'package:yourfit/src/utils/functions/show_snackbar.dart';
@@ -12,39 +14,6 @@ import 'package:yourfit/src/utils/functions/show_snackbar.dart';
 const String kGeminiApiKey = "AIzaSyCI-es8sI7XKwQwYiipkmLdlNH65MgExFo";
 const String kModel = 'gemini-2.5-pro';
 const Duration kHttpTimeout = Duration(seconds: 25);
-
-class ExerciseItem {
-  final String name;
-  final String qty;
-  ExerciseItem({required this.name, required this.qty});
-  factory ExerciseItem.fromJson(Map<String, dynamic> j) => ExerciseItem(
-    name: j['name']?.toString() ?? '',
-    qty: j['qty']?.toString() ?? '',
-  );
-}
-
-class DayData {
-  final List<ExerciseItem> exercises;
-  DayData({required this.exercises});
-  factory DayData.fromJson(dynamic data) {
-    if (data is Map) {
-      final listRaw = data['workouts'] ?? data['exercises'];
-      if (listRaw is List) {
-        final list = listRaw
-            .map((e) => ExerciseItem.fromJson(Map<String, dynamic>.from(e)))
-            .toList();
-        return DayData(exercises: list);
-      }
-    }
-    if (data is List) {
-      final list = data
-          .map((e) => ExerciseItem.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
-      return DayData(exercises: list);
-    }
-    return DayData(exercises: []);
-  }
-}
 
 final Map<String, dynamic> workoutContext = {
   "user": {
@@ -173,7 +142,7 @@ class WorkoutsScreen extends StatelessWidget {
                                     ),
                                   ),
                                   Text(
-                                    it.qty,
+                                    "${it.sets}x${it.reps}",
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -213,32 +182,41 @@ class _WorkoutsScreenController extends GetxController {
     loading = true;
     lastError = null;
     update();
-    
+
     try {
       if (kGeminiApiKey.isEmpty) {
         throw Exception(
           'Missing GEMINI_API_KEY (use --dart-define=GEMINI_API_KEY=...)',
         );
       }
-      await exerciseService.getExercises(
-      UserData(
-        firstName: "John",
-        lastName: "Smith",
-        gender: UserGender.male,
-        dob: DateTime.now(),
-        age: 33,
-        height: 180,
-        weight: 75,
-        totalCaloriesBurned: 50000,
-        milesTraveled: 500,
-        physicalActivity: UserPhysicalActivity.moderate,
-        exerciseData: {},
-      ),
-    );
-      final parsed = await _callGeminiWithRetries(
-        buildWorkoutPrompt(workoutContext),
-      );
-      dayData = parsed ?? _fallbackDay(workoutContext);
+      dayData =
+          await exerciseService.getExercises(
+            UserData(
+              firstName: "Grug",
+              lastName: "Boogaman",
+              gender: UserGender.male,
+              dob: DateTime(1),
+              age: 99,
+              height: 100,
+              weight: 226,
+              physicalFitness: UserPhysicalFitness.moderate,
+              equipment: ["stone", "boulder", "club", "spear"],
+              disabilities: [
+                "cancer",
+                "blind",
+                "deaf",
+                "no arms or legs",
+                "one lung",
+                "athritus",
+              ],
+            ),
+            intensity: ExerciseIntensity.high,
+            additionalParameters: {
+  "goal": "to be able to hunt wooly mammoths",
+            },
+          ) ??
+          _fallbackDay(workoutContext);
+
       if (dayData!.exercises.isEmpty) throw Exception('Parsed empty workouts');
     } catch (e) {
       lastError = e.toString();
@@ -247,105 +225,6 @@ class _WorkoutsScreenController extends GetxController {
     }
     loading = false;
     update();
-  }
-
-  Future<DayData?> _callGeminiWithRetries(String prompt) async {
-    final uri = Uri.parse(
-      'https://generativelanguage.googleapis.com/v1beta/models/$kModel:generateContent?key=$kGeminiApiKey',
-    );
-    final payload = {
-      "contents": [
-        {
-          "role": "user",
-          "parts": [
-            {"text": prompt},
-          ],
-        },
-      ],
-      "generationConfig": {
-        "temperature": 0.2,
-        "responseMimeType": "application/json",
-        "responseSchema": {
-          "type": "OBJECT",
-          "properties": {
-            "workouts": {
-              "type": "ARRAY",
-              "items": {
-                "type": "OBJECT",
-                "properties": {
-                  "name": {"type": "STRING"},
-                  "qty": {"type": "STRING"},
-                },
-                "required": ["name", "qty"],
-              },
-            },
-          },
-          "required": ["workouts"],
-        },
-      },
-      "safetySettings": [
-        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-        {
-          "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-          "threshold": "BLOCK_NONE",
-        },
-        {
-          "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-          "threshold": "BLOCK_NONE",
-        },
-      ],
-    };
-
-    Exception? lastErr;
-    for (int attempt = 0; attempt < 3; attempt++) {
-      try {
-        final res = await http
-            .post(
-              uri,
-              headers: {"Content-Type": "application/json"},
-              body: jsonEncode(payload),
-            )
-            .timeout(kHttpTimeout);
-        if (res.statusCode != 200)
-          throw Exception('HTTP ${res.statusCode}: ${res.body}');
-        final decoded = jsonDecode(res.body);
-        final block = decoded['promptFeedback']?['blockReason']?.toString();
-        if (block != null && block.isNotEmpty)
-          throw Exception('Blocked: $block');
-
-        final candidates = decoded['candidates'] as List?;
-        if (candidates == null || candidates.isEmpty)
-          throw Exception('No candidates');
-
-        String text = '';
-        final parts = candidates[0]['content']?['parts'] as List?;
-        if (parts != null && parts.isNotEmpty) {
-          for (final p in parts) {
-            final t = p['text']?.toString();
-            if (t != null && t.trim().isNotEmpty) {
-              text = t;
-              break;
-            }
-          }
-        }
-        if (text.isEmpty) throw Exception('Empty model response');
-
-        final jsonStr = _extractJson(text);
-        if (jsonStr.isEmpty) throw Exception('No JSON found');
-        final data = jsonDecode(jsonStr);
-        final dd = DayData.fromJson(data);
-        if (dd.exercises.isEmpty) throw Exception('No exercises parsed');
-        return dd;
-      } on TimeoutException {
-        lastErr = Exception('Request timed out');
-      } catch (e) {
-        lastErr = e is Exception ? e : Exception(e.toString());
-        await Future.delayed(Duration(milliseconds: 350 * (attempt + 1)));
-      }
-    }
-    if (lastErr != null) throw lastErr;
-    return null;
   }
 
   String _extractJson(String s) {
@@ -373,17 +252,8 @@ class _WorkoutsScreenController extends GetxController {
     final equipment = (plan['equipment'] as List)
         .map((e) => e.toString().toLowerCase())
         .toList();
-    final hasBar =
-        equipment.contains('pull-up bar') || equipment.contains('barbell');
-    final items = <ExerciseItem>[
-      if (hasBar) ExerciseItem(name: "Pull-Ups (assisted)", qty: "3x5"),
-      ExerciseItem(name: "Back Squat or Goblet Squat", qty: "4x8"),
-      ExerciseItem(name: "Bench Press or DB Press", qty: "4x8"),
-      ExerciseItem(name: "Row (Barbell/DB)", qty: "3x10"),
-      ExerciseItem(name: "RDL (Barbell/DB)", qty: "3x8"),
-      ExerciseItem(name: "Plank", qty: "3x45s"),
-      ExerciseItem(name: "Bike/Run", qty: "12m"),
-    ];
-    return DayData(exercises: items);
+
+    final items = <ExerciseData>[];
+    return DayData(exercises: items, caloriesBurned: 40);
   }
 }

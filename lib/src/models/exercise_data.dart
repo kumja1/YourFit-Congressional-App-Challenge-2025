@@ -5,9 +5,17 @@ part 'exercise_data.mapper.dart';
 @MappableEnum()
 enum ExerciseDifficulty { easy, medium, hard }
 
+@MappableEnum()
+enum ExerciseIntensity { low, medium, high }
+
+@MappableEnum()
+enum ExerciseType { strength, cardio, flexibility, balance }
+
 @MappableClass()
 class ExerciseData with ExerciseDataMappable {
   final ExerciseDifficulty difficulty;
+  final ExerciseIntensity intensity;
+  final ExerciseType type;
   final double caloriesBurned;
   final String instructions;
   final List<String> targetMuscles;
@@ -17,6 +25,8 @@ class ExerciseData with ExerciseDataMappable {
 
   ExerciseData({
     required this.difficulty,
+    required this.intensity,
+    required this.type,
     required this.caloriesBurned,
     required this.name,
     required this.instructions,

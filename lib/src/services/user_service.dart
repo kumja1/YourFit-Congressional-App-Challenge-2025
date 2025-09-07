@@ -12,7 +12,7 @@ class UserService {
     double height,
     DateTime dob,
     UserGender gender,
-    UserPhysicalActivity activityLevel,
+    UserPhysicalFitness activityLevel,
   ) async {
     try {
       UserData user = UserData(
@@ -23,10 +23,7 @@ class UserService {
         age: dob.age,
         weight: weight,
         height: height,
-        physicalActivity: activityLevel,
-        totalCaloriesBurned: 0,
-        exerciseData: {},
-        milesTraveled: 0,
+        physicalFitness: activityLevel,
       );
 
       return await createUserFromData(user);
@@ -44,7 +41,7 @@ class UserService {
     double? height,
     DateTime? dob,
     UserGender? gender,
-    UserPhysicalActivity? physicalActivity,
+    UserPhysicalFitness? physicalFitness,
   }) async {
     user = user.copyWith(
       firstName: firstName,
@@ -54,7 +51,7 @@ class UserService {
       dob: dob,
       age: dob?.age,
       gender: gender,
-      physicalActivity: physicalActivity,
+      physicalFitness: physicalFitness,
     );
 
     await _userTable.insert(user.toMap());

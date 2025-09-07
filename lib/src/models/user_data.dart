@@ -7,13 +7,13 @@ part 'user_data.mapper.dart';
 enum UserGender { male, female }
 
 @MappableEnum()
-enum UserPhysicalActivity {
+enum UserPhysicalFitness {
   minimal("Minimal"),
   light("Light"),
   moderate("Moderate"),
-  intense("Intense");
+  extreme("Extreme");
 
-  const UserPhysicalActivity(this.level);
+  const UserPhysicalFitness(this.level);
   final String level;
 
   @override
@@ -26,27 +26,31 @@ class UserData with UserDataMappable {
 
   late final DateTime createdAt;
 
-  late String firstName;
+  final String firstName;
 
-  late String lastName;
+  final String lastName;
 
-  late UserGender gender;
+  final UserGender gender;
 
-  late int age;
+  final int age;
 
-  late DateTime dob;
+  final DateTime dob;
 
-  late double height;
+  final double height;
 
-  late double weight;
+  final double weight;
 
-  late double totalCaloriesBurned;
+  final double totalCaloriesBurned;
 
-  late double milesTraveled;
+  final double milesTraveled;
 
-  late UserPhysicalActivity physicalActivity;
+  final UserPhysicalFitness physicalFitness;
 
-  late Map<DateTime, MonthData> exerciseData;
+  final Map<DateTime, MonthData> exerciseData;
+
+  final List<String> disabilities;
+
+  final List<String> equipment;
 
   UserData({
     required this.firstName,
@@ -56,10 +60,12 @@ class UserData with UserDataMappable {
     required this.age,
     required this.height,
     required this.weight,
-    required this.totalCaloriesBurned,
-    required this.milesTraveled,
-    required this.physicalActivity,
-    required this.exerciseData,
+    required this.physicalFitness,
+    this.totalCaloriesBurned = 0,
+    this.milesTraveled = 0,
+    this.exerciseData = const {},
+    this.disabilities = const [],
+    this.equipment = const [],
   });
 
   factory UserData.fromJson(String json) => UserDataMapper.fromJson(json);

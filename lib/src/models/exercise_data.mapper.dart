@@ -57,6 +57,110 @@ extension ExerciseDifficultyMapperExtension on ExerciseDifficulty {
   }
 }
 
+class ExerciseIntensityMapper extends EnumMapper<ExerciseIntensity> {
+  ExerciseIntensityMapper._();
+
+  static ExerciseIntensityMapper? _instance;
+  static ExerciseIntensityMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = ExerciseIntensityMapper._());
+    }
+    return _instance!;
+  }
+
+  static ExerciseIntensity fromValue(dynamic value) {
+    ensureInitialized();
+    return MapperContainer.globals.fromValue(value);
+  }
+
+  @override
+  ExerciseIntensity decode(dynamic value) {
+    switch (value) {
+      case r'low':
+        return ExerciseIntensity.low;
+      case r'medium':
+        return ExerciseIntensity.medium;
+      case r'high':
+        return ExerciseIntensity.high;
+      default:
+        throw MapperException.unknownEnumValue(value);
+    }
+  }
+
+  @override
+  dynamic encode(ExerciseIntensity self) {
+    switch (self) {
+      case ExerciseIntensity.low:
+        return r'low';
+      case ExerciseIntensity.medium:
+        return r'medium';
+      case ExerciseIntensity.high:
+        return r'high';
+    }
+  }
+}
+
+extension ExerciseIntensityMapperExtension on ExerciseIntensity {
+  String toValue() {
+    ExerciseIntensityMapper.ensureInitialized();
+    return MapperContainer.globals.toValue<ExerciseIntensity>(this) as String;
+  }
+}
+
+class ExerciseTypeMapper extends EnumMapper<ExerciseType> {
+  ExerciseTypeMapper._();
+
+  static ExerciseTypeMapper? _instance;
+  static ExerciseTypeMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = ExerciseTypeMapper._());
+    }
+    return _instance!;
+  }
+
+  static ExerciseType fromValue(dynamic value) {
+    ensureInitialized();
+    return MapperContainer.globals.fromValue(value);
+  }
+
+  @override
+  ExerciseType decode(dynamic value) {
+    switch (value) {
+      case r'strength':
+        return ExerciseType.strength;
+      case r'cardio':
+        return ExerciseType.cardio;
+      case r'flexibility':
+        return ExerciseType.flexibility;
+      case r'balance':
+        return ExerciseType.balance;
+      default:
+        throw MapperException.unknownEnumValue(value);
+    }
+  }
+
+  @override
+  dynamic encode(ExerciseType self) {
+    switch (self) {
+      case ExerciseType.strength:
+        return r'strength';
+      case ExerciseType.cardio:
+        return r'cardio';
+      case ExerciseType.flexibility:
+        return r'flexibility';
+      case ExerciseType.balance:
+        return r'balance';
+    }
+  }
+}
+
+extension ExerciseTypeMapperExtension on ExerciseType {
+  String toValue() {
+    ExerciseTypeMapper.ensureInitialized();
+    return MapperContainer.globals.toValue<ExerciseType>(this) as String;
+  }
+}
+
 class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
   ExerciseDataMapper._();
 
@@ -65,6 +169,8 @@ class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = ExerciseDataMapper._());
       ExerciseDifficultyMapper.ensureInitialized();
+      ExerciseIntensityMapper.ensureInitialized();
+      ExerciseTypeMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -76,6 +182,16 @@ class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
   static const Field<ExerciseData, ExerciseDifficulty> _f$difficulty = Field(
     'difficulty',
     _$difficulty,
+  );
+  static ExerciseIntensity _$intensity(ExerciseData v) => v.intensity;
+  static const Field<ExerciseData, ExerciseIntensity> _f$intensity = Field(
+    'intensity',
+    _$intensity,
+  );
+  static ExerciseType _$type(ExerciseData v) => v.type;
+  static const Field<ExerciseData, ExerciseType> _f$type = Field(
+    'type',
+    _$type,
   );
   static double _$caloriesBurned(ExerciseData v) => v.caloriesBurned;
   static const Field<ExerciseData, double> _f$caloriesBurned = Field(
@@ -102,6 +218,8 @@ class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
   @override
   final MappableFields<ExerciseData> fields = const {
     #difficulty: _f$difficulty,
+    #intensity: _f$intensity,
+    #type: _f$type,
     #caloriesBurned: _f$caloriesBurned,
     #name: _f$name,
     #instructions: _f$instructions,
@@ -113,6 +231,8 @@ class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
   static ExerciseData _instantiate(DecodingData data) {
     return ExerciseData(
       difficulty: data.dec(_f$difficulty),
+      intensity: data.dec(_f$intensity),
+      type: data.dec(_f$type),
       caloriesBurned: data.dec(_f$caloriesBurned),
       name: data.dec(_f$name),
       instructions: data.dec(_f$instructions),
@@ -188,6 +308,8 @@ abstract class ExerciseDataCopyWith<$R, $In extends ExerciseData, $Out>
   get targetMuscles;
   $R call({
     ExerciseDifficulty? difficulty,
+    ExerciseIntensity? intensity,
+    ExerciseType? type,
     double? caloriesBurned,
     String? name,
     String? instructions,
@@ -216,6 +338,8 @@ class _ExerciseDataCopyWithImpl<$R, $Out>
   @override
   $R call({
     ExerciseDifficulty? difficulty,
+    ExerciseIntensity? intensity,
+    ExerciseType? type,
     double? caloriesBurned,
     String? name,
     String? instructions,
@@ -225,6 +349,8 @@ class _ExerciseDataCopyWithImpl<$R, $Out>
   }) => $apply(
     FieldCopyWithData({
       if (difficulty != null) #difficulty: difficulty,
+      if (intensity != null) #intensity: intensity,
+      if (type != null) #type: type,
       if (caloriesBurned != null) #caloriesBurned: caloriesBurned,
       if (name != null) #name: name,
       if (instructions != null) #instructions: instructions,
@@ -236,6 +362,8 @@ class _ExerciseDataCopyWithImpl<$R, $Out>
   @override
   ExerciseData $make(CopyWithData data) => ExerciseData(
     difficulty: data.get(#difficulty, or: $value.difficulty),
+    intensity: data.get(#intensity, or: $value.intensity),
+    type: data.get(#type, or: $value.type),
     caloriesBurned: data.get(#caloriesBurned, or: $value.caloriesBurned),
     name: data.get(#name, or: $value.name),
     instructions: data.get(#instructions, or: $value.instructions),
