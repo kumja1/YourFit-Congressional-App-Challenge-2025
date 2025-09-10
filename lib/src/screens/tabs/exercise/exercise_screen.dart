@@ -154,14 +154,22 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
                   sliver: SliverList.builder(
                     itemCount: c.dayData?.exercises.length ?? 0,
-                    itemBuilder: (_, i) => ExerciseCard(
-                      exercise: c.dayData!.exercises[i],
-                      progress: c.progressFor(i),
-                      isDone: c.isDone(i),
-                      onStart: () => c.openExec(i),
-                      onYoutube: () =>
-                          _openYoutube(c.dayData!.exercises[i].name),
-                    ),
+                    itemBuilder: (_, i) {
+                      final ex = c.dayData!.exercises[i];
+                      final s = c.summaryFor(ex);
+                      return ExerciseCard(
+                        exercise: ex,
+                        progress: c.progressFor(i),
+                        isDone: c.isDone(i),
+                        onStart: () => c.openExec(i),
+                        onYoutube: () => _openYoutube(ex.name),
+                        summaryText: s.text,
+                        summaryLoading: s.loading,
+                        summaryError: s.error,
+                        onExpandLoad: () => c.loadSummary(ex),
+                        onRegenerate: () => c.loadSummary(ex, force: true),
+                      );
+                    },
                   ),
                 ),
             ],

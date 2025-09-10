@@ -27,6 +27,58 @@ class AiWorkoutResult {
 }
 
 class AiWorkoutService {
+  final _howToCache = <String, String>{};
+
+  Future<String> summarizeExercise({
+    required ExerciseItem exercise,
+    required AiUserContext user,
+    ProfileController? profile,
+  }) async {
+    final key = (exercise.name).trim();
+    if (_howToCache.containsKey(key)) return _howToCache[key]!;
+    final text = await _callGemini(_buildHowToPrompt(exercise, user, profile));
+    _howToCache[key] = text.trim();
+    return _howToCache[key]!;
+  }
+
+  Future<String> regenerateExerciseSummary({
+    required ExerciseItem exercise,
+    required AiUserContext user,
+    ProfileController? profile,
+  }) async {
+    final key = (exercise.name).trim();
+    final text = await _callGemini(_buildHowToPrompt(exercise, user, profile));
+    _howToCache[key] = text.trim();
+    return _howToCache[key]!;
+  }
+
+  String _buildHowToPrompt(
+    ExerciseItem ex,
+    AiUserContext user,
+    ProfileController? profile,
+  ) {
+    final goal = profile?.goal ?? 'general fitness';
+    final exp = profile?.experience ?? 'beginner';
+    final intensity = profile?.intensity ?? 'moderate';
+    final equipment = (profile?.equipment ?? 'bodyweight').toString();
+    final injuries = (profile?.injuries ?? 'none').toString();
+
+    return '''
+You are an in-app coach. Explain **how to perform** the exercise safely and effectively.
+Add no additional text other than the list
+User: age ${user.age}, ${user.heightCm} cm, ${user.weightKg} kg; goal $goal; experience $exp; intensity $intensity; equipment $equipment; injuries $injuries.
+Exercise: "${ex.name}"  Qty: "${ex.qty}"
+
+Constraints:
+- Keep it plain text, no markdown whatsoever (no ** , bold text, etc)
+- Make it a very short step by step list
+- Max ~700 characters.
+- Respect injuries/equipment. If unsafe for likely injuries, suggest a safer swap.
+
+Answer:
+''';
+  }
+
   Future<AiWorkoutResult> generateWorkout({
     required AiUserContext user,
     ProfileController? profile,
@@ -88,7 +140,7 @@ class AiWorkoutService {
     );
   }
 
-  // NEW: concise Q&A endpoint
+  // Concise Q&A
   Future<String> answerQuestion({
     required AiUserContext user,
     required String question,
@@ -115,6 +167,7 @@ A:
     return text;
   }
 
+  // ---------- Prompts / transport / parsing ----------
   String _buildGeneratePrompt(
     AiUserContext user,
     ProfileController? profile,

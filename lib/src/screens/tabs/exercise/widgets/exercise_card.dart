@@ -1,12 +1,21 @@
+// lib/src/screens/tabs/exercise/widgets/exercise_card.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/exercise_models.dart';
 
-class ExerciseCard extends StatelessWidget {
+class ExerciseCard extends StatefulWidget {
   final ExerciseItem exercise;
   final ExecProgress progress;
   final bool isDone;
   final VoidCallback onStart;
   final VoidCallback onYoutube;
+
+  // NEW: summary props/callbacks
+  final String? summaryText;
+  final bool summaryLoading;
+  final String? summaryError;
+  final Future<void> Function()? onExpandLoad;
+  final Future<void> Function()? onRegenerate;
 
   const ExerciseCard({
     super.key,
@@ -15,16 +24,36 @@ class ExerciseCard extends StatelessWidget {
     required this.isDone,
     required this.onStart,
     required this.onYoutube,
+    this.summaryText,
+    this.summaryLoading = false,
+    this.summaryError,
+    this.onExpandLoad,
+    this.onRegenerate,
   });
 
   @override
+  State<ExerciseCard> createState() => _ExerciseCardState();
+}
+
+class _ExerciseCardState extends State<ExerciseCard> {
+  bool _expanded = false;
+
+  @override
   Widget build(BuildContext context) {
+    final ex = widget.exercise;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        title: Text(exercise.name),
+      child: ExpansionTile(
+        onExpansionChanged: (v) async {
+          setState(() => _expanded = v);
+          if (v && widget.onExpandLoad != null) {
+            await widget.onExpandLoad!();
+          }
+        },
+        title: Text(ex.name),
         subtitle: Text(
-          '${exercise.qty}  •  ${progress.done}/${progress.total} sets',
+          '${ex.qty}  •  ${widget.progress.done}/${widget.progress.total} sets',
         ),
         trailing: Wrap(
           spacing: 6,
@@ -32,15 +61,106 @@ class ExerciseCard extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.ondemand_video),
               tooltip: 'YouTube tutorial',
-              onPressed: onYoutube,
+              onPressed: widget.onYoutube,
             ),
             FilledButton(
-              onPressed: onStart,
-              child: Text(isDone ? 'Done' : 'Start'),
+              onPressed: widget.onStart,
+              child: Text(widget.isDone ? 'Done' : 'Start'),
             ),
           ],
         ),
+        children: [
+          if (_expanded)
+            _SummaryArea(
+              loading: widget.summaryLoading,
+              text: widget.summaryText,
+              error: widget.summaryError,
+              onRegenerate: widget.onRegenerate,
+            ),
+        ],
       ),
+    );
+  }
+}
+
+class _SummaryArea extends StatelessWidget {
+  final bool loading;
+  final String? text;
+  final String? error;
+  final Future<void> Function()? onRegenerate;
+
+  const _SummaryArea({
+    required this.loading,
+    required this.text,
+    required this.error,
+    this.onRegenerate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    Widget body;
+    if (loading) {
+      body = const Padding(
+        padding: EdgeInsets.all(16),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 12),
+            Text('Generating how-to…'),
+          ],
+        ),
+      );
+    } else if (error != null && error!.isNotEmpty) {
+      body = Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text('Error: $error'),
+      );
+    } else if (text != null && text!.isNotEmpty) {
+      body = Padding(
+        padding: const EdgeInsets.all(16),
+        child: SelectableText(text!),
+      );
+    } else {
+      body = const Padding(
+        padding: EdgeInsets.all(16),
+        child: Text('Expand to generate a short AI guide for this exercise.'),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        body,
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: Row(
+            children: [
+              OutlinedButton.icon(
+                onPressed: onRegenerate,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Regenerate'),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: (text == null || text!.isEmpty)
+                    ? null
+                    : () async {
+                        await Clipboard.setData(ClipboardData(text: text!));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Summary copied')),
+                        );
+                      },
+                icon: const Icon(Icons.copy),
+                label: const Text('Copy'),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

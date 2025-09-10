@@ -1,4 +1,3 @@
-// TODO Implement this library.
 // lib/src/screens/tabs/exercise/controllers/workouts_controller.dart
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -6,14 +5,27 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Optional: only read from it if registered
 import 'package:yourfit/src/screens/tabs/profile/profile_controller.dart';
 
 import 'exercise_exec_sheet.dart';
-import '../services/ai_service.dart';
 import '../models/exercise_models.dart';
+import '../services/ai_service.dart';
 
 typedef BuildContextGetter = BuildContext Function();
+
+class SummaryState {
+  final bool loading;
+  final String? text;
+  final String? error;
+  const SummaryState({this.loading = false, this.text, this.error});
+
+  SummaryState copyWith({bool? loading, String? text, String? error}) =>
+      SummaryState(
+        loading: loading ?? this.loading,
+        text: text ?? this.text,
+        error: error,
+      );
+}
 
 class WorkoutsCtrl extends GetxController {
   WorkoutsCtrl({required this.getContext});
@@ -37,6 +49,12 @@ class WorkoutsCtrl extends GetxController {
   final Map<int, int> _completedSets = {};
   final Set<int> _doneExercises = {};
   final List<String> _history = [];
+
+  // ---- NEW: per-exercise summary state ----
+  final Map<String, SummaryState> _summaries = {};
+
+  AiWorkoutService get _ai => _aiSvc ??= AiWorkoutService();
+  AiWorkoutService? _aiSvc;
 
   @override
   void onInit() {
@@ -84,25 +102,20 @@ class WorkoutsCtrl extends GetxController {
     double height = 170;
     double weight = 70;
 
-    // From ProfileController if available
     try {
       if (Get.isRegistered<ProfileController>()) {
         final p = Get.find<ProfileController>();
-        // If load() exists it’s safe to call; swallow errors
         try {
           await p.load();
         } catch (_) {}
         if (p.age != null && p.age! > 0) age = p.age!;
-        if (p.heightCm != null && p.heightCm! > 0) {
+        if (p.heightCm != null && p.heightCm! > 0)
           height = p.heightCm!.toDouble();
-        }
-        if (p.weightKg != null && p.weightKg! > 0) {
+        if (p.weightKg != null && p.weightKg! > 0)
           weight = p.weightKg!.toDouble();
-        }
       }
     } catch (_) {}
 
-    // Fallback: SharedPreferences (optional keys)
     try {
       final prefs = await SharedPreferences.getInstance();
       final a = prefs.getInt('user_age');
@@ -136,6 +149,43 @@ class WorkoutsCtrl extends GetxController {
     return (_completedSets[i] ?? 0) >= totalSets || _doneExercises.contains(i);
   }
 
+  SummaryState summaryFor(ExerciseItem ex) {
+    final key = (ex.name).trim();
+    return _summaries[key] ?? const SummaryState();
+  }
+
+  Future<void> loadSummary(ExerciseItem ex, {bool force = false}) async {
+    final key = (ex.name).trim();
+    if (!force && (_summaries[key]?.text?.isNotEmpty ?? false)) return;
+
+    _summaries[key] = const SummaryState(loading: true);
+    update();
+
+    try {
+      final userCtx = await _resolveUserContext();
+      final profile = Get.isRegistered<ProfileController>()
+          ? Get.find<ProfileController>()
+          : null;
+
+      final text = force
+          ? await _ai.regenerateExerciseSummary(
+              exercise: ex,
+              user: userCtx,
+              profile: profile,
+            )
+          : await _ai.summarizeExercise(
+              exercise: ex,
+              user: userCtx,
+              profile: profile,
+            );
+
+      _summaries[key] = SummaryState(loading: false, text: text);
+    } catch (e) {
+      _summaries[key] = SummaryState(loading: false, error: '$e');
+    }
+    update();
+  }
+
   // ----------------- Actions -----------------
   Future<void> generate() async {
     if (loading) return;
@@ -152,7 +202,7 @@ class WorkoutsCtrl extends GetxController {
           ? Get.find<ProfileController>()
           : null;
 
-      final result = await AiWorkoutService().generateWorkout(
+      final result = await _ai.generateWorkout(
         user: userCtx,
         profile: profile,
         history: _history,
@@ -168,6 +218,9 @@ class WorkoutsCtrl extends GetxController {
           List.generate(dayData!.exercises.length, (i) => MapEntry(i, 0)),
         );
       _doneExercises.clear();
+
+      // Clear summaries for previous plan
+      _summaries.clear();
     } catch (e, st) {
       lastError = 'Failed to generate workout: $e';
       if (kDebugMode) {
@@ -194,7 +247,7 @@ class WorkoutsCtrl extends GetxController {
           ? Get.find<ProfileController>()
           : null;
 
-      final res = await AiWorkoutService().tweakWorkout(
+      final res = await _ai.tweakWorkout(
         current: dayData!,
         instruction: instruction,
         user: userCtx,
@@ -210,6 +263,9 @@ class WorkoutsCtrl extends GetxController {
           List.generate(dayData!.exercises.length, (i) => MapEntry(i, 0)),
         );
       _doneExercises.clear();
+
+      // Reset summaries since exercises changed
+      _summaries.clear();
     } catch (e) {
       lastError = 'Failed to tweak workout: $e';
     } finally {
