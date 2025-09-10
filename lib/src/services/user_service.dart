@@ -46,16 +46,22 @@ class UserService {
     UserGender? gender,
     UserPhysicalActivity? physicalActivity,
   }) async {
-    user = user.copyWith(
-      firstName: firstName,
-      lastName: lastName,
-      weight: weight,
-      height: height,
-      dob: dob,
-      age: dob?.age,
-      gender: gender,
-      physicalActivity: physicalActivity,
-    );
+    final id = user.id;
+    final createdAt = user.createdAt;
+
+    user =
+        user.copyWith(
+            firstName: firstName,
+            lastName: lastName,
+            weight: weight,
+            height: height,
+            dob: dob,
+            age: dob?.age,
+            gender: gender,
+            physicalActivity: physicalActivity,
+          )
+          ..id = id
+          ..createdAt = createdAt;
 
     await _userTable.insert(user.toMap());
     return user;

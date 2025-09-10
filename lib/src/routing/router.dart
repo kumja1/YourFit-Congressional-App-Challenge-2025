@@ -4,7 +4,8 @@ import 'package:yourfit/src/routing/routes.dart';
 
 @AutoRouterConfig()
 class AppRouter extends RootStackRouter {
-  
+  AppRouter({super.navigatorKey});
+
   @override
   List<AutoRoute> get routes => [
     AutoRoute(page: SplashRoute.page, path: Routes.splash),
@@ -19,7 +20,7 @@ class AppRouter extends RootStackRouter {
       children: [
         AutoRoute(page: RoadmapRoute.page, path: "roadmap"),
         AutoRoute(page: WorkoutsRoute.page, path: "workouts"),
-        AutoRoute(page: ProfileRoute.page, path:"profile")
+        AutoRoute(page: ProfileRoute.page, path: "profile"),
       ],
     ),
   ];

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' hide Router;
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:yourfit/src/routing/router.dart';
 import 'package:yourfit/src/utils/functions/init_services.dart';
@@ -12,11 +12,13 @@ void main() async {
 class YourFitApp extends StatelessWidget {
   const YourFitApp({super.key});
 
-  AppRouter get router => Get.put(AppRouter());
+  AppRouter get _router => Get.put(AppRouter(navigatorKey: Get.key));
 
   @override
-  Widget build(BuildContext context) => MaterialApp.router(
-    routerConfig: router.config(),
+  Widget build(BuildContext context) => GetMaterialApp.router(
+    routerDelegate: _router.delegate(),
+    routeInformationParser: _router.defaultRouteParser(),
+    routeInformationProvider: _router.routeInfoProvider(),
     title: 'YourFit',
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
