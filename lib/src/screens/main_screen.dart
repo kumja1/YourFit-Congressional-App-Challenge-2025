@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:yourfit/src/routing/router.gr.dart';
+import 'package:yourfit/lib/src/screens/index.dart';
 
 @RoutePage()
 class MainScreen extends StatelessWidget {
@@ -9,11 +10,7 @@ class MainScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AutoTabsScaffold(
-      routes: const [
-        RoadmapRoute(),
-        WorkoutsRoute(),
-        ProfileRoute(),
-      ],
+      routes: const [RoadmapRoute(), WorkoutsRoute(), ProfileRoute()],
       bottomNavigationBuilder: (_, tabsRouter) {
         return BottomNavigationBar(
           currentIndex: tabsRouter.activeIndex,
@@ -21,9 +18,10 @@ class MainScreen extends StatelessWidget {
           items: const [
             BottomNavigationBarItem(label: 'Roadmap', icon: Icon(Icons.map)),
             BottomNavigationBarItem(
-                label: 'Workouts', icon: Icon(Icons.fitness_center)),
-            BottomNavigationBarItem(
-                label: 'Profile', icon: Icon(Icons.person)),
+              label: 'Workouts',
+              icon: Icon(Icons.fitness_center),
+            ),
+            BottomNavigationBarItem(label: 'Profile', icon: Icon(Icons.person)),
           ],
         );
       },
