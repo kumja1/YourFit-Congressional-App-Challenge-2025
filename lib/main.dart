@@ -15,8 +15,10 @@ class YourFitApp extends StatelessWidget {
   AppRouter get router => Get.put(AppRouter());
 
   @override
-  Widget build(BuildContext context) => MaterialApp.router(
-    routerConfig: router.config(),
+  Widget build(BuildContext context) => GetMaterialApp.router(
+    routeInformationProvider: router.routeInfoProvider(),
+    routerDelegate: router.delegate(),
+    routeInformationParser: router.defaultRouteParser(),
     title: 'YourFit',
     debugShowCheckedModeBanner: false,
     theme: ThemeData(

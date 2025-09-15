@@ -11,8 +11,7 @@ class MainScreen extends StatelessWidget {
     return AutoTabsScaffold(
       routes: const [
         RoadmapRoute(),
-        WorkoutsRoute(),
-        ProfileRoute(),
+        ExerciseRoute(),
       ],
       bottomNavigationBuilder: (_, tabsRouter) {
         return BottomNavigationBar(
@@ -21,7 +20,7 @@ class MainScreen extends StatelessWidget {
           items: const [
             BottomNavigationBarItem(label: 'Roadmap', icon: Icon(Icons.map)),
             BottomNavigationBarItem(
-                label: 'Workouts', icon: Icon(Icons.fitness_center)),
+                label: 'Exercises', icon: Icon(Icons.fitness_center)),
             BottomNavigationBarItem(
                 label: 'Profile', icon: Icon(Icons.person)),
           ],

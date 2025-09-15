@@ -5,29 +5,30 @@ import 'package:yourfit/src/models/user_data.dart';
 import 'package:yourfit/src/widgets/animated_choice_chip.dart';
 import 'package:yourfit/src/widgets/onboarding_screen.dart';
 
-class ActivityLevelOnboardingScreen extends OnboardingScreen {
-  const ActivityLevelOnboardingScreen({super.key});
+class PhysicalFitnessOnboardingScreen extends OnboardingScreen {
+  const PhysicalFitnessOnboardingScreen({super.key});
 
-  _ActivityLevelOnboardingScreenController get _controller =>
-      Get.put(_ActivityLevelOnboardingScreenController());
+  // ignore: library_private_types_in_public_api
+  _PhysicalFitnessOnboardingScreenController get controller =>
+      Get.put(_PhysicalFitnessOnboardingScreenController());
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<_ActivityLevelOnboardingScreenController>(
-      init: _ActivityLevelOnboardingScreenController(),
-      builder: (_) => InlineChoice<UserPhysicalFitness>.single(
-        value: _controller.selectedChoice,
-        onChanged: _controller.setChoice,
-        itemCount: _controller.choices.length,
-        itemBuilder: (controller, i) => AnimatedChoiceChip(
-          selected: controller.selected(_controller.choices[i]),
-          onSelected: controller.onSelected(_controller.choices[i]),
+    return GetBuilder<_PhysicalFitnessOnboardingScreenController>(
+      init: _PhysicalFitnessOnboardingScreenController(),
+      builder: (controller) => InlineChoice<UserPhysicalFitness>.single(
+        value: controller.selectedChoice,
+        onChanged: controller.setChoice,
+        itemCount: controller.choices.length,
+        itemBuilder: (choiceController, i) => AnimatedChoiceChip(
+          selected: choiceController.selected(controller.choices[i]),
+          onSelected: choiceController.onSelected(controller.choices[i]),
           selectedShadowColor: Colors.blue.shade300,
           selectedColor: Colors.blue.shade50,
           selectedLabelColor: Colors.blue,
           shadowColor: Colors.black12,
           backgroundColor: Colors.white,
-          labelText: _controller.choices[i].toString(),
+          labelText: controller.choices[i].toString(),
         ),
         listBuilder: (itemBuilder, count) => Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -40,15 +41,14 @@ class ActivityLevelOnboardingScreen extends OnboardingScreen {
   }
 
   @override
-  Map<String, dynamic> getData() {
-    return {"activityLevel": _controller.selectedChoice};
-  }
+  Map<String, dynamic> getData() => {"physicalFitness": controller.selectedChoice};
+  
 
   @override
-  bool canProgress() => _controller.selectedChoice != null;
+  bool canProgress() => controller.selectedChoice != null;
 }
 
-class _ActivityLevelOnboardingScreenController extends GetxController {
+class _PhysicalFitnessOnboardingScreenController extends GetxController {
   final choices = [
     UserPhysicalFitness.minimal,
     UserPhysicalFitness.light,

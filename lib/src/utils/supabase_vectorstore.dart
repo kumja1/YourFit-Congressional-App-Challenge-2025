@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:math' as Math;
 
 import 'package:extensions_plus/extensions_plus.dart';
@@ -277,7 +276,7 @@ Future<List<Document>> maxMarginalRelevanceSearchByVectorAsync({
       print("\n--- MMR Iteration $iteration ---");
       print("Current selection: ${selectedEmbeddingsIndexes.join(', ')}");
       
-      double bestScore = -1;
+      double bestScore = double.negativeInfinity;
       int bestIndex = -1;
 
       try {

@@ -18,8 +18,8 @@ class AppRouter extends RootStackRouter {
       path: Routes.main,
       children: [
         AutoRoute(page: RoadmapRoute.page, path: "roadmap"),
-        AutoRoute(page: WorkoutsRoute.page, path: "workouts"),
-        AutoRoute(page: ProfileRoute.page, path:"profile")
+        AutoRoute(page: ExerciseRoute.page, path: "workouts"),
+        // AutoRoute(page: ProfileRoute.page, path:"profile")
       ],
     ),
   ];

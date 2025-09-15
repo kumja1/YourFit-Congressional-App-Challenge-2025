@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:yourfit/src/routing/routes.dart';
-import 'package:yourfit/src/utils/constants/icons.dart';
+import 'package:yourfit/src/utils/objects/icons.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form_text_field.dart';
 import 'package:yourfit/src/widgets/buttons/oauth_button.dart';

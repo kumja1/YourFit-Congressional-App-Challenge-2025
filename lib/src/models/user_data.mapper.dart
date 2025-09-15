@@ -143,8 +143,6 @@ class UserDataMapper extends ClassMapperBase<UserData> {
   );
   static DateTime _$dob(UserData v) => v.dob;
   static const Field<UserData, DateTime> _f$dob = Field('dob', _$dob);
-  static int _$age(UserData v) => v.age;
-  static const Field<UserData, int> _f$age = Field('age', _$age);
   static double _$height(UserData v) => v.height;
   static const Field<UserData, double> _f$height = Field('height', _$height);
   static double _$weight(UserData v) => v.weight;
@@ -171,19 +169,18 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     opt: true,
     def: 0,
   );
-  static Map<DateTime, MonthData> _$exerciseData(UserData v) => v.exerciseData;
-  static const Field<UserData, Map<DateTime, MonthData>> _f$exerciseData =
-      Field(
-        'exerciseData',
-        _$exerciseData,
-        key: r'exercise_data',
-        opt: true,
-        def: const {},
-      );
-  static List<String> _$disablities(UserData v) => v.disabilities;
-  static const Field<UserData, List<String>> _f$disablities = Field(
-    'disablities',
-    _$disablities,
+  static Map<String, MonthData> _$exerciseData(UserData v) => v.exerciseData;
+  static const Field<UserData, Map<String, MonthData>> _f$exerciseData = Field(
+    'exerciseData',
+    _$exerciseData,
+    key: r'exercise_data',
+    opt: true,
+    def: const {},
+  );
+  static List<String> _$disabilities(UserData v) => v.disabilities;
+  static const Field<UserData, List<String>> _f$disabilities = Field(
+    'disabilities',
+    _$disabilities,
     opt: true,
     def: const [],
   );
@@ -207,6 +204,19 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     key: r'created_at',
     mode: FieldMode.member,
   );
+  static String _$fullName(UserData v) => v.fullName;
+  static const Field<UserData, String> _f$fullName = Field(
+    'fullName',
+    _$fullName,
+    key: r'full_name',
+    mode: FieldMode.member,
+  );
+  static int _$age(UserData v) => v.age;
+  static const Field<UserData, int> _f$age = Field(
+    'age',
+    _$age,
+    mode: FieldMode.member,
+  );
 
   @override
   final MappableFields<UserData> fields = const {
@@ -214,17 +224,18 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     #lastName: _f$lastName,
     #gender: _f$gender,
     #dob: _f$dob,
-    #age: _f$age,
     #height: _f$height,
     #weight: _f$weight,
     #physicalFitness: _f$physicalFitness,
     #totalCaloriesBurned: _f$totalCaloriesBurned,
     #milesTraveled: _f$milesTraveled,
     #exerciseData: _f$exerciseData,
-    #disablities: _f$disablities,
+    #disabilities: _f$disabilities,
     #equipment: _f$equipment,
     #id: _f$id,
     #createdAt: _f$createdAt,
+    #fullName: _f$fullName,
+    #age: _f$age,
   };
 
   static UserData _instantiate(DecodingData data) {
@@ -233,14 +244,13 @@ class UserDataMapper extends ClassMapperBase<UserData> {
       lastName: data.dec(_f$lastName),
       gender: data.dec(_f$gender),
       dob: data.dec(_f$dob),
-      age: data.dec(_f$age),
       height: data.dec(_f$height),
       weight: data.dec(_f$weight),
       physicalFitness: data.dec(_f$physicalFitness),
       totalCaloriesBurned: data.dec(_f$totalCaloriesBurned),
       milesTraveled: data.dec(_f$milesTraveled),
       exerciseData: data.dec(_f$exerciseData),
-      disabilities: data.dec(_f$disablities),
+      disabilities: data.dec(_f$disabilities),
       equipment: data.dec(_f$equipment),
     );
   }
@@ -304,26 +314,25 @@ abstract class UserDataCopyWith<$R, $In extends UserData, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   MapCopyWith<
     $R,
-    DateTime,
+    String,
     MonthData,
     MonthDataCopyWith<$R, MonthData, MonthData>
   >
   get exerciseData;
-  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get disablities;
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get disabilities;
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get equipment;
   $R call({
     String? firstName,
     String? lastName,
     UserGender? gender,
     DateTime? dob,
-    int? age,
     double? height,
     double? weight,
     UserPhysicalFitness? physicalFitness,
     double? totalCaloriesBurned,
     double? milesTraveled,
-    Map<DateTime, MonthData>? exerciseData,
-    List<String>? disablities,
+    Map<String, MonthData>? exerciseData,
+    List<String>? disabilities,
     List<String>? equipment,
   });
   UserDataCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
@@ -340,7 +349,7 @@ class _UserDataCopyWithImpl<$R, $Out>
   @override
   MapCopyWith<
     $R,
-    DateTime,
+    String,
     MonthData,
     MonthDataCopyWith<$R, MonthData, MonthData>
   >
@@ -351,10 +360,10 @@ class _UserDataCopyWithImpl<$R, $Out>
   );
   @override
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
-  get disablities => ListCopyWith(
+  get disabilities => ListCopyWith(
     $value.disabilities,
     (v, t) => ObjectCopyWith(v, $identity, t),
-    (v) => call(disablities: v),
+    (v) => call(disabilities: v),
   );
   @override
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get equipment =>
@@ -369,14 +378,13 @@ class _UserDataCopyWithImpl<$R, $Out>
     String? lastName,
     UserGender? gender,
     DateTime? dob,
-    int? age,
     double? height,
     double? weight,
     UserPhysicalFitness? physicalFitness,
     double? totalCaloriesBurned,
     double? milesTraveled,
-    Map<DateTime, MonthData>? exerciseData,
-    List<String>? disablities,
+    Map<String, MonthData>? exerciseData,
+    List<String>? disabilities,
     List<String>? equipment,
   }) => $apply(
     FieldCopyWithData({
@@ -384,7 +392,6 @@ class _UserDataCopyWithImpl<$R, $Out>
       if (lastName != null) #lastName: lastName,
       if (gender != null) #gender: gender,
       if (dob != null) #dob: dob,
-      if (age != null) #age: age,
       if (height != null) #height: height,
       if (weight != null) #weight: weight,
       if (physicalFitness != null) #physicalFitness: physicalFitness,
@@ -392,7 +399,7 @@ class _UserDataCopyWithImpl<$R, $Out>
         #totalCaloriesBurned: totalCaloriesBurned,
       if (milesTraveled != null) #milesTraveled: milesTraveled,
       if (exerciseData != null) #exerciseData: exerciseData,
-      if (disablities != null) #disablities: disablities,
+      if (disabilities != null) #disabilities: disabilities,
       if (equipment != null) #equipment: equipment,
     }),
   );
@@ -402,7 +409,6 @@ class _UserDataCopyWithImpl<$R, $Out>
     lastName: data.get(#lastName, or: $value.lastName),
     gender: data.get(#gender, or: $value.gender),
     dob: data.get(#dob, or: $value.dob),
-    age: data.get(#age, or: $value.age),
     height: data.get(#height, or: $value.height),
     weight: data.get(#weight, or: $value.weight),
     physicalFitness: data.get(#physicalFitness, or: $value.physicalFitness),
@@ -412,7 +418,7 @@ class _UserDataCopyWithImpl<$R, $Out>
     ),
     milesTraveled: data.get(#milesTraveled, or: $value.milesTraveled),
     exerciseData: data.get(#exerciseData, or: $value.exerciseData),
-    disabilities: data.get(#disablities, or: $value.disabilities),
+    disabilities: data.get(#disabilities, or: $value.disabilities),
     equipment: data.get(#equipment, or: $value.equipment),
   );
 

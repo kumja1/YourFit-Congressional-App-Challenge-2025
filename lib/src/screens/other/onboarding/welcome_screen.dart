@@ -6,7 +6,7 @@ import 'package:introduction_screen/introduction_screen.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 import 'package:yourfit/src/routing/router.dart';
 import 'package:yourfit/src/routing/router.gr.dart';
-import 'package:yourfit/src/screens/other/onboarding/screens/activity_level_onboarding_screen.dart';
+import 'package:yourfit/src/screens/other/onboarding/screens/physical_fitness_onboarding_screen.dart';
 import 'package:yourfit/src/screens/other/onboarding/screens/user_info_onboarding_screen.dart';
 import 'package:yourfit/src/widgets/buttons/animated_button.dart';
 import 'package:yourfit/src/widgets/onboarding_screen.dart';
@@ -72,7 +72,7 @@ class _WelcomeScreenController extends GetxController {
 
   final List<OnboardingScreen> pages = const [
     UserInfoOnboardingScreen(),
-    ActivityLevelOnboardingScreen(),
+    PhysicalFitnessOnboardingScreen(),
   ];
 
   int currentIndex = 0;

@@ -12,8 +12,8 @@ import 'package:yourfit/src/widgets/onboarding_screen.dart';
 class UserInfoOnboardingScreen extends OnboardingScreen {
   const UserInfoOnboardingScreen({super.key});
 
-  _InformationOnboardingScreenController get _controller =>
-      Get.put(_InformationOnboardingScreenController());
+  _UserInfoOnboardingScreenController get _controller =>
+      Get.put(_UserInfoOnboardingScreenController());
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +45,7 @@ class UserInfoOnboardingScreen extends OnboardingScreen {
           ),
         ),
         AuthFormTextField(
-          labelText: "Height (inches)",
+          labelText: "Height (cm)",
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           onChanged: (value) => _controller.height = int.tryParse(value) ?? 0,
           validator: (value) => _controller.validateString(
@@ -69,7 +69,7 @@ class UserInfoOnboardingScreen extends OnboardingScreen {
   bool canProgress() => _controller.validateForm();
 }
 
-class _InformationOnboardingScreenController extends AuthFormController {
+class _UserInfoOnboardingScreenController extends AuthFormController {
   UserGender? gender;
   double weight = 0;
   int height = 0;

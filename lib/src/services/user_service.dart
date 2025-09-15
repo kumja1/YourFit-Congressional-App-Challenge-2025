@@ -1,4 +1,3 @@
-import 'package:extensions_plus/extensions_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 import 'package:yourfit/src/models/user_data.dart';
 
@@ -20,7 +19,6 @@ class UserService {
         lastName: lastName,
         gender: gender,
         dob: dob,
-        age: dob.age,
         weight: weight,
         height: height,
         physicalFitness: activityLevel,
@@ -49,7 +47,6 @@ class UserService {
       weight: weight,
       height: height,
       dob: dob,
-      age: dob?.age,
       gender: gender,
       physicalFitness: physicalFitness,
     );

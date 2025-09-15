@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:yourfit/src/models/auth/auth_response.dart';
 import 'package:yourfit/src/routing/routes.dart';
-import 'package:yourfit/src/utils/constants/auth/auth_code.dart';
+import 'package:yourfit/src/utils/objects/auth/auth_code.dart';
 import 'package:yourfit/src/utils/functions/show_snackbar.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form_text_field.dart';

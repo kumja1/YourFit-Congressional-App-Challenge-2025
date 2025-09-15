@@ -3,7 +3,7 @@ import 'package:get/instance_manager.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:yourfit/src/services/index.dart';
-import 'package:yourfit/src/utils/constants/env/env.dart';
+import 'package:yourfit/src/utils/objects/env/env.dart';
 
 Future<void> initServices() async {
   await Supabase.initialize(url: Env.supabaseUrl, anonKey: Env.supabaseKey);
@@ -14,6 +14,7 @@ Future<void> initServices() async {
     clientId:
         "49363448521-ka0refci22k8s3mvvkq1uisdbn06g6vh.apps.googleusercontent.com",
   );
+  
   Get.lazyPut(() => AuthService());
   Get.lazyPut(() => UserService());
   Get.lazyPut(() => ExerciseService());
