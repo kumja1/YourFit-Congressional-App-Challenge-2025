@@ -5,13 +5,39 @@ workflows:
       flutter: stable
       xcode: latest
     scripts:
-      - flutter pub get
-      - keychain initialize
-      - app-store-connect fetch-signing-files "com.coltnovak.urfit" --type IOS_APP_STORE --create
-      - keychain add-certificates
-      - flutter build ipa --release
+      - name: Set bundle IDs
+        script: |
+          APP_ID="com.coltnovak.urfit"
+          TESTS_ID="${APP_ID}.RunnerTests"
+
+          # Update all PRODUCT_BUNDLE_IDENTIFIER entries in pbxproj
+          sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = com\.example\.yourfit;/PRODUCT_BUNDLE_IDENTIFIER = ${APP_ID};/g" ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' "s/PRODUCT_BUNDLE_IDENTIFIER = com\.example\.yourfit\.RunnerTests;/PRODUCT_BUNDLE_IDENTIFIER = ${TESTS_ID};/g" ios/Runner.xcodeproj/project.pbxproj
+
+          # Ensure Info.plist uses the right ID (ok if this key is $(PRODUCT_BUNDLE_IDENTIFIER))
+          /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier ${APP_ID}" ios/Runner/Info.plist || true
+
+          echo "Bundle IDs set to:"
+          grep -n "PRODUCT_BUNDLE_IDENTIFIER" ios/Runner.xcodeproj/project.pbxproj
+
+      - name: Deps
+        script: |
+          flutter clean
+          flutter pub get
+          cd ios && pod repo update && pod install && cd ..
+
+      - name: Fetch signing (App Store)
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "com.coltnovak.urfit" --type IOS_APP_STORE --create
+          keychain add-certificates
+
+      - name: Build IPA
+        script: flutter build ipa --release
+
     artifacts:
       - build/ios/ipa/*.ipa
+
     publishing:
       app_store_connect:
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
