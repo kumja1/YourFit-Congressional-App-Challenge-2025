@@ -1,0 +1,20 @@
+workflows:
+  ios_testflight:
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: latest
+    scripts:
+      - flutter pub get
+      - keychain initialize
+      - app-store-connect fetch-signing-files "com.coltnovak.urfit" --type IOS_APP_STORE --create
+      - keychain add-certificates
+      - flutter build ipa --release
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        submit_to_testflight: true
