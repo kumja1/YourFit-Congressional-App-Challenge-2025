@@ -11,6 +11,7 @@ import 'package:yourfit/src/routing/routes.dart';
 import 'package:yourfit/src/utils/constants/auth/auth_code.dart';
 import 'package:yourfit/src/utils/constants/icons.dart';
 import 'package:yourfit/src/utils/functions/show_snackbar.dart';
+import 'package:yourfit/src/utils/objects/icons.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form_text_field.dart';
 import 'package:yourfit/src/widgets/buttons/oauth_button.dart';

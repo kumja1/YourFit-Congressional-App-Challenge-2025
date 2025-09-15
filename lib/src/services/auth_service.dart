@@ -1,5 +1,4 @@
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
-import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -9,9 +8,9 @@ import 'package:yourfit/src/models/auth/auth_response.dart';
 import 'package:yourfit/src/models/auth/new_user_auth_response.dart';
 import 'package:yourfit/src/models/user_data.dart';
 import 'package:yourfit/src/services/user_service.dart';
-import 'package:yourfit/src/utils/constants/auth/auth_code.dart';
-import 'package:yourfit/src/utils/constants/auth/auth_error.dart';
-import 'package:yourfit/src/utils/constants/variables.dart';
+import 'package:yourfit/src/utils/objects/auth/auth_code.dart';
+import 'package:yourfit/src/utils/objects/auth/auth_error.dart';
+import 'package:yourfit/src/utils/objects/variables.dart';
 
 class AuthService extends GetxService {
   final GoTrueClient _auth = supabaseClient.auth;
@@ -59,23 +58,11 @@ class AuthService extends GetxService {
     String email,
     String password,
   ) async => await _tryCatch(() async {
-    final adminResponse = await supabaseClient.auth.admin.createUser(
-      AdminUserAttributes(
-        email: email,
-        password: password,
-        emailConfirm: false,
-      ),
-    );
-    if (adminResponse.user == null) {
+    final response = await _auth.signUp(email: email, password: password);
+    if (response.user == null) {
       return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
     }
-    final loginResponse = await _auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
-    if (loginResponse.user == null) {
-      return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
-    }
+
     return AuthResponse(code: AuthCode.success, error: null);
   });
 
@@ -106,50 +93,44 @@ class AuthService extends GetxService {
     return AuthResponse(code: AuthCode.success, error: null);
   });
 
-  Future<AuthResponse> signInWithOAuth(OAuthProvider provider) async =>
-      kIsWeb ? _signInWithWebOAuth(provider) : _signInWithMobileOAuth(provider);
 
-  Future<AuthResponse> _signInWithWebOAuth(
-    OAuthProvider provider,
-  ) async => await _tryCatch(() async {
-    final origin = Uri.base; 
-    final redirect = Uri(
-      scheme: origin.scheme,
-      host: origin.host,
-      port: (origin.hasPort && origin.port != 80 && origin.port != 443)
-          ? origin.port
-          : null,
-      path: '/',
-      fragment: 'main', // -> /#/main
-    ).toString();
-
-    final ok = await _auth.signInWithOAuth(
-      provider,
-      redirectTo: redirect,
-      queryParams: const {'prompt': 'consent'},
-    );
-    if (!ok) {
-      return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
-    }
-    return AuthResponse(code: AuthCode.success, error: null);
-  });
-
-  Future<AuthResponse> _signInWithMobileOAuth(OAuthProvider provider) async =>
+  Future<AuthResponse> _signInWithWebOAuth(OAuthProvider provider) async =>
       await _tryCatch(() async {
-        // Must match your Android/iOS deep link (Manifest/Info.plist)
-        const mobileRedirect = 'com.app.yourfit://app/auth#/main';
-        final ok = await _auth.signInWithOAuth(
+        final origin = Uri.base;
+        final redirect = Uri(
+          scheme: origin.scheme,
+          host: origin.host,
+          port: (origin.hasPort && origin.port != 80 && origin.port != 443)
+              ? origin.port
+              : null,
+          path: '/',
+          fragment: 'main', // -> /#/main
+        ).toString();
+
+        final success = await _auth.signInWithOAuth(
           provider,
-          redirectTo: mobileRedirect,
+          redirectTo: redirect,
+          queryParams: const {'prompt': 'consent'},
         );
-        if (!ok) {
+
+        if (!success) {
           return AuthResponse(
             code: AuthCode.error,
             error: AuthError.userNotFound,
           );
         }
+
         return AuthResponse(code: AuthCode.success, error: null);
       });
+  Future<AuthResponse> signInWithOAuth(OAuthProvider provider) async => kIsWeb
+      ? _signInWithWebOAuth(provider)
+      : switch (provider) {
+          (OAuthProvider.google) => await _signInWithGoogleOAuth(),
+          _ => AuthResponse(
+            code: AuthCode.error,
+            error: AuthError.invalidOAuthProvider,
+          ),
+        };
 
   Future<AuthResponse> _signInWithGoogleOAuth() async =>
       await _tryCatch(() async {
@@ -217,13 +198,9 @@ class AuthService extends GetxService {
               lastName: name.familyName ?? '',
               gender: UserGender.fromValue(gender.value ?? 'male'),
               dob: dobDateTime,
-              age: dobDateTime.age,
               height: 0,
               weight: 0,
-              totalCaloriesBurned: 0,
-              milesTraveled: 0,
-              physicalActivity: UserPhysicalActivity.minimal,
-              exerciseData: const {},
+              physicalFitness: UserPhysicalFitness.minimal,
             ),
           );
         }

@@ -26,6 +26,7 @@ class MonthDataMapper extends ClassMapperBase<MonthData> {
   static const Field<MonthData, Map<int, DayData>> _f$days = Field(
     'days',
     _$days,
+    hook: MapHook(),
   );
   static double _$caloriesBurned(MonthData v) => v.caloriesBurned;
   static const Field<MonthData, double> _f$caloriesBurned = Field(

@@ -1,5 +1,5 @@
 import 'package:yourfit/src/models/user_data.dart';
-import 'package:yourfit/src/utils/constants/auth/auth_code.dart';
+import 'package:yourfit/src/utils/objects/auth/auth_code.dart';
 
 import 'auth_response.dart';
 

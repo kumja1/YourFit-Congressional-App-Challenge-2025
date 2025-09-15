@@ -1,4 +1,3 @@
-import 'package:extensions_plus/extensions_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 import 'package:yourfit/src/models/user_data.dart';
 
@@ -12,7 +11,7 @@ class UserService {
     double height,
     DateTime dob,
     UserGender gender,
-    UserPhysicalActivity activityLevel,
+    UserPhysicalFitness activityLevel,
   ) async {
     try {
       UserData user = UserData(
@@ -20,13 +19,9 @@ class UserService {
         lastName: lastName,
         gender: gender,
         dob: dob,
-        age: dob.age,
         weight: weight,
         height: height,
-        physicalActivity: activityLevel,
-        totalCaloriesBurned: 0,
-        exerciseData: {},
-        milesTraveled: 0,
+        physicalFitness: activityLevel,
       );
 
       return await createUserFromData(user);
@@ -44,7 +39,7 @@ class UserService {
     double? height,
     DateTime? dob,
     UserGender? gender,
-    UserPhysicalActivity? physicalActivity,
+    UserPhysicalFitness? physicalFitness,
   }) async {
     final id = user.id;
     final createdAt = user.createdAt;

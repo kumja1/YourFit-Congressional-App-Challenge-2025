@@ -13,8 +13,8 @@ import 'package:yourfit/src/models/auth/new_user_auth_response.dart';
 import 'package:yourfit/src/routing/router.dart';
 import 'package:yourfit/src/routing/routes.dart';
 import 'package:yourfit/src/services/index.dart';
-import 'package:yourfit/src/utils/constants/auth/auth_code.dart';
-import 'package:yourfit/src/utils/constants/icons.dart';
+import 'package:yourfit/src/utils/objects/auth/auth_code.dart';
+import 'package:yourfit/src/utils/objects/icons.dart';
 import 'package:yourfit/src/utils/extensions/widget_extension.dart';
 import 'package:yourfit/src/utils/functions/show_snackbar.dart';
 import 'package:yourfit/src/widgets/auth_form/auth_form.dart';
@@ -73,12 +73,14 @@ class SignUpScreen extends StatelessWidget {
           AuthFormTextField(
             labelText: "Password",
             onChanged: (value) => controller.password = value,
-            validator: controller.validatePassword,
-            isPassword: controller.password.isEmpty ? false : true,
+            validator: (value) =>
+                controller.validatePassword(value, minLength: 6),
+            isPassword:  true,
           ),
         ],
-        onSubmitPressed: () async => await controller.createAccount(onboardingData),
-        
+        onSubmitPressed: () async =>
+            await controller.createAccount(onboardingData),
+
         submitButtonChild: const Text(
           "Create Account",
           style: TextStyle(color: Colors.white),
@@ -150,7 +152,7 @@ class _SignUpScreenController extends AuthFormController {
         data["height"],
         dob!,
         data["gender"],
-        data["activityLevel"],
+        data["physicalFitness"],
       );
       router.replacePath(Routes.main);
     } catch (e) {

@@ -31,6 +31,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.put(_ExerciseScreenController());
     return Scaffold(
       appBar: AppBar(title: const Text('Workouts')),
       floatingActionButton: GetBuilder<WorkoutsCtrl>(

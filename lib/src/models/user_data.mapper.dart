@@ -53,58 +53,57 @@ extension UserGenderMapperExtension on UserGender {
   }
 }
 
-class UserPhysicalActivityMapper extends EnumMapper<UserPhysicalActivity> {
-  UserPhysicalActivityMapper._();
+class UserPhysicalFitnessMapper extends EnumMapper<UserPhysicalFitness> {
+  UserPhysicalFitnessMapper._();
 
-  static UserPhysicalActivityMapper? _instance;
-  static UserPhysicalActivityMapper ensureInitialized() {
+  static UserPhysicalFitnessMapper? _instance;
+  static UserPhysicalFitnessMapper ensureInitialized() {
     if (_instance == null) {
-      MapperContainer.globals.use(_instance = UserPhysicalActivityMapper._());
+      MapperContainer.globals.use(_instance = UserPhysicalFitnessMapper._());
     }
     return _instance!;
   }
 
-  static UserPhysicalActivity fromValue(dynamic value) {
+  static UserPhysicalFitness fromValue(dynamic value) {
     ensureInitialized();
     return MapperContainer.globals.fromValue(value);
   }
 
   @override
-  UserPhysicalActivity decode(dynamic value) {
+  UserPhysicalFitness decode(dynamic value) {
     switch (value) {
       case r'minimal':
-        return UserPhysicalActivity.minimal;
+        return UserPhysicalFitness.minimal;
       case r'light':
-        return UserPhysicalActivity.light;
+        return UserPhysicalFitness.light;
       case r'moderate':
-        return UserPhysicalActivity.moderate;
-      case r'intense':
-        return UserPhysicalActivity.intense;
+        return UserPhysicalFitness.moderate;
+      case r'extreme':
+        return UserPhysicalFitness.extreme;
       default:
         throw MapperException.unknownEnumValue(value);
     }
   }
 
   @override
-  dynamic encode(UserPhysicalActivity self) {
+  dynamic encode(UserPhysicalFitness self) {
     switch (self) {
-      case UserPhysicalActivity.minimal:
+      case UserPhysicalFitness.minimal:
         return r'minimal';
-      case UserPhysicalActivity.light:
+      case UserPhysicalFitness.light:
         return r'light';
-      case UserPhysicalActivity.moderate:
+      case UserPhysicalFitness.moderate:
         return r'moderate';
-      case UserPhysicalActivity.intense:
-        return r'intense';
+      case UserPhysicalFitness.extreme:
+        return r'extreme';
     }
   }
 }
 
-extension UserPhysicalActivityMapperExtension on UserPhysicalActivity {
+extension UserPhysicalFitnessMapperExtension on UserPhysicalFitness {
   String toValue() {
-    UserPhysicalActivityMapper.ensureInitialized();
-    return MapperContainer.globals.toValue<UserPhysicalActivity>(this)
-        as String;
+    UserPhysicalFitnessMapper.ensureInitialized();
+    return MapperContainer.globals.toValue<UserPhysicalFitness>(this) as String;
   }
 }
 
@@ -116,7 +115,7 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = UserDataMapper._());
       UserGenderMapper.ensureInitialized();
-      UserPhysicalActivityMapper.ensureInitialized();
+      UserPhysicalFitnessMapper.ensureInitialized();
       MonthDataMapper.ensureInitialized();
     }
     return _instance!;
@@ -144,31 +143,54 @@ class UserDataMapper extends ClassMapperBase<UserData> {
   );
   static DateTime _$dob(UserData v) => v.dob;
   static const Field<UserData, DateTime> _f$dob = Field('dob', _$dob);
-  static int _$age(UserData v) => v.age;
-  static const Field<UserData, int> _f$age = Field('age', _$age);
   static double _$height(UserData v) => v.height;
   static const Field<UserData, double> _f$height = Field('height', _$height);
   static double _$weight(UserData v) => v.weight;
   static const Field<UserData, double> _f$weight = Field('weight', _$weight);
+  static UserPhysicalFitness _$physicalFitness(UserData v) => v.physicalFitness;
+  static const Field<UserData, UserPhysicalFitness> _f$physicalFitness = Field(
+    'physicalFitness',
+    _$physicalFitness,
+    key: r'physical_fitness',
+  );
   static double _$totalCaloriesBurned(UserData v) => v.totalCaloriesBurned;
   static const Field<UserData, double> _f$totalCaloriesBurned = Field(
     'totalCaloriesBurned',
     _$totalCaloriesBurned,
     key: r'total_calories_burned',
+    opt: true,
+    def: 0,
   );
   static double _$milesTraveled(UserData v) => v.milesTraveled;
   static const Field<UserData, double> _f$milesTraveled = Field(
     'milesTraveled',
     _$milesTraveled,
     key: r'miles_traveled',
+    opt: true,
+    def: 0,
   );
-  static UserPhysicalActivity _$physicalActivity(UserData v) =>
-      v.physicalActivity;
-  static const Field<UserData, UserPhysicalActivity> _f$physicalActivity =
-      Field('physicalActivity', _$physicalActivity, key: r'physical_activity');
-  static Map<DateTime, MonthData> _$exerciseData(UserData v) => v.exerciseData;
-  static const Field<UserData, Map<DateTime, MonthData>> _f$exerciseData =
-      Field('exerciseData', _$exerciseData, key: r'exercise_data');
+  static Map<String, MonthData> _$exerciseData(UserData v) => v.exerciseData;
+  static const Field<UserData, Map<String, MonthData>> _f$exerciseData = Field(
+    'exerciseData',
+    _$exerciseData,
+    key: r'exercise_data',
+    opt: true,
+    def: const {},
+  );
+  static List<String> _$disabilities(UserData v) => v.disabilities;
+  static const Field<UserData, List<String>> _f$disabilities = Field(
+    'disabilities',
+    _$disabilities,
+    opt: true,
+    def: const [],
+  );
+  static List<String> _$equipment(UserData v) => v.equipment;
+  static const Field<UserData, List<String>> _f$equipment = Field(
+    'equipment',
+    _$equipment,
+    opt: true,
+    def: const [],
+  );
   static String _$id(UserData v) => v.id;
   static const Field<UserData, String> _f$id = Field(
     'id',
@@ -182,6 +204,19 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     key: r'created_at',
     mode: FieldMode.member,
   );
+  static String _$fullName(UserData v) => v.fullName;
+  static const Field<UserData, String> _f$fullName = Field(
+    'fullName',
+    _$fullName,
+    key: r'full_name',
+    mode: FieldMode.member,
+  );
+  static int _$age(UserData v) => v.age;
+  static const Field<UserData, int> _f$age = Field(
+    'age',
+    _$age,
+    mode: FieldMode.member,
+  );
 
   @override
   final MappableFields<UserData> fields = const {
@@ -189,15 +224,18 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     #lastName: _f$lastName,
     #gender: _f$gender,
     #dob: _f$dob,
-    #age: _f$age,
     #height: _f$height,
     #weight: _f$weight,
+    #physicalFitness: _f$physicalFitness,
     #totalCaloriesBurned: _f$totalCaloriesBurned,
     #milesTraveled: _f$milesTraveled,
-    #physicalActivity: _f$physicalActivity,
     #exerciseData: _f$exerciseData,
+    #disabilities: _f$disabilities,
+    #equipment: _f$equipment,
     #id: _f$id,
     #createdAt: _f$createdAt,
+    #fullName: _f$fullName,
+    #age: _f$age,
   };
 
   static UserData _instantiate(DecodingData data) {
@@ -206,13 +244,14 @@ class UserDataMapper extends ClassMapperBase<UserData> {
       lastName: data.dec(_f$lastName),
       gender: data.dec(_f$gender),
       dob: data.dec(_f$dob),
-      age: data.dec(_f$age),
       height: data.dec(_f$height),
       weight: data.dec(_f$weight),
+      physicalFitness: data.dec(_f$physicalFitness),
       totalCaloriesBurned: data.dec(_f$totalCaloriesBurned),
       milesTraveled: data.dec(_f$milesTraveled),
-      physicalActivity: data.dec(_f$physicalActivity),
       exerciseData: data.dec(_f$exerciseData),
+      disabilities: data.dec(_f$disabilities),
+      equipment: data.dec(_f$equipment),
     );
   }
 
@@ -275,23 +314,26 @@ abstract class UserDataCopyWith<$R, $In extends UserData, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   MapCopyWith<
     $R,
-    DateTime,
+    String,
     MonthData,
     MonthDataCopyWith<$R, MonthData, MonthData>
   >
   get exerciseData;
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get disabilities;
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get equipment;
   $R call({
     String? firstName,
     String? lastName,
     UserGender? gender,
     DateTime? dob,
-    int? age,
     double? height,
     double? weight,
+    UserPhysicalFitness? physicalFitness,
     double? totalCaloriesBurned,
     double? milesTraveled,
-    UserPhysicalActivity? physicalActivity,
-    Map<DateTime, MonthData>? exerciseData,
+    Map<String, MonthData>? exerciseData,
+    List<String>? disabilities,
+    List<String>? equipment,
   });
   UserDataCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
@@ -307,7 +349,7 @@ class _UserDataCopyWithImpl<$R, $Out>
   @override
   MapCopyWith<
     $R,
-    DateTime,
+    String,
     MonthData,
     MonthDataCopyWith<$R, MonthData, MonthData>
   >
@@ -317,32 +359,48 @@ class _UserDataCopyWithImpl<$R, $Out>
     (v) => call(exerciseData: v),
   );
   @override
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
+  get disabilities => ListCopyWith(
+    $value.disabilities,
+    (v, t) => ObjectCopyWith(v, $identity, t),
+    (v) => call(disabilities: v),
+  );
+  @override
+  ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get equipment =>
+      ListCopyWith(
+        $value.equipment,
+        (v, t) => ObjectCopyWith(v, $identity, t),
+        (v) => call(equipment: v),
+      );
+  @override
   $R call({
     String? firstName,
     String? lastName,
     UserGender? gender,
     DateTime? dob,
-    int? age,
     double? height,
     double? weight,
+    UserPhysicalFitness? physicalFitness,
     double? totalCaloriesBurned,
     double? milesTraveled,
-    UserPhysicalActivity? physicalActivity,
-    Map<DateTime, MonthData>? exerciseData,
+    Map<String, MonthData>? exerciseData,
+    List<String>? disabilities,
+    List<String>? equipment,
   }) => $apply(
     FieldCopyWithData({
       if (firstName != null) #firstName: firstName,
       if (lastName != null) #lastName: lastName,
       if (gender != null) #gender: gender,
       if (dob != null) #dob: dob,
-      if (age != null) #age: age,
       if (height != null) #height: height,
       if (weight != null) #weight: weight,
+      if (physicalFitness != null) #physicalFitness: physicalFitness,
       if (totalCaloriesBurned != null)
         #totalCaloriesBurned: totalCaloriesBurned,
       if (milesTraveled != null) #milesTraveled: milesTraveled,
-      if (physicalActivity != null) #physicalActivity: physicalActivity,
       if (exerciseData != null) #exerciseData: exerciseData,
+      if (disabilities != null) #disabilities: disabilities,
+      if (equipment != null) #equipment: equipment,
     }),
   );
   @override
@@ -351,16 +409,17 @@ class _UserDataCopyWithImpl<$R, $Out>
     lastName: data.get(#lastName, or: $value.lastName),
     gender: data.get(#gender, or: $value.gender),
     dob: data.get(#dob, or: $value.dob),
-    age: data.get(#age, or: $value.age),
     height: data.get(#height, or: $value.height),
     weight: data.get(#weight, or: $value.weight),
+    physicalFitness: data.get(#physicalFitness, or: $value.physicalFitness),
     totalCaloriesBurned: data.get(
       #totalCaloriesBurned,
       or: $value.totalCaloriesBurned,
     ),
     milesTraveled: data.get(#milesTraveled, or: $value.milesTraveled),
-    physicalActivity: data.get(#physicalActivity, or: $value.physicalActivity),
     exerciseData: data.get(#exerciseData, or: $value.exerciseData),
+    disabilities: data.get(#disabilities, or: $value.disabilities),
+    equipment: data.get(#equipment, or: $value.equipment),
   );
 
   @override
