@@ -215,7 +215,7 @@ class AuthService extends GetxService {
             newUser: UserData(
               firstName: name.givenName ?? '',
               lastName: name.familyName ?? '',
-              gender: UserGenderMapper.fromValue(gender.value ?? 'male'),
+              gender: UserGender.fromValue(gender.value ?? 'male'),
               dob: dobDateTime,
               age: dobDateTime.age,
               height: 0,
