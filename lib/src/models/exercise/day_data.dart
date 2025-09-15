@@ -9,8 +9,9 @@ part 'day_data.mapper.dart';
 class DayData with DayDataMappable {
   final List<ExerciseData> exercises;
   final double caloriesBurned;
+  final String summary;
 
-  DayData({required this.exercises, required this.caloriesBurned});
+  DayData({required this.exercises, required this.caloriesBurned, required this.summary});
 
   factory DayData.fromJson(String json) => DayDataMapper.fromJson(json);
 

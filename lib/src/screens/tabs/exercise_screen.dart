@@ -11,30 +11,16 @@ import '../../widgets/exercise/ai_insights_panel.dart';
 import '../../widgets/exercise/qa_mini.dart';
 
 @RoutePage()
-class WorkoutsScreen extends StatefulWidget {
+class WorkoutsScreen extends StatelessWidget {
   const WorkoutsScreen({super.key});
-  @override
-  State<WorkoutsScreen> createState() => _WorkoutsScreenState();
-}
-
-class _WorkoutsScreenState extends State<WorkoutsScreen> {
-  late final WorkoutsCtrl ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    ctrl = Get.isRegistered<WorkoutsCtrl>()
-        ? Get.find<WorkoutsCtrl>()
-        : Get.put(WorkoutsCtrl(getContext: () => context));
-    WidgetsBinding.instance.addPostFrameCallback((_) => ctrl.generate());
-  }
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(_ExerciseScreenController());
+    final c = Get.put(WorkoutsScreenController());
     return Scaffold(
       appBar: AppBar(title: const Text('Workouts')),
-      floatingActionButton: GetBuilder<WorkoutsCtrl>(
+      floatingActionButton: GetBuilder<WorkoutsScreenController>(
+        init: WorkoutsScreenController(),
         builder: (c) => FloatingActionButton.extended(
           onPressed: c.loading ? null : c.generate,
           icon: c.loading
@@ -50,7 +36,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           label: const Text('New Plan'),
         ),
       ),
-      body: GetBuilder<WorkoutsCtrl>(
+      body: GetBuilder<WorkoutsScreenController>(
         builder: (c) {
           final scroll = CustomScrollView(
             slivers: [
@@ -154,21 +140,16 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
                   sliver: SliverList.builder(
-                    itemCount: c.dayData?.exercises.length ?? 0,
+                    itemCount: c.exercises.length,
                     itemBuilder: (_, i) {
-                      final ex = c.dayData!.exercises[i];
-                      final s = c.summaryFor(ex);
+                      final ex = c.exercises[i];
                       return ExerciseCard(
                         exercise: ex,
                         progress: c.progressFor(i),
                         isDone: c.isDone(i),
                         onStart: () => c.openExec(i),
                         onYoutube: () => _openYoutube(ex.name),
-                        summaryText: s.text,
-                        summaryLoading: s.loading,
-                        summaryError: s.error,
-                        onExpandLoad: () => c.loadSummary(ex),
-                        onRegenerate: () => c.loadSummary(ex, force: true),
+                        summaryText: ex.summary,
                       );
                     },
                   ),

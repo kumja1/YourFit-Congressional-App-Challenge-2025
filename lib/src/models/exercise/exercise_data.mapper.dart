@@ -207,6 +207,11 @@ class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
     'instructions',
     _$instructions,
   );
+  static String _$summary(ExerciseData v) => v.summary;
+  static const Field<ExerciseData, String> _f$summary = Field(
+    'summary',
+    _$summary,
+  );
   static int _$sets(ExerciseData v) => v.sets;
   static const Field<ExerciseData, int> _f$sets = Field('sets', _$sets);
   static int _$reps(ExerciseData v) => v.reps;
@@ -253,6 +258,7 @@ class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
     #caloriesBurned: _f$caloriesBurned,
     #name: _f$name,
     #instructions: _f$instructions,
+    #summary: _f$summary,
     #sets: _f$sets,
     #reps: _f$reps,
     #durationPerSet: _f$durationPerSet,
@@ -270,6 +276,7 @@ class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
       caloriesBurned: data.dec(_f$caloriesBurned),
       name: data.dec(_f$name),
       instructions: data.dec(_f$instructions),
+      summary: data.dec(_f$summary),
       sets: data.dec(_f$sets),
       reps: data.dec(_f$reps),
       durationPerSet: data.dec(_f$durationPerSet),
@@ -357,6 +364,7 @@ abstract class ExerciseDataCopyWith<$R, $In extends ExerciseData, $Out>
     double? caloriesBurned,
     String? name,
     String? instructions,
+    String? summary,
     int? sets,
     int? reps,
     Duration? durationPerSet,
@@ -408,6 +416,7 @@ class _ExerciseDataCopyWithImpl<$R, $Out>
     double? caloriesBurned,
     String? name,
     String? instructions,
+    String? summary,
     int? sets,
     int? reps,
     Duration? durationPerSet,
@@ -422,6 +431,7 @@ class _ExerciseDataCopyWithImpl<$R, $Out>
       if (caloriesBurned != null) #caloriesBurned: caloriesBurned,
       if (name != null) #name: name,
       if (instructions != null) #instructions: instructions,
+      if (summary != null) #summary: summary,
       if (sets != null) #sets: sets,
       if (reps != null) #reps: reps,
       if (durationPerSet != null) #durationPerSet: durationPerSet,
@@ -438,6 +448,7 @@ class _ExerciseDataCopyWithImpl<$R, $Out>
     caloriesBurned: data.get(#caloriesBurned, or: $value.caloriesBurned),
     name: data.get(#name, or: $value.name),
     instructions: data.get(#instructions, or: $value.instructions),
+    summary: data.get(#summary, or: $value.summary),
     sets: data.get(#sets, or: $value.sets),
     reps: data.get(#reps, or: $value.reps),
     durationPerSet: data.get(#durationPerSet, or: $value.durationPerSet),

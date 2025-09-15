@@ -1,9 +1,7 @@
 // lib/src/screens/tabs/exercise/widgets/qa_mini.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-import '../../services/exercise/ai_service.dart';
-import '../../controllers/profile/profile_controller.dart';
+import 'package:yourfit/src/services/index.dart';
 
 class QaMiniButton extends StatelessWidget {
   const QaMiniButton({super.key});
@@ -63,7 +61,8 @@ class _QaMiniSheet extends StatefulWidget {
 
 class _QaMiniSheetState extends State<_QaMiniSheet> {
   final _controller = TextEditingController();
-  final _service = AiWorkoutService();
+  final _service = Get.put(ExerciseService());
+  final currentUser = Get.find<AuthService>().currentUser;
   final _items = <_QaItem>[];
   bool _sending = false;
 
@@ -83,34 +82,9 @@ class _QaMiniSheetState extends State<_QaMiniSheet> {
       _controller.clear();
     });
 
-    final profile = Get.isRegistered<ProfileController>()
-        ? Get.find<ProfileController>()
-        : null;
-
-    // --- FIX: coerce height/weight to double safely ---
-    final double heightCm = (profile?.heightCm != null)
-        ? profile!.heightCm!.toDouble()
-        : 172.0;
-
-    final double weightKg = (() {
-      final wk = profile?.weightKg;
-      return double.tryParse('${wk ?? ''}') ?? 60.0;
-    })();
-    // ---------------------------------------------------
-
-    final user = AiUserContext(
-      age: profile?.age ?? 16,
-      heightCm: heightCm,
-      weightKg: weightKg,
-    );
-
     String ans;
     try {
-      ans = await _service.answerQuestion(
-        user: user,
-        profile: profile,
-        question: q,
-      );
+      ans = (await _service.invokeWithUser(currentUser.value, q))!["answer"] as String;
       ans = ans.trim();
       if (ans.length > 1200) ans = ans.substring(0, 1200);
     } catch (e) {

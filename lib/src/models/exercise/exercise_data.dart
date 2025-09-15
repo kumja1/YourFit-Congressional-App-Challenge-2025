@@ -45,6 +45,7 @@ class ExerciseData with ExerciseDataMappable {
   final Duration durationPerSet;
   final double caloriesBurned;
   final String instructions;
+  final String summary;
 
   @MappableField(hook: MapHook())
   final List<RestInterval> restIntervals;
@@ -62,6 +63,7 @@ class ExerciseData with ExerciseDataMappable {
     required this.caloriesBurned,
     required this.name,
     required this.instructions,
+    required this.summary,
     required this.sets,
     required this.reps,
     required this.durationPerSet,

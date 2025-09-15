@@ -4,14 +4,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:yourfit/src/controllers/profile/profile_controller.dart';
+import 'package:yourfit/src/models/exercise/exercise_data.dart';
+import 'package:yourfit/src/models/user_data.dart';
+import 'package:yourfit/src/services/auth_service.dart';
+import 'package:yourfit/src/services/exercise_service.dart';
 
 import 'exercise_exec_sheet.dart';
 import '../../models/exercise/exercise_models.dart';
-import '../../services/exercise/ai_service.dart';
-
-typedef BuildContextGetter = BuildContext Function();
 
 class SummaryState {
   final bool loading;
@@ -27,9 +26,8 @@ class SummaryState {
       );
 }
 
-class WorkoutsCtrl extends GetxController {
-  WorkoutsCtrl({required this.getContext});
-  final BuildContextGetter getContext;
+class WorkoutsScreenController extends GetxController {
+  WorkoutsScreenController();
 
   // ---- Gamification ----
   int level = 1;
@@ -42,7 +40,7 @@ class WorkoutsCtrl extends GetxController {
   bool loading = false;
   String? lastError;
   String aiExplanation = '';
-  DayData? dayData;
+  List<ExerciseData> exercises = [];
   String? dayFocus; // label for UI (e.g., "Leg Day")
 
   // ---- Progress State ----
@@ -50,11 +48,8 @@ class WorkoutsCtrl extends GetxController {
   final Set<int> _doneExercises = {};
   final List<String> _history = [];
 
-  // ---- NEW: per-exercise summary state ----
-  final Map<String, SummaryState> _summaries = {};
-
-  AiWorkoutService get _ai => _aiSvc ??= AiWorkoutService();
-  AiWorkoutService? _aiSvc;
+  final Rx<UserData?> currentUser = Get.find<AuthService>().currentUser;
+  final ExerciseService _exerciseService = Get.find();
 
   @override
   void onInit() {
@@ -96,94 +91,20 @@ class WorkoutsCtrl extends GetxController {
     }
   }
 
-  // ----------------- Resolve minimal user context for AI -----------------
-  Future<AiUserContext> _resolveUserContext() async {
-    int age = 25;
-    double height = 170;
-    double weight = 70;
-
-    try {
-      if (Get.isRegistered<ProfileController>()) {
-        final p = Get.find<ProfileController>();
-        try {
-          await p.load();
-        } catch (_) {}
-        if (p.age != null && p.age! > 0) age = p.age!;
-        if (p.heightCm != null && p.heightCm! > 0)
-          height = p.heightCm!.toDouble();
-        if (p.weightKg != null && p.weightKg! > 0)
-          weight = p.weightKg!.toDouble();
-      }
-    } catch (_) {}
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final a = prefs.getInt('user_age');
-      final h = prefs.getDouble('user_height');
-      final w = prefs.getDouble('user_weight');
-      if (a != null && a > 0) age = a;
-      if (h != null && h > 0) height = h;
-      if (w != null && w > 0) weight = w;
-    } catch (_) {}
-
-    return AiUserContext(age: age, heightCm: height, weightKg: weight);
-  }
-
   // ----------------- Public helpers -----------------
   ExecProgress progressFor(int i) {
-    final ex = (dayData?.exercises.length ?? 0) > i
-        ? dayData!.exercises[i]
-        : null;
+    final ex = exercises.length > i ? exercises[i] : null;
     if (ex == null) return const ExecProgress(0, 1);
-    final totalSets = _setsFromQty(ex.qty);
+    final totalSets = ex.sets;
     final done = _completedSets[i] ?? 0;
     return ExecProgress(done.clamp(0, totalSets), totalSets);
   }
 
   bool isDone(int i) {
-    final ex = (dayData?.exercises.length ?? 0) > i
-        ? dayData!.exercises[i]
-        : null;
+    final ex = (exercises.length ?? 0) > i ? exercises[i] : null;
     if (ex == null) return false;
-    final totalSets = _setsFromQty(ex.qty);
+    final totalSets = ex.sets;
     return (_completedSets[i] ?? 0) >= totalSets || _doneExercises.contains(i);
-  }
-
-  SummaryState summaryFor(ExerciseItem ex) {
-    final key = (ex.name).trim();
-    return _summaries[key] ?? const SummaryState();
-  }
-
-  Future<void> loadSummary(ExerciseItem ex, {bool force = false}) async {
-    final key = (ex.name).trim();
-    if (!force && (_summaries[key]?.text?.isNotEmpty ?? false)) return;
-
-    _summaries[key] = const SummaryState(loading: true);
-    update();
-
-    try {
-      final userCtx = await _resolveUserContext();
-      final profile = Get.isRegistered<ProfileController>()
-          ? Get.find<ProfileController>()
-          : null;
-
-      final text = force
-          ? await _ai.regenerateExerciseSummary(
-              exercise: ex,
-              user: userCtx,
-              profile: profile,
-            )
-          : await _ai.summarizeExercise(
-              exercise: ex,
-              user: userCtx,
-              profile: profile,
-            );
-
-      _summaries[key] = SummaryState(loading: false, text: text);
-    } catch (e) {
-      _summaries[key] = SummaryState(loading: false, error: '$e');
-    }
-    update();
   }
 
   // ----------------- Actions -----------------
@@ -192,41 +113,13 @@ class WorkoutsCtrl extends GetxController {
     loading = true;
     lastError = null;
     update();
-
+    final canonicalFocus = await _canonicalFocusForToday();
+    dayFocus = _labelForCanonical(canonicalFocus);
     try {
-      final userCtx = await _resolveUserContext();
-      final canonicalFocus = await _canonicalFocusForToday();
-      dayFocus = _labelForCanonical(canonicalFocus);
-
-      final profile = Get.isRegistered<ProfileController>()
-          ? Get.find<ProfileController>()
-          : null;
-
-      final result = await _ai.generateWorkout(
-        user: userCtx,
-        profile: profile,
-        history: _history,
-        focusLabel: canonicalFocus,
-      );
-
-      dayData = result.workout;
-      aiExplanation = result.explanation;
-
-      _completedSets
-        ..clear()
-        ..addEntries(
-          List.generate(dayData!.exercises.length, (i) => MapEntry(i, 0)),
-        );
-      _doneExercises.clear();
-
-      // Clear summaries for previous plan
-      _summaries.clear();
-    } catch (e, st) {
-      lastError = 'Failed to generate workout: $e';
-      if (kDebugMode) {
-        print('Generate error: $e');
-        print(st);
-      }
+      final result = await _exerciseService.getExercises(currentUser.value);
+      exercises = result?.exercises ?? [];
+    } on Error catch (e, st) {
+      print("Generate: $e, $st");
     } finally {
       loading = false;
       update();
@@ -234,38 +127,26 @@ class WorkoutsCtrl extends GetxController {
   }
 
   Future<void> tweakWorkout(String instruction) async {
-    if (dayData == null || loading) return;
+    if (loading) return;
     loading = true;
     lastError = null;
     update();
 
     try {
-      final userCtx = await _resolveUserContext();
       final canonicalFocus = await _canonicalFocusForToday();
       dayFocus = _labelForCanonical(canonicalFocus);
-      final profile = Get.isRegistered<ProfileController>()
-          ? Get.find<ProfileController>()
-          : null;
 
-      final res = await _ai.tweakWorkout(
-        current: dayData!,
-        instruction: instruction,
-        user: userCtx,
-        profile: profile,
-        focusLabel: canonicalFocus,
+      final res = await _exerciseService.getExercises(
+        currentUser.value,
+        count: exercises.length,
       );
 
-      dayData = res.workout;
-      aiExplanation = res.explanation;
+      exercises = res?.exercises ?? [];
+      // aiExplanation = res.explanation;
       _completedSets
         ..clear()
-        ..addEntries(
-          List.generate(dayData!.exercises.length, (i) => MapEntry(i, 0)),
-        );
+        ..addEntries(List.generate(exercises.length, (i) => MapEntry(i, 0)));
       _doneExercises.clear();
-
-      // Reset summaries since exercises changed
-      _summaries.clear();
     } catch (e) {
       lastError = 'Failed to tweak workout: $e';
     } finally {
@@ -276,24 +157,17 @@ class WorkoutsCtrl extends GetxController {
 
   // ----------------- Execution -----------------
   void openExec(int index) {
-    final ctx = getContext();
-    final ex = (dayData?.exercises.length ?? 0) > index
-        ? dayData!.exercises[index]
-        : null;
+    final ex = exercises.length > index ? exercises[index] : null;
     if (ex == null) return;
 
-    final totalSets = _setsFromQty(ex.qty);
     showModalBottomSheet(
-      context: ctx,
+      context: Get.context!,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (_) => ExerciseExecSheet(
-        name: ex.name,
-        qty: ex.qty,
-        completedSets: _completedSets[index] ?? 0,
-        totalSets: totalSets,
+        exercise: ex,
         onCompleteSet: () => completeSet(index),
         onMarkDone: () => markExerciseDone(index),
       ),
@@ -301,38 +175,27 @@ class WorkoutsCtrl extends GetxController {
   }
 
   void completeSet(int index) {
-    final ex = (dayData?.exercises.length ?? 0) > index
-        ? dayData!.exercises[index]
-        : null;
+    final ex = exercises.length > index ? exercises[index] : null;
     if (ex == null) return;
 
-    final total = _setsFromQty(ex.qty);
-    final cur = (_completedSets[index] ?? 0) + 1;
-    _completedSets[index] = cur.clamp(0, total);
+    final total = ex.sets;
+    final cur = ex.state.setsDone + 1;
 
-    final reps = _repsFromQty(ex.qty);
-    final gained = 8 + (reps ~/ 5) + (streak ~/ 5);
+    final gained = 8 + (ex.reps ~/ 5) + (streak ~/ 5);
     _addXp(gained);
 
-    _history.add("${ex.name} ${ex.qty}");
     if (_history.length > 20) _history.removeAt(0);
-
-    if ((_completedSets[index] ?? 0) >= total) {
-      _doneExercises.add(index);
-    }
 
     _saveStoredData();
     update();
   }
 
   void markExerciseDone(int index) {
-    final ex = (dayData?.exercises.length ?? 0) > index
-        ? dayData!.exercises[index]
-        : null;
+    final ex = exercises.length > index ? exercises[index] : null;
     if (ex == null) return;
 
-    final total = _setsFromQty(ex.qty);
-    final cur = _completedSets[index] ?? 0;
+    final total = ex.sets;
+    final cur = ex.state.setsDone;
 
     if (cur < total) {
       final missing = (total - cur).clamp(0, total);
@@ -359,28 +222,6 @@ class WorkoutsCtrl extends GetxController {
   int _calcNextLevelXp(int lvl) {
     final base = 120;
     return (base + (lvl - 1) * 40).clamp(120, 999999);
-  }
-
-  // ----------------- Qty parsing -----------------
-  int _setsFromQty(String qty) {
-    final s = qty.toLowerCase().trim();
-    if (RegExp(r'(\d+)\s*(s|sec|secs|min|m|minutes?)$').hasMatch(s)) return 1;
-    final m = RegExp(r'(\d+)\s*x').firstMatch(s);
-    return int.tryParse(m?.group(1) ?? '') ?? 3;
-  }
-
-  int _repsFromQty(String qty) {
-    final durSec = RegExp(r'(\d+)\s*(s|sec|secs)$').firstMatch(qty);
-    if (durSec != null) return int.tryParse(durSec.group(1) ?? '') ?? 30;
-
-    final durMin = RegExp(r'(\d+)\s*(min|m|minutes?)$').firstMatch(qty);
-    if (durMin != null) return (int.tryParse(durMin.group(1) ?? '') ?? 1) * 60;
-
-    final m = RegExp(r'x\s*(\d+)(?:-(\d+))?').firstMatch(qty);
-    if (m == null) return 10;
-    final a = int.tryParse(m.group(1) ?? '') ?? 10;
-    final b = int.tryParse(m.group(2) ?? '') ?? a;
-    return ((a + b) / 2).round();
   }
 
   // ----------------- Focus (from Roadmap prefs) -----------------
@@ -443,7 +284,7 @@ class WorkoutsCtrl extends GetxController {
 
   // ----------------- Utilities -----------------
   double get workoutCompletionPercentage {
-    final total = dayData?.exercises.length ?? 0;
+    final total = exercises.length;
     if (total == 0) return 0;
     int done = 0;
     for (var i = 0; i < total; i++) {
@@ -453,7 +294,7 @@ class WorkoutsCtrl extends GetxController {
   }
 
   bool get isWorkoutComplete {
-    final total = dayData?.exercises.length ?? 0;
+    final total = exercises.length;
     if (total == 0) return false;
     for (var i = 0; i < total; i++) {
       if (!isDone(i)) return false;
@@ -467,13 +308,13 @@ class WorkoutsCtrl extends GetxController {
   void resetWorkoutProgress() {
     _completedSets.clear();
     _doneExercises.clear();
-    final n = dayData?.exercises.length ?? 0;
+    final n = exercises.length;
     _completedSets.addEntries(List.generate(n, (i) => MapEntry(i, 0)));
     update();
   }
 
   void skipExercise(int index) {
-    final n = dayData?.exercises.length ?? 0;
+    final n = exercises.length;
     if (index < 0 || index >= n) return;
     _doneExercises.add(index);
     _saveStoredData();

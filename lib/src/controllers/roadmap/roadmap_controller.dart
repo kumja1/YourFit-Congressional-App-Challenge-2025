@@ -102,7 +102,7 @@ class RoadmapController extends GetxController {
     try {
       final user = currentUser.value;
       final age = user?.age ?? 25;
-      final activity = user?.physicalActivity ?? UserPhysicalActivity.moderate;
+      final activity = user?.physicalFitness ?? UserPhysicalFitness.moderate;
       final plan = await _generateAIPlan(age, activity);
       await _savePlans(plan);
       workoutPlans = plan;
@@ -116,7 +116,7 @@ class RoadmapController extends GetxController {
 
   Future<Map<String, WorkoutType>> _generateAIPlan(
     int age,
-    UserPhysicalActivity activity,
+    UserPhysicalFitness activity,
   ) async {
     const apiKey = "AIzaSyCI-es8sI7XKwQwYiipkmLdlNH65MgExFo";
     const model = 'gemini-2.5-flash';
@@ -126,6 +126,7 @@ class RoadmapController extends GetxController {
 Generate a 30-day workout plan.
 User age: $age, activity: ${activity.name}.
 Return JSON with date keys (YYYY-MM-DD) starting from today ${_dateKey(DateTime.now())}.
+Make the routine consistent
 Allowed values: legDay, upperBody, cardio, core, fullBody, rest, yoga.
 Keep variety and 1-2 rest days per week.
 Example:

@@ -51,9 +51,8 @@ class UserService {
             weight: weight,
             height: height,
             dob: dob,
-            age: dob?.age,
             gender: gender,
-            physicalActivity: physicalActivity,
+            physicalFitness: physicalFitness,
           )
           ..id = id
           ..createdAt = createdAt;

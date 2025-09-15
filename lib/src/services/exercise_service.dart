@@ -12,7 +12,8 @@ class ExerciseService extends GetxService {
   late final Runnable llmChain;
 
   @override
-  void onInit() async {
+  void onInit() {
+    try {
     super.onInit();
     final model =
         ChatPromptTemplate.fromTemplates([
@@ -20,8 +21,9 @@ class ExerciseService extends GetxService {
             ChatMessageType.system,
             """
 ---- Instructions ----
-You are a thoughtful, detailed, accurate, and considerate fitness trainer that uses medical guidlines to provide the user with the appropriate exercise(s) to perform at their age, height, weight, gender, physicalFitness, and any other additional parameters. You are also excellent at math which enables you to give out mathematically correct solutions when necessary. Your response should only be related to the given information provided to you by the user and relevant information found in the dataset. Your response should also contain no introduction or explanation, only the information necessary in a valid JSON format. You response should not repeat any of the information provided to you.
-
+You are a thoughtful, detailed, accurate, and considerate fitness trainer that uses medical guidlines to provide the user with the appropriate exercise(s) to perform at their age, height, weight, gender, physicalFitness, and any other additional parameters. 
+You are also excellent at math which enables you to give out mathematically correct solutions when necessary. Your response should only be related to the given information provided to you by the user and relevant information found in the dataset. 
+Your response should not repeat any of the information provided to and should contain no introduction or explanation, only the information necessary in a valid JSON format. 
 ---- Context ----
 {context}
 """,
@@ -40,7 +42,7 @@ Below is the information you will take into consideration when formulating your 
   gender: {gender}
   equipment: {equipment}
   disabilities: {disabilities}
-  previousExercises: {exerciseData}
+  previousExercisesData: {exerciseData}
 
 ---- Additional Information ----
   {additionalParameters}
@@ -54,7 +56,7 @@ Below is the information you will take into consideration when formulating your 
 
           defaultOptions: ChatGoogleGenerativeAIOptions(
             model: "gemini-2.5-pro",
-            tools: [
+            tools: const [
               ToolSpec(
                 name: 'dayData',
                 description:
@@ -99,6 +101,10 @@ Below is the information you will take into consideration when formulating your 
                           'instructions': {
                             'type': 'string',
                             'description': 'Instructions for the exercise.',
+                          },
+                          'summary': {
+                            'type': 'string',
+                            'description': 'A quick summary of the exercise. ',
                           },
                           'targetMuscles': {
                             'type': 'array',
@@ -158,6 +164,7 @@ Below is the information you will take into consideration when formulating your 
                           'durationPerSet',
                           'caloriesBurned',
                           'name',
+                          'summary',
                           'instructions',
                           'targetMuscles',
                           'sets',
@@ -176,10 +183,26 @@ Below is the information you will take into consideration when formulating your 
                           'The reasoning behind this selection of exercises. Include any thing such as exerciseData, equipment, and any other information that influcended the final decison',
                     },
                   },
-                  'required': ['exercises', 'caloriesBurned'],
+                  'summary': {
+                    'type': 'string',
+                    'description': 'A summary of the exercises for the day',
+                  },
+                  'required': ['exercises', 'caloriesBurned', 'summary'],
                 },
               ),
-            ],
+   /**
+               ToolSpec(
+                 name: "answer",
+                 description: "The answer to a question",
+                 inputJsonSchema: {
+                   "answer": {
+                     "type": "string",
+                     "description": "The answer to a question",
+                   },
+                 },
+               ),
+            
+   */ ],
             safetySettings: const [
               ChatGoogleGenerativeAISafetySetting(
                 category: ChatGoogleGenerativeAISafetySettingCategory
@@ -232,7 +255,7 @@ Below is the information you will take into consideration when formulating your 
                 Runnable.mapInput((data) {
                   final str = (data as Map<String, MonthData>).entries
                       .map(
-                        (entry) => "(${entry.key}):${entry.value.toJson()})}",
+                        (entry) => "(${entry.key}):${entry.value.toString()})}",
                       )
                       .join(" | ");
                   print(str);
@@ -266,12 +289,18 @@ Below is the information you will take into consideration when formulating your 
           ToolsOutputParser();
     } on Error catch (e) {
       print("$e, ${e.stackTrace}");
+    }} catch (e){
+      print(e);
     }
   }
 
-  Future<Map<String, dynamic>> invoke(Map<String, dynamic> params) async {
+  Future<Map<String, dynamic>> invoke(
+    Map<String, dynamic> params, {
+    ChatModelOptions? options,
+  }) async {
     print("Invoking LLM with parameters: $params");
     try {
+     // final chain = options == null ? llmChain : llmChain.bind(options);
       List<ParsedToolCall> results =
           await llmChain.invoke(params) as List<ParsedToolCall>;
       return results.isEmpty ? {} : results[0].arguments;
@@ -281,12 +310,15 @@ Below is the information you will take into consideration when formulating your 
     }
   }
 
-  Future<Map<String, dynamic>> invokeWithUser(
-    UserData user,
+  Future<Map<String, dynamic>?> invokeWithUser(
+    UserData? user,
     String prompt, {
     Map<String, dynamic> additionalParameters = const {},
+    ChatModelOptions? options,
   }) async {
     try {
+      if (user == null) return null;
+
       return await invoke({
         "equipment": user.equipment,
         "disabilities": user.disabilities,
@@ -298,34 +330,34 @@ Below is the information you will take into consideration when formulating your 
         "physicalFitness": user.physicalFitness,
         "prompt": prompt,
         "additionalParameters": additionalParameters,
-      });
+      }, options: options);
     } catch (e) {
-      print(e);
+      print("Error: $e");
       return {};
     }
   }
 
   Future<DayData?> getExercises(
-    UserData user, {
+    UserData? user, {
     ExerciseType? type,
     ExerciseDifficulty? difficulty,
     ExerciseIntensity? intensity,
-    int count = 3,
+    ChatModelOptions? options,
     Map<String, dynamic> additionalParameters = const {},
+    int count = 3,
   }) async {
-    additionalParameters = {
-      ...additionalParameters,
-      "exercise_type": type?.name,
-      "exercise_difficulty": difficulty?.name,
-      "exercise_intensity": intensity?.name,
-    };
-
     final result = await invokeWithUser(
       user,
       "Please provide the user with $count exercises",
-      additionalParameters: additionalParameters,
+      additionalParameters: {
+        ...additionalParameters,
+        "exercise_type": type?.name,
+        "exercise_difficulty": difficulty?.name,
+        "exercise_intensity": intensity?.name,
+      },
+      options: options
     );
     print(result);
-    return DayData(caloriesBurned: 0, exercises: []);
+    return result == null ? null : DayData.fromMap(result);
   }
 }

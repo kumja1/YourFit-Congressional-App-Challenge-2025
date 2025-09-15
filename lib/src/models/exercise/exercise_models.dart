@@ -8,12 +8,6 @@ class ExerciseItem {
 }
 
 @immutable
-class DayData {
-  final List<ExerciseItem> exercises;
-  const DayData({required this.exercises});
-}
-
-@immutable
 class ExecProgress {
   final int done;
   final int total;

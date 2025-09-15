@@ -1,26 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:yourfit/src/models/exercise/exercise_data.dart';
 
 class ExerciseExecSheet extends StatelessWidget {
   const ExerciseExecSheet({
     super.key,
-    required this.name,
-    required this.qty,
-    required this.completedSets,
-    required this.totalSets,
+    required this.exercise,
     required this.onCompleteSet,
     required this.onMarkDone,
   });
-
-  final String name;
-  final String qty;
-  final int completedSets;
-  final int totalSets;
+final ExerciseData exercise;
   final VoidCallback onCompleteSet;
   final VoidCallback onMarkDone;
 
   @override
   Widget build(BuildContext context) {
-    final remaining = (totalSets - completedSets).clamp(0, totalSets);
+    final remaining = (exercise.sets - exercise.state.setsDone).clamp(0, exercise.sets);
     return Padding(
       padding: EdgeInsets.only(
         left: 16,
@@ -40,14 +34,14 @@ class ExerciseExecSheet extends StatelessWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          Text(name,
+          Text(exercise.name,
               style:
                   const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 6),
-          Text(qty, style: const TextStyle(fontSize: 14, color: Colors.black54)),
+          Text("${exercise.sets} x ${exercise.reps}", style: const TextStyle(fontSize: 14, color: Colors.black54)),
           const SizedBox(height: 12),
           Text(
-            'Sets: $completedSets / $totalSets',
+            'Sets: ${exercise.state.setsDone} / ${exercise.sets}',
             style: const TextStyle(fontSize: 14),
           ),
           const SizedBox(height: 14),

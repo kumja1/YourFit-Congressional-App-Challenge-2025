@@ -1,10 +1,11 @@
 // lib/src/screens/tabs/exercise/widgets/exercise_card.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:yourfit/src/models/exercise/exercise_data.dart';
 import '../../models/exercise/exercise_models.dart';
 
 class ExerciseCard extends StatefulWidget {
-  final ExerciseItem exercise;
+  final ExerciseData exercise;
   final ExecProgress progress;
   final bool isDone;
   final VoidCallback onStart;
@@ -14,9 +15,6 @@ class ExerciseCard extends StatefulWidget {
   final String? summaryText;
   final bool summaryLoading;
   final String? summaryError;
-  final Future<void> Function()? onExpandLoad;
-  final Future<void> Function()? onRegenerate;
-
   const ExerciseCard({
     super.key,
     required this.exercise,
@@ -27,8 +25,6 @@ class ExerciseCard extends StatefulWidget {
     this.summaryText,
     this.summaryLoading = false,
     this.summaryError,
-    this.onExpandLoad,
-    this.onRegenerate,
   });
 
   @override
@@ -47,13 +43,10 @@ class _ExerciseCardState extends State<ExerciseCard> {
       child: ExpansionTile(
         onExpansionChanged: (v) async {
           setState(() => _expanded = v);
-          if (v && widget.onExpandLoad != null) {
-            await widget.onExpandLoad!();
-          }
         },
         title: Text(ex.name),
         subtitle: Text(
-          '${ex.qty}  •  ${widget.progress.done}/${widget.progress.total} sets',
+          '${ex.sets} x ${ex.reps}  •  ${widget.progress.done}/${widget.progress.total} sets',
         ),
         trailing: Wrap(
           spacing: 6,
@@ -75,7 +68,6 @@ class _ExerciseCardState extends State<ExerciseCard> {
               loading: widget.summaryLoading,
               text: widget.summaryText,
               error: widget.summaryError,
-              onRegenerate: widget.onRegenerate,
             ),
         ],
       ),
@@ -87,13 +79,11 @@ class _SummaryArea extends StatelessWidget {
   final bool loading;
   final String? text;
   final String? error;
-  final Future<void> Function()? onRegenerate;
 
   const _SummaryArea({
     required this.loading,
     required this.text,
     required this.error,
-    this.onRegenerate,
   });
 
   @override
@@ -140,7 +130,7 @@ class _SummaryArea extends StatelessWidget {
           child: Row(
             children: [
               OutlinedButton.icon(
-                onPressed: onRegenerate,
+                onPressed: () {},
                 icon: const Icon(Icons.refresh),
                 label: const Text('Regenerate'),
               ),

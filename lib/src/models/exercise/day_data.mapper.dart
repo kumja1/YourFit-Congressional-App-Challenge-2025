@@ -32,17 +32,21 @@ class DayDataMapper extends ClassMapperBase<DayData> {
     'caloriesBurned',
     _$caloriesBurned,
   );
+  static String _$summary(DayData v) => v.summary;
+  static const Field<DayData, String> _f$summary = Field('summary', _$summary);
 
   @override
   final MappableFields<DayData> fields = const {
     #exercises: _f$exercises,
     #caloriesBurned: _f$caloriesBurned,
+    #summary: _f$summary,
   };
 
   static DayData _instantiate(DecodingData data) {
     return DayData(
       exercises: data.dec(_f$exercises),
       caloriesBurned: data.dec(_f$caloriesBurned),
+      summary: data.dec(_f$summary),
     );
   }
 
@@ -109,7 +113,11 @@ abstract class DayDataCopyWith<$R, $In extends DayData, $Out>
     ExerciseDataCopyWith<$R, ExerciseData, ExerciseData>
   >
   get exercises;
-  $R call({List<ExerciseData>? exercises, double? caloriesBurned});
+  $R call({
+    List<ExerciseData>? exercises,
+    double? caloriesBurned,
+    String? summary,
+  });
   DayDataCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -133,16 +141,22 @@ class _DayDataCopyWithImpl<$R, $Out>
     (v) => call(exercises: v),
   );
   @override
-  $R call({List<ExerciseData>? exercises, double? caloriesBurned}) => $apply(
+  $R call({
+    List<ExerciseData>? exercises,
+    double? caloriesBurned,
+    String? summary,
+  }) => $apply(
     FieldCopyWithData({
       if (exercises != null) #exercises: exercises,
       if (caloriesBurned != null) #caloriesBurned: caloriesBurned,
+      if (summary != null) #summary: summary,
     }),
   );
   @override
   DayData $make(CopyWithData data) => DayData(
     exercises: data.get(#exercises, or: $value.exercises),
     caloriesBurned: data.get(#caloriesBurned, or: $value.caloriesBurned),
+    summary: data.get(#summary, or: $value.summary),
   );
 
   @override
