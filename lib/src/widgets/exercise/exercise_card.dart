@@ -1,7 +1,7 @@
 // lib/src/screens/tabs/exercise/widgets/exercise_card.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../models/exercise_models.dart';
+import '../../models/exercise/exercise_models.dart';
 
 class ExerciseCard extends StatefulWidget {
   final ExerciseItem exercise;

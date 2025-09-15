@@ -2,8 +2,8 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:yourfit/src/screens/tabs/profile/profile_controller.dart';
-import '../models/exercise_models.dart';
+import 'package:yourfit/src/controllers/profile/profile_controller.dart';
+import '../../models/exercise/exercise_models.dart';
 
 class AiUserContext {
   final int age;

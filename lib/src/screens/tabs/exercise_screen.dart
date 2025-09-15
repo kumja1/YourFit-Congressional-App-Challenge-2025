@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'controllers/workouts_controller.dart';
-import 'widgets/compact_header.dart';
-import 'widgets/exercise_card.dart';
-import 'widgets/ai_insights_panel.dart';
-import 'widgets/qa_mini.dart';
+import '../../controllers/exercise/workouts_controller.dart';
+import '../../widgets/exercise/compact_header.dart';
+import '../../widgets/exercise/exercise_card.dart';
+import '../../widgets/exercise/ai_insights_panel.dart';
+import '../../widgets/exercise/qa_mini.dart';
 
 @RoutePage()
 class WorkoutsScreen extends StatefulWidget {

@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../services/ai_service.dart';
-import '../../profile/profile_controller.dart';
+import '../../services/exercise/ai_service.dart';
+import '../../controllers/profile/profile_controller.dart';
 
 class QaMiniButton extends StatelessWidget {
   const QaMiniButton({super.key});

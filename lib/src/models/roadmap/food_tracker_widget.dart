@@ -1,8 +1,8 @@
 // lib/src/screens/tabs/roadmap/widgets/food_tracker_widgets.dart
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../roadmap_controller.dart';
-import '../models/food_entry.dart';
+import '../../controllers/roadmap/roadmap_controller.dart';
+import 'food_entry.dart';
 
 class FoodSearchSliver extends StatelessWidget {
   final RoadmapController controller;

@@ -1,5 +1,5 @@
 import 'package:dart_mappable/dart_mappable.dart';
-import 'package:yourfit/src/models/month_data.dart';
+import 'package:yourfit/src/models/exercise/month_data.dart';
 
 part 'user_data.mapper.dart';
 

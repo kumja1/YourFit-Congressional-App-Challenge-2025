@@ -1,6 +1,6 @@
 // lib/src/screens/tabs/roadmap/widgets/daily_summary_widgets.dart
 import 'package:flutter/material.dart';
-import '../roadmap_controller.dart';
+import '../../controllers/roadmap/roadmap_controller.dart';
 
 class AiGenerationBanner extends StatelessWidget {
   const AiGenerationBanner({super.key});

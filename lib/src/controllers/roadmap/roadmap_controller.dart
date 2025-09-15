@@ -1,4 +1,3 @@
-// lib/src/screens/tabs/roadmap/roadmap_controller.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -10,8 +9,8 @@ import 'package:const_date_time/const_date_time.dart';
 import 'package:yourfit/src/models/user_data.dart';
 import 'package:yourfit/src/services/auth_service.dart';
 
-import 'models/food_entry.dart';
-import 'models/workout_type.dart';
+import '../../models/roadmap/food_entry.dart';
+import '../../models/roadmap/workout_type.dart';
 
 class RoadmapController extends GetxController {
   final Rx<UserData?> currentUser = Get.find<AuthService>().currentUser;

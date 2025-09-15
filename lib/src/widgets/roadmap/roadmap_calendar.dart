@@ -2,7 +2,7 @@
 import 'package:const_date_time/const_date_time.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import '../roadmap_controller.dart';
+import '../../controllers/roadmap/roadmap_controller.dart';
 
 class RoadmapCalendar extends StatelessWidget {
   final RoadmapController controller;

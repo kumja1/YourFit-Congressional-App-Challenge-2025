@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:yourfit/src/screens/tabs/profile/profile_controller.dart';
+import 'package:yourfit/src/controllers/profile/profile_controller.dart';
 
 import 'exercise_exec_sheet.dart';
-import '../models/exercise_models.dart';
-import '../services/ai_service.dart';
+import '../../models/exercise/exercise_models.dart';
+import '../../services/exercise/ai_service.dart';
 
 typedef BuildContextGetter = BuildContext Function();
 

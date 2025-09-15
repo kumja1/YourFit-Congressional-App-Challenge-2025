@@ -21,9 +21,9 @@ import 'package:yourfit/src/screens/other/landing_screen.dart' as _i1;
 import 'package:yourfit/src/screens/other/onboarding/welcome_screen.dart'
     as _i9;
 import 'package:yourfit/src/screens/other/splash_screen.dart' as _i8;
-import 'package:yourfit/src/screens/tabs/exercise/exercise_screen.dart' as _i10;
-import 'package:yourfit/src/screens/tabs/profile/profile_screen.dart' as _i4;
-import 'package:yourfit/src/screens/tabs/roadmap/roadmap_screen.dart' as _i5;
+import 'package:yourfit/src/screens/tabs/exercise_screen.dart' as _i10;
+import 'package:yourfit/src/screens/tabs/profile_screen.dart' as _i4;
+import 'package:yourfit/src/screens/tabs/roadmap_screen.dart' as _i5;
 
 /// generated route for
 /// [_i1.LandingScreen]

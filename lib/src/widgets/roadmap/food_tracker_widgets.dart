@@ -1,6 +1,6 @@
 // lib/src/screens/tabs/roadmap/widgets/food_tracker_widgets.dart
 import 'package:flutter/material.dart';
-import '../roadmap_controller.dart';
+import '../../controllers/roadmap/roadmap_controller.dart';
 
 class FoodSearchSliver extends StatelessWidget {
   final RoadmapController controller;
@@ -45,7 +45,3 @@ class FoodSearchSliver extends StatelessWidget {
     );
   }
 }
-
-// ... other food-related widgets like SearchResultsList and FoodEntriesList
-// NOTE: These are omitted for brevity but would be structured similarly,
-// taking the controller as a parameter and returning a Sliver.

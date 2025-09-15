@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:yourfit/src/screens/tabs/exercise/models/exercise_models.dart';
-import 'package:yourfit/src/screens/tabs/roadmap/models/workout_type.dart';
-import 'package:yourfit/src/screens/tabs/roadmap/roadmap_screen.dart';
+import 'package:yourfit/src/models/exercise/exercise_models.dart';
+import 'package:yourfit/src/models/roadmap/workout_type.dart';
+import 'package:yourfit/src/screens/tabs/roadmap_screen.dart';
 
 class WorkoutStorageService {
   final String accountKey;

@@ -9,7 +9,7 @@ import 'package:yourfit/src/services/auth_service.dart';
 import 'package:yourfit/src/utils/constants/auth/auth_code.dart';
 import 'package:yourfit/src/utils/functions/show_snackbar.dart';
 import 'package:yourfit/src/utils/mixins/input_validation_mixin.dart';
-import 'package:yourfit/src/screens/tabs/profile/profile_controller.dart';
+import 'package:yourfit/src/controllers/profile/profile_controller.dart';
 
 class AuthFormController extends GetxController with InputValidationMixin {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();

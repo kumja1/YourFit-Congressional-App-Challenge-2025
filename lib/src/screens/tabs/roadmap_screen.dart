@@ -2,12 +2,12 @@
 import 'package:auto_route/annotations.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:yourfit/src/screens/tabs/roadmap/models/food_tracker_widget.dart';
+import 'package:yourfit/src/models/roadmap/food_tracker_widget.dart';
 
-import 'roadmap_controller.dart';
-import 'widgets/daily_summary_widgets.dart';
-import 'widgets/roadmap_calendar.dart';
-import 'widgets/food_tracker_widgets.dart' hide FoodSearchSliver;
+import '../../controllers/roadmap/roadmap_controller.dart';
+import '../../widgets/roadmap/daily_summary_widgets.dart';
+import '../../widgets/roadmap/roadmap_calendar.dart';
+import '../../widgets/roadmap/food_tracker_widgets.dart' hide FoodSearchSliver;
 
 @RoutePage()
 class RoadmapScreen extends StatelessWidget {
