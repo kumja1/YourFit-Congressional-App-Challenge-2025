@@ -1,6 +1,7 @@
 import 'package:dart_mappable/dart_mappable.dart';
 import 'package:extensions_plus/extensions_plus.dart';
-import 'package:yourfit/src/models/exercise/day_data.dart';
+import 'package:yourfit/src/models/exercise/workout_data.dart';
+import 'package:yourfit/src/models/exercise/exercise_data.dart';
 import 'package:yourfit/src/models/exercise/month_data.dart';
 
 part 'user_data.mapper.dart';
@@ -16,16 +17,10 @@ enum UserGender {
 
 @MappableEnum()
 enum UserPhysicalFitness {
-  minimal("Minimal"),
-  light("Light"),
-  moderate("Moderate"),
-  extreme("Extreme");
-
-  const UserPhysicalFitness(this.level);
-  final String level;
-
-  @override
-  String toString() => level;
+  minimal,
+  light,
+  moderate,
+  extreme;
 
   factory UserPhysicalFitness.fromValue(String value) =>
       UserPhysicalFitnessMapper.fromValue(value);
@@ -33,31 +28,35 @@ enum UserPhysicalFitness {
 
 @MappableClass(caseStyle: CaseStyle.snakeCase)
 class UserData with UserDataMappable {
-  late final String id;
+  final String id;
 
-  late final DateTime createdAt;
+  final DateTime createdAt;
 
-  final String firstName;
+  String get fullName => "$firstName $lastName";
 
-  final String lastName;
+  String get intials => fullName.initials;
 
-  final String fullName;
+  int get age => dob.age;
 
-  final UserGender gender;
+  String firstName;
 
-  final DateTime dob;
+  String lastName;
 
-  final int age;
+  UserGender gender;
 
-  final double height;
+  DateTime dob;
 
-  final double weight;
+  double height;
 
-  final double totalCaloriesBurned;
+  double weight;
 
-  final double milesTraveled;
+  UserPhysicalFitness physicalFitness;
 
-  final UserPhysicalFitness physicalFitness;
+  String goal;
+
+  int exerciseDaysPerWeek;
+
+  ExerciseIntensity exercisesIntensity;
 
   final Map<String, MonthData> exerciseData;
 
@@ -65,7 +64,11 @@ class UserData with UserDataMappable {
 
   final List<String> equipment;
 
+  final UserStats stats;
+
   UserData({
+    required this.id,
+    required this.createdAt,
     required this.firstName,
     required this.lastName,
     required this.gender,
@@ -73,34 +76,68 @@ class UserData with UserDataMappable {
     required this.height,
     required this.weight,
     required this.physicalFitness,
-    this.totalCaloriesBurned = 0,
-    this.milesTraveled = 0,
+    required this.stats,
+    this.goal = "",
+    this.exerciseDaysPerWeek = 3,
+    this.exercisesIntensity = ExerciseIntensity.low,
     this.exerciseData = const {},
     this.disabilities = const [],
     this.equipment = const [],
-  }) : fullName = '$firstName $lastName',
-       age = dob.age;
-  
-  void addExerciseData(DayData dayData) {
+  });
+
+  void addExerciseData(WorkoutData dayData) {
     final now = DateTime.now();
     final monthData = getMonthData(now);
-    monthData.days[now.day] ??= dayData;
+    monthData.workouts[now.day] ??= dayData;
   }
-  
-  /// Returns the exercise data for a day
-  DayData getExerciseData(DateTime date) {
+
+  WorkoutData getExerciseData(DateTime date) {
     final monthData = getMonthData(date);
-    return monthData.days[date.day]!;
+    return monthData.workouts[date.day]!;
   }
 
   MonthData getMonthData(DateTime date) =>
-      exerciseData["${date.year}.${date.month}"] ??= MonthData(days: {});
-
-  @override
-  String toString() => fullName;
+      exerciseData["${date.year}.${date.month}"] ??= MonthData(workouts: {});
 
   factory UserData.fromJson(String json) => UserDataMapper.fromJson(json);
 
   factory UserData.fromMap(Map<String, dynamic> map) =>
       UserDataMapper.fromMap(map);
+}
+
+@MappableClass(caseStyle: CaseStyle.snakeCase)
+class UserStats with UserStatsMappable {
+  double totalCaloriesBurned;
+  double milesTraveled;
+
+  int level;
+  int xp;
+  int xpToNext;
+  int streak;
+
+  UserStats({
+    this.milesTraveled = 0,
+    this.totalCaloriesBurned = 0,
+    this.xp = 0,
+    this.xpToNext = 120,
+    this.level = 1,
+    this.streak = 0,
+  });
+
+  void addXp(int amount) {
+    xp += amount;
+    while (xp >= xpToNext) {
+      xp -= xpToNext;
+      level += 1;
+      xpToNext = _calcNextLevelXp(level);
+    }
+  }
+
+  int _calcNextLevelXp(int lvl) =>
+      (xpToNext + (lvl - 1) * 40).clamp(xpToNext, 999999);
+
+  factory UserStats.fromJson(String json) => UserStatsMapper.fromJson(json);
+
+  factory UserStats.fromMap(Map<String, dynamic> map) =>
+      UserStatsMapper.fromMap(map);
 }

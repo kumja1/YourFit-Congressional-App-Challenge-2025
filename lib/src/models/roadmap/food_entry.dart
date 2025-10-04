@@ -1,20 +1,17 @@
 // lib/src/screens/tabs/roadmap/models/food_entry.dart
 
-enum MealType { breakfast, lunch, dinner, snacks }
+enum MealType {
+  breakfast,
+  lunch,
+  dinner,
+  snacks;
 
-extension MealTypeX on MealType {
-  String get label {
-    switch (this) {
-      case MealType.breakfast:
-        return 'Breakfast';
-      case MealType.lunch:
-        return 'Lunch';
-      case MealType.dinner:
-        return 'Dinner';
-      case MealType.snacks:
-        return 'Snacks';
-    }
-  }
+  String get label => switch (this) {
+    MealType.breakfast => 'Breakfast',
+    MealType.lunch => 'Lunch',
+    MealType.dinner => 'Dinner',
+    MealType.snacks => 'Snacks',
+  };
 }
 
 class FoodEntry {

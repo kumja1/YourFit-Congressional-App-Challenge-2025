@@ -116,6 +116,8 @@ class UserDataMapper extends ClassMapperBase<UserData> {
       MapperContainer.globals.use(_instance = UserDataMapper._());
       UserGenderMapper.ensureInitialized();
       UserPhysicalFitnessMapper.ensureInitialized();
+      UserStatsMapper.ensureInitialized();
+      ExerciseIntensityMapper.ensureInitialized();
       MonthDataMapper.ensureInitialized();
     }
     return _instance!;
@@ -124,6 +126,14 @@ class UserDataMapper extends ClassMapperBase<UserData> {
   @override
   final String id = 'UserData';
 
+  static String _$id(UserData v) => v.id;
+  static const Field<UserData, String> _f$id = Field('id', _$id);
+  static DateTime _$createdAt(UserData v) => v.createdAt;
+  static const Field<UserData, DateTime> _f$createdAt = Field(
+    'createdAt',
+    _$createdAt,
+    key: r'created_at',
+  );
   static String _$firstName(UserData v) => v.firstName;
   static const Field<UserData, String> _f$firstName = Field(
     'firstName',
@@ -153,21 +163,31 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     _$physicalFitness,
     key: r'physical_fitness',
   );
-  static double _$totalCaloriesBurned(UserData v) => v.totalCaloriesBurned;
-  static const Field<UserData, double> _f$totalCaloriesBurned = Field(
-    'totalCaloriesBurned',
-    _$totalCaloriesBurned,
-    key: r'total_calories_burned',
+  static UserStats _$stats(UserData v) => v.stats;
+  static const Field<UserData, UserStats> _f$stats = Field('stats', _$stats);
+  static String _$goal(UserData v) => v.goal;
+  static const Field<UserData, String> _f$goal = Field(
+    'goal',
+    _$goal,
     opt: true,
-    def: 0,
+    def: "",
   );
-  static double _$milesTraveled(UserData v) => v.milesTraveled;
-  static const Field<UserData, double> _f$milesTraveled = Field(
-    'milesTraveled',
-    _$milesTraveled,
-    key: r'miles_traveled',
+  static int _$exerciseDaysPerWeek(UserData v) => v.exerciseDaysPerWeek;
+  static const Field<UserData, int> _f$exerciseDaysPerWeek = Field(
+    'exerciseDaysPerWeek',
+    _$exerciseDaysPerWeek,
+    key: r'exercise_days_per_week',
     opt: true,
-    def: 0,
+    def: 3,
+  );
+  static ExerciseIntensity _$exercisesIntensity(UserData v) =>
+      v.exercisesIntensity;
+  static const Field<UserData, ExerciseIntensity> _f$exercisesIntensity = Field(
+    'exercisesIntensity',
+    _$exercisesIntensity,
+    key: r'exercises_intensity',
+    opt: true,
+    def: ExerciseIntensity.low,
   );
   static Map<String, MonthData> _$exerciseData(UserData v) => v.exerciseData;
   static const Field<UserData, Map<String, MonthData>> _f$exerciseData = Field(
@@ -191,24 +211,17 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     opt: true,
     def: const [],
   );
-  static String _$id(UserData v) => v.id;
-  static const Field<UserData, String> _f$id = Field(
-    'id',
-    _$id,
-    mode: FieldMode.member,
-  );
-  static DateTime _$createdAt(UserData v) => v.createdAt;
-  static const Field<UserData, DateTime> _f$createdAt = Field(
-    'createdAt',
-    _$createdAt,
-    key: r'created_at',
-    mode: FieldMode.member,
-  );
   static String _$fullName(UserData v) => v.fullName;
   static const Field<UserData, String> _f$fullName = Field(
     'fullName',
     _$fullName,
     key: r'full_name',
+    mode: FieldMode.member,
+  );
+  static String _$intials(UserData v) => v.intials;
+  static const Field<UserData, String> _f$intials = Field(
+    'intials',
+    _$intials,
     mode: FieldMode.member,
   );
   static int _$age(UserData v) => v.age;
@@ -220,6 +233,8 @@ class UserDataMapper extends ClassMapperBase<UserData> {
 
   @override
   final MappableFields<UserData> fields = const {
+    #id: _f$id,
+    #createdAt: _f$createdAt,
     #firstName: _f$firstName,
     #lastName: _f$lastName,
     #gender: _f$gender,
@@ -227,19 +242,22 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     #height: _f$height,
     #weight: _f$weight,
     #physicalFitness: _f$physicalFitness,
-    #totalCaloriesBurned: _f$totalCaloriesBurned,
-    #milesTraveled: _f$milesTraveled,
+    #stats: _f$stats,
+    #goal: _f$goal,
+    #exerciseDaysPerWeek: _f$exerciseDaysPerWeek,
+    #exercisesIntensity: _f$exercisesIntensity,
     #exerciseData: _f$exerciseData,
     #disabilities: _f$disabilities,
     #equipment: _f$equipment,
-    #id: _f$id,
-    #createdAt: _f$createdAt,
     #fullName: _f$fullName,
+    #intials: _f$intials,
     #age: _f$age,
   };
 
   static UserData _instantiate(DecodingData data) {
     return UserData(
+      id: data.dec(_f$id),
+      createdAt: data.dec(_f$createdAt),
       firstName: data.dec(_f$firstName),
       lastName: data.dec(_f$lastName),
       gender: data.dec(_f$gender),
@@ -247,8 +265,10 @@ class UserDataMapper extends ClassMapperBase<UserData> {
       height: data.dec(_f$height),
       weight: data.dec(_f$weight),
       physicalFitness: data.dec(_f$physicalFitness),
-      totalCaloriesBurned: data.dec(_f$totalCaloriesBurned),
-      milesTraveled: data.dec(_f$milesTraveled),
+      stats: data.dec(_f$stats),
+      goal: data.dec(_f$goal),
+      exerciseDaysPerWeek: data.dec(_f$exerciseDaysPerWeek),
+      exercisesIntensity: data.dec(_f$exercisesIntensity),
       exerciseData: data.dec(_f$exerciseData),
       disabilities: data.dec(_f$disabilities),
       equipment: data.dec(_f$equipment),
@@ -312,6 +332,7 @@ extension UserDataValueCopy<$R, $Out> on ObjectCopyWith<$R, UserData, $Out> {
 
 abstract class UserDataCopyWith<$R, $In extends UserData, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
+  UserStatsCopyWith<$R, UserStats, UserStats> get stats;
   MapCopyWith<
     $R,
     String,
@@ -322,6 +343,8 @@ abstract class UserDataCopyWith<$R, $In extends UserData, $Out>
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get disabilities;
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get equipment;
   $R call({
+    String? id,
+    DateTime? createdAt,
     String? firstName,
     String? lastName,
     UserGender? gender,
@@ -329,8 +352,10 @@ abstract class UserDataCopyWith<$R, $In extends UserData, $Out>
     double? height,
     double? weight,
     UserPhysicalFitness? physicalFitness,
-    double? totalCaloriesBurned,
-    double? milesTraveled,
+    UserStats? stats,
+    String? goal,
+    int? exerciseDaysPerWeek,
+    ExerciseIntensity? exercisesIntensity,
     Map<String, MonthData>? exerciseData,
     List<String>? disabilities,
     List<String>? equipment,
@@ -346,6 +371,9 @@ class _UserDataCopyWithImpl<$R, $Out>
   @override
   late final ClassMapperBase<UserData> $mapper =
       UserDataMapper.ensureInitialized();
+  @override
+  UserStatsCopyWith<$R, UserStats, UserStats> get stats =>
+      $value.stats.copyWith.$chain((v) => call(stats: v));
   @override
   MapCopyWith<
     $R,
@@ -374,6 +402,8 @@ class _UserDataCopyWithImpl<$R, $Out>
       );
   @override
   $R call({
+    String? id,
+    DateTime? createdAt,
     String? firstName,
     String? lastName,
     UserGender? gender,
@@ -381,13 +411,17 @@ class _UserDataCopyWithImpl<$R, $Out>
     double? height,
     double? weight,
     UserPhysicalFitness? physicalFitness,
-    double? totalCaloriesBurned,
-    double? milesTraveled,
+    UserStats? stats,
+    String? goal,
+    int? exerciseDaysPerWeek,
+    ExerciseIntensity? exercisesIntensity,
     Map<String, MonthData>? exerciseData,
     List<String>? disabilities,
     List<String>? equipment,
   }) => $apply(
     FieldCopyWithData({
+      if (id != null) #id: id,
+      if (createdAt != null) #createdAt: createdAt,
       if (firstName != null) #firstName: firstName,
       if (lastName != null) #lastName: lastName,
       if (gender != null) #gender: gender,
@@ -395,9 +429,11 @@ class _UserDataCopyWithImpl<$R, $Out>
       if (height != null) #height: height,
       if (weight != null) #weight: weight,
       if (physicalFitness != null) #physicalFitness: physicalFitness,
-      if (totalCaloriesBurned != null)
-        #totalCaloriesBurned: totalCaloriesBurned,
-      if (milesTraveled != null) #milesTraveled: milesTraveled,
+      if (stats != null) #stats: stats,
+      if (goal != null) #goal: goal,
+      if (exerciseDaysPerWeek != null)
+        #exerciseDaysPerWeek: exerciseDaysPerWeek,
+      if (exercisesIntensity != null) #exercisesIntensity: exercisesIntensity,
       if (exerciseData != null) #exerciseData: exerciseData,
       if (disabilities != null) #disabilities: disabilities,
       if (equipment != null) #equipment: equipment,
@@ -405,6 +441,8 @@ class _UserDataCopyWithImpl<$R, $Out>
   );
   @override
   UserData $make(CopyWithData data) => UserData(
+    id: data.get(#id, or: $value.id),
+    createdAt: data.get(#createdAt, or: $value.createdAt),
     firstName: data.get(#firstName, or: $value.firstName),
     lastName: data.get(#lastName, or: $value.lastName),
     gender: data.get(#gender, or: $value.gender),
@@ -412,11 +450,16 @@ class _UserDataCopyWithImpl<$R, $Out>
     height: data.get(#height, or: $value.height),
     weight: data.get(#weight, or: $value.weight),
     physicalFitness: data.get(#physicalFitness, or: $value.physicalFitness),
-    totalCaloriesBurned: data.get(
-      #totalCaloriesBurned,
-      or: $value.totalCaloriesBurned,
+    stats: data.get(#stats, or: $value.stats),
+    goal: data.get(#goal, or: $value.goal),
+    exerciseDaysPerWeek: data.get(
+      #exerciseDaysPerWeek,
+      or: $value.exerciseDaysPerWeek,
     ),
-    milesTraveled: data.get(#milesTraveled, or: $value.milesTraveled),
+    exercisesIntensity: data.get(
+      #exercisesIntensity,
+      or: $value.exercisesIntensity,
+    ),
     exerciseData: data.get(#exerciseData, or: $value.exerciseData),
     disabilities: data.get(#disabilities, or: $value.disabilities),
     equipment: data.get(#equipment, or: $value.equipment),
@@ -426,5 +469,202 @@ class _UserDataCopyWithImpl<$R, $Out>
   UserDataCopyWith<$R2, UserData, $Out2> $chain<$R2, $Out2>(
     Then<$Out2, $R2> t,
   ) => _UserDataCopyWithImpl<$R2, $Out2>($value, $cast, t);
+}
+
+class UserStatsMapper extends ClassMapperBase<UserStats> {
+  UserStatsMapper._();
+
+  static UserStatsMapper? _instance;
+  static UserStatsMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = UserStatsMapper._());
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'UserStats';
+
+  static double _$milesTraveled(UserStats v) => v.milesTraveled;
+  static const Field<UserStats, double> _f$milesTraveled = Field(
+    'milesTraveled',
+    _$milesTraveled,
+    key: r'miles_traveled',
+    opt: true,
+    def: 0,
+  );
+  static double _$totalCaloriesBurned(UserStats v) => v.totalCaloriesBurned;
+  static const Field<UserStats, double> _f$totalCaloriesBurned = Field(
+    'totalCaloriesBurned',
+    _$totalCaloriesBurned,
+    key: r'total_calories_burned',
+    opt: true,
+    def: 0,
+  );
+  static int _$xp(UserStats v) => v.xp;
+  static const Field<UserStats, int> _f$xp = Field(
+    'xp',
+    _$xp,
+    opt: true,
+    def: 0,
+  );
+  static int _$xpToNext(UserStats v) => v.xpToNext;
+  static const Field<UserStats, int> _f$xpToNext = Field(
+    'xpToNext',
+    _$xpToNext,
+    key: r'xp_to_next',
+    opt: true,
+    def: 120,
+  );
+  static int _$level(UserStats v) => v.level;
+  static const Field<UserStats, int> _f$level = Field(
+    'level',
+    _$level,
+    opt: true,
+    def: 1,
+  );
+  static int _$streak(UserStats v) => v.streak;
+  static const Field<UserStats, int> _f$streak = Field(
+    'streak',
+    _$streak,
+    opt: true,
+    def: 0,
+  );
+
+  @override
+  final MappableFields<UserStats> fields = const {
+    #milesTraveled: _f$milesTraveled,
+    #totalCaloriesBurned: _f$totalCaloriesBurned,
+    #xp: _f$xp,
+    #xpToNext: _f$xpToNext,
+    #level: _f$level,
+    #streak: _f$streak,
+  };
+
+  static UserStats _instantiate(DecodingData data) {
+    return UserStats(
+      milesTraveled: data.dec(_f$milesTraveled),
+      totalCaloriesBurned: data.dec(_f$totalCaloriesBurned),
+      xp: data.dec(_f$xp),
+      xpToNext: data.dec(_f$xpToNext),
+      level: data.dec(_f$level),
+      streak: data.dec(_f$streak),
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static UserStats fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<UserStats>(map);
+  }
+
+  static UserStats fromJson(String json) {
+    return ensureInitialized().decodeJson<UserStats>(json);
+  }
+}
+
+mixin UserStatsMappable {
+  String toJson() {
+    return UserStatsMapper.ensureInitialized().encodeJson<UserStats>(
+      this as UserStats,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return UserStatsMapper.ensureInitialized().encodeMap<UserStats>(
+      this as UserStats,
+    );
+  }
+
+  UserStatsCopyWith<UserStats, UserStats, UserStats> get copyWith =>
+      _UserStatsCopyWithImpl<UserStats, UserStats>(
+        this as UserStats,
+        $identity,
+        $identity,
+      );
+  @override
+  String toString() {
+    return UserStatsMapper.ensureInitialized().stringifyValue(
+      this as UserStats,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return UserStatsMapper.ensureInitialized().equalsValue(
+      this as UserStats,
+      other,
+    );
+  }
+
+  @override
+  int get hashCode {
+    return UserStatsMapper.ensureInitialized().hashValue(this as UserStats);
+  }
+}
+
+extension UserStatsValueCopy<$R, $Out> on ObjectCopyWith<$R, UserStats, $Out> {
+  UserStatsCopyWith<$R, UserStats, $Out> get $asUserStats =>
+      $base.as((v, t, t2) => _UserStatsCopyWithImpl<$R, $Out>(v, t, t2));
+}
+
+abstract class UserStatsCopyWith<$R, $In extends UserStats, $Out>
+    implements ClassCopyWith<$R, $In, $Out> {
+  $R call({
+    double? milesTraveled,
+    double? totalCaloriesBurned,
+    int? xp,
+    int? xpToNext,
+    int? level,
+    int? streak,
+  });
+  UserStatsCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
+}
+
+class _UserStatsCopyWithImpl<$R, $Out>
+    extends ClassCopyWithBase<$R, UserStats, $Out>
+    implements UserStatsCopyWith<$R, UserStats, $Out> {
+  _UserStatsCopyWithImpl(super.value, super.then, super.then2);
+
+  @override
+  late final ClassMapperBase<UserStats> $mapper =
+      UserStatsMapper.ensureInitialized();
+  @override
+  $R call({
+    double? milesTraveled,
+    double? totalCaloriesBurned,
+    int? xp,
+    int? xpToNext,
+    int? level,
+    int? streak,
+  }) => $apply(
+    FieldCopyWithData({
+      if (milesTraveled != null) #milesTraveled: milesTraveled,
+      if (totalCaloriesBurned != null)
+        #totalCaloriesBurned: totalCaloriesBurned,
+      if (xp != null) #xp: xp,
+      if (xpToNext != null) #xpToNext: xpToNext,
+      if (level != null) #level: level,
+      if (streak != null) #streak: streak,
+    }),
+  );
+  @override
+  UserStats $make(CopyWithData data) => UserStats(
+    milesTraveled: data.get(#milesTraveled, or: $value.milesTraveled),
+    totalCaloriesBurned: data.get(
+      #totalCaloriesBurned,
+      or: $value.totalCaloriesBurned,
+    ),
+    xp: data.get(#xp, or: $value.xp),
+    xpToNext: data.get(#xpToNext, or: $value.xpToNext),
+    level: data.get(#level, or: $value.level),
+    streak: data.get(#streak, or: $value.streak),
+  );
+
+  @override
+  UserStatsCopyWith<$R2, UserStats, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  ) => _UserStatsCopyWithImpl<$R2, $Out2>($value, $cast, t);
 }
 

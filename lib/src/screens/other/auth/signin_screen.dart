@@ -4,16 +4,10 @@ import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthResponse;
-import 'package:yourfit/src/models/auth/auth_response.dart';
-import 'package:yourfit/src/models/auth/new_user_auth_response.dart';
-import 'package:yourfit/src/routing/router.dart';
-import 'package:yourfit/src/routing/routes.dart';
-import 'package:yourfit/src/utils/functions/show_snackbar.dart';
-import 'package:yourfit/src/utils/objects/auth/auth_code.dart';
-import 'package:yourfit/src/utils/objects/icons.dart';
-import 'package:yourfit/src/widgets/auth_form/auth_form.dart';
-import 'package:yourfit/src/widgets/auth_form/auth_form_text_field.dart';
-import 'package:yourfit/src/widgets/buttons/oauth_button.dart';
+import 'package:yourfit/src/services/index.dart';
+import 'package:yourfit/src/utils/index.dart';
+import 'package:yourfit/src/routing/index.dart';
+import 'package:yourfit/src/widgets/index.dart';
 
 @RoutePage()
 class SignInScreen extends StatelessWidget {
@@ -74,12 +68,8 @@ class _SignInController extends AuthFormController {
     try {
       if (provider != null) {
         AuthResponse response = await signInWithOAuth(provider);
-        if (response is! NewUserAuthResponse) {
-          return;
-        }
-
         if (response.code == AuthCode.error) {
-          showSnackbar(response.error!, AnimatedSnackBarType.error);
+          showSnackbar(response.message!, AnimatedSnackBarType.error);
           return;
         }
 
@@ -87,24 +77,20 @@ class _SignInController extends AuthFormController {
         return;
       }
 
-      if (!validateForm()) {
-        print("form not valid");
-        return;
-      }
-
+      if (!validateForm()) return;
       AuthResponse response = await authService.signInWithPassword(
         email,
         password,
       );
+
       if (response.code == AuthCode.error) {
-        print(response.error!);
-        showSnackbar(response.error!, AnimatedSnackBarType.error);
+        print(response.message!);
+        showSnackbar(response.message!, AnimatedSnackBarType.error);
         return;
       }
 
       router.replacePath(Routes.main);
     } catch (e) {
-      print(e);
       showSnackbar(e.toString(), AnimatedSnackBarType.error);
     }
   }

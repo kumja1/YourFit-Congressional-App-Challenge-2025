@@ -4,38 +4,39 @@ import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/people/v1.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthResponse;
-import 'package:yourfit/src/models/auth/auth_response.dart';
-import 'package:yourfit/src/models/auth/new_user_auth_response.dart';
-import 'package:yourfit/src/models/user_data.dart';
+import 'package:yourfit/src/models/index.dart';
 import 'package:yourfit/src/services/user_service.dart';
-import 'package:yourfit/src/utils/objects/auth/auth_code.dart';
-import 'package:yourfit/src/utils/objects/auth/auth_error.dart';
-import 'package:yourfit/src/utils/objects/variables.dart';
+import 'package:yourfit/src/utils/objects/auth/index.dart';
 
 class AuthService extends GetxService {
-  final GoTrueClient _auth = supabaseClient.auth;
   final UserService _userService = Get.find();
+  final GoTrueClient _auth = Supabase.instance.client.auth;
   final Rx<UserData?> currentUser = Rx<UserData?>(null);
-
+  
+  /// Returns true if the user is signed in.
   bool get isSignedIn => currentUser.value != null;
 
   @override
   void onInit() {
     super.onInit();
+    print("AuthService.onInit");
     _auth.onAuthStateChange.listen((event) async {
-      switch (event.event) {
-        case AuthChangeEvent.tokenRefreshed:
-        case AuthChangeEvent.signedIn:
-          currentUser.value = await _userService.getUser(
-            event.session!.user.id,
-          );
-          break;
-        case AuthChangeEvent.passwordRecovery:
-        case AuthChangeEvent.signedOut:
-          currentUser.value = null;
-          break;
-        default:
-          break;
+      try {
+        switch (event.event) {
+          case AuthChangeEvent.signedIn:
+            currentUser.value = await _userService.getUser(
+              event.session!.user.id,
+            );
+            break;
+          case AuthChangeEvent.passwordRecovery:
+          case AuthChangeEvent.signedOut:
+            currentUser.value = null;
+            break;
+          default:
+            break;
+        }
+      } catch (e) {
+        print(e);
       }
     });
   }
@@ -43,16 +44,36 @@ class AuthService extends GetxService {
   Future<AuthResponse> signInWithPassword(
     String email,
     String password,
-  ) async => await _tryCatch(() async {
-    final response = await _auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
-    if (response.user == null) {
-      return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
-    }
-    return AuthResponse(code: AuthCode.success, error: null);
-  });
+  ) async => await _tryCatch(
+    () async {
+      final response = await _auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+
+      if (response.user == null) {
+        return AuthResponse(
+          code: AuthCode.error,
+          message: AuthError.userNotFound,
+        );
+      }
+
+      return AuthResponse(
+        code: AuthCode.success,
+        message: null,
+        supabaseUser: response.user,
+      );
+    },
+    onError: (e) async {
+      await _auth.resend(
+        type: OtpType.signup,
+        email: email,
+        emailRedirectTo: Uri.base.toString(),
+      );
+
+      return AuthResponse(code: AuthCode.error, message: e.message);
+    },
+  );
 
   Future<AuthResponse> signUpWithPassword(
     String email,
@@ -60,15 +81,22 @@ class AuthService extends GetxService {
   ) async => await _tryCatch(() async {
     final response = await _auth.signUp(email: email, password: password);
     if (response.user == null) {
-      return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
+      return AuthResponse(
+        code: AuthCode.error,
+        message: AuthError.userNotFound,
+      );
     }
 
-    return AuthResponse(code: AuthCode.success, error: null);
+    return AuthResponse(
+      code: AuthCode.success,
+      message: null,
+      supabaseUser: response.user,
+    );
   });
 
   Future<AuthResponse> signOut() async => await _tryCatch(() async {
     await _auth.signOut();
-    return AuthResponse(code: AuthCode.success, error: null);
+    return AuthResponse(code: AuthCode.success, message: null);
   });
 
   Future<AuthResponse> sendPasswordReset(
@@ -76,145 +104,157 @@ class AuthService extends GetxService {
     String? redirectTo,
   }) async => await _tryCatch(() async {
     await _auth.resetPasswordForEmail(email, redirectTo: redirectTo);
-    return AuthResponse(code: AuthCode.success, error: null);
+    return AuthResponse(code: AuthCode.success, message: null);
   });
 
   Future<AuthResponse> resetPassword(String newPassword) async =>
       await _tryCatch(() async {
         await _auth.updateUser(UserAttributes(password: newPassword));
-        return AuthResponse(code: AuthCode.success, error: null);
+        return AuthResponse(code: AuthCode.success, message: null);
       });
 
   Future<AuthResponse> refreshSession() async => await _tryCatch(() async {
     final session = await _auth.refreshSession();
     if (session.user == null) {
-      return AuthResponse(code: AuthCode.error, error: AuthError.userNotFound);
+      return AuthResponse(
+        code: AuthCode.error,
+        message: AuthError.userNotFound,
+      );
     }
-    return AuthResponse(code: AuthCode.success, error: null);
+    return AuthResponse(code: AuthCode.success, message: null);
   });
-
 
   Future<AuthResponse> _signInWithWebOAuth(OAuthProvider provider) async =>
       await _tryCatch(() async {
-        final origin = Uri.base;
-        final redirect = Uri(
-          scheme: origin.scheme,
-          host: origin.host,
-          port: (origin.hasPort && origin.port != 80 && origin.port != 443)
-              ? origin.port
-              : null,
-          path: '/',
-          fragment: 'main', // -> /#/main
-        ).toString();
-
         final success = await _auth.signInWithOAuth(
           provider,
-          redirectTo: redirect,
+          redirectTo: null,
           queryParams: const {'prompt': 'consent'},
         );
 
         if (!success) {
           return AuthResponse(
             code: AuthCode.error,
-            error: AuthError.userNotFound,
+            message: AuthError.userNotFound,
           );
         }
 
-        return AuthResponse(code: AuthCode.success, error: null);
+        return AuthResponse(code: AuthCode.success, message: null);
       });
+
   Future<AuthResponse> signInWithOAuth(OAuthProvider provider) async => kIsWeb
       ? _signInWithWebOAuth(provider)
       : switch (provider) {
           (OAuthProvider.google) => await _signInWithGoogleOAuth(),
           _ => AuthResponse(
             code: AuthCode.error,
-            error: AuthError.invalidOAuthProvider,
+            message: AuthError.invalidOAuthProvider,
           ),
         };
 
-  Future<AuthResponse> _signInWithGoogleOAuth() async =>
-      await _tryCatch(() async {
-        final scopes = const [
-          PeopleServiceApi.userGenderReadScope,
-          PeopleServiceApi.userinfoProfileScope,
-          PeopleServiceApi.userBirthdayReadScope,
-        ];
+  Future<AuthResponse> _signInWithGoogleOAuth() async => await _tryCatch(
+    () async {
+      final scopes = const [
+        PeopleServiceApi.userGenderReadScope,
+        PeopleServiceApi.userinfoProfileScope,
+        PeopleServiceApi.userBirthdayReadScope,
+      ];
 
-        final account = await GoogleSignIn.instance.authenticate(
-          scopeHint: scopes,
+      final account = await GoogleSignIn.instance.authenticate(
+        scopeHint: scopes,
+      );
+
+      final authentication = account.authentication;
+      final authorization = await GoogleSignIn.instance.authorizationClient
+          .authorizationForScopes(scopes);
+
+      if (authorization == null) {
+        return AuthResponse(
+          code: AuthCode.error,
+          message: AuthError.googleOAuthSignInError,
+        );
+      }
+      if (authentication.idToken == null) {
+        return AuthResponse(
+          code: AuthCode.error,
+          message: AuthError.googleOAuthSignInError,
+        );
+      }
+
+      final response = await _auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: authentication.idToken!,
+        accessToken: authorization.accessToken,
+      );
+
+      if (response.user == null) {
+        return AuthResponse(
+          code: AuthCode.error,
+          message: "An unknown error occured",
+        );
+      }
+
+      final existingUser = await _userService.getUser(response.user!.id);
+      final bool isNewUser = existingUser == null;
+
+      if (isNewUser) {
+        final peopleApi = PeopleServiceApi(
+          authorization.authClient(scopes: scopes),
         );
 
-        final authentication = account.authentication;
-        final authorization = await GoogleSignIn.instance.authorizationClient
-            .authorizationForScopes(scopes);
-
-        if (authorization == null) {
-          return AuthResponse(
-            code: AuthCode.error,
-            error: AuthError.googleSignInError,
-          );
-        }
-        if (authentication.idToken == null) {
-          return AuthResponse(
-            code: AuthCode.error,
-            error: AuthError.googleSignInError,
-          );
-        }
-
-        final response = await _auth.signInWithIdToken(
-          provider: OAuthProvider.google,
-          idToken: authentication.idToken!,
-          accessToken: authorization.accessToken,
+        final Person person = await peopleApi.people.get(
+          'people/me',
+          personFields: 'birthdays,genders,names',
         );
 
-        final existingUser = await _userService.getUser(response.user!.id);
-        final bool isNewUser = existingUser == null;
+        final name = person.names?.first;
+        final gender = person.genders?.first;
+        final dob = person.birthdays?.first;
 
-        if (isNewUser) {
-          final peopleApi = PeopleServiceApi(
-            authorization.authClient(scopes: scopes),
-          );
-
-          final Person person = await peopleApi.people.get(
-            'people/me',
-            personFields: 'birthdays,genders,names',
-          );
-
-          final name = person.names?.first;
-          final gender = person.genders?.first;
-          final dob = person.birthdays?.first;
-
-          if (name == null || gender == null || dob == null) {
-            return AuthResponse(
-              code: AuthCode.error,
-              error: AuthError.googleSignInError,
-            );
-          }
-
-          final dobDateTime = DateTime.parse(dob.date.toString());
-          return NewUserAuthResponse(
-            newUser: UserData(
-              firstName: name.givenName ?? '',
-              lastName: name.familyName ?? '',
-              gender: UserGender.fromValue(gender.value ?? 'male'),
-              dob: dobDateTime,
-              height: 0,
-              weight: 0,
-              physicalFitness: UserPhysicalFitness.minimal,
-            ),
+        if (name == null || gender == null || dob == null) {
+          return AuthResponse(
+            code: AuthCode.error,
+            message: AuthError.googleOAuthSignInError,
           );
         }
 
-        return AuthResponse(code: AuthCode.success, error: null);
-      });
+        final dobDateTime = DateTime.parse(dob.date.toString());
+        return NewUserAuthResponse(
+          newUser: UserData(
+            id: response.user!.id,
+            createdAt: DateTime.now(),
+            firstName: name.givenName ?? '',
+            lastName: name.familyName ?? '',
+            gender: UserGender.fromValue(gender.value ?? 'male'),
+            dob: dobDateTime,
+            height: 0,
+            weight: 0,
+            physicalFitness: UserPhysicalFitness.minimal,
+            stats: UserStats()
+          ),
+          supabaseUser: response.user,
+        );
+      }
+
+      return AuthResponse(code: AuthCode.success, supabaseUser: response.user);
+    },
+  );
 
   Future<AuthResponse> _tryCatch(
-    Future<AuthResponse> Function() callback,
-  ) async {
+    Future<AuthResponse> Function() callback, {
+    Future<AuthResponse> Function(AuthException)? onError,
+  }) async {
     try {
       return await callback();
     } on AuthException catch (e) {
-      return AuthResponse(code: AuthCode.error, error: e.message);
+      if (onError == null) {
+        return AuthResponse(code: AuthCode.error, message: e.message);
+      }
+
+      return await onError(e);
     }
   }
+
+  @override
+  void onClose() => _auth.dispose();
 }

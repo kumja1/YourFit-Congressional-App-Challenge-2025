@@ -1,10 +1,13 @@
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
+import 'package:yourfit/src/models/exercise/exercise_data.dart';
+import 'package:yourfit/src/models/exercise/month_data.dart';
 import 'package:yourfit/src/models/user_data.dart';
 
 class UserService {
   final _userTable = Supabase.instance.client.from("user_data");
 
   Future<UserData> createUser(
+    String id,
     String firstName,
     String lastName,
     double weight,
@@ -15,6 +18,8 @@ class UserService {
   ) async {
     try {
       UserData user = UserData(
+        id: id,
+        createdAt: DateTime.now(),
         firstName: firstName,
         lastName: lastName,
         gender: gender,
@@ -22,6 +27,7 @@ class UserService {
         weight: weight,
         height: height,
         physicalFitness: activityLevel,
+        stats: UserStats(),
       );
 
       return await createUserFromData(user);
@@ -33,6 +39,8 @@ class UserService {
 
   Future<UserData> createUserFromData(
     UserData user, {
+    String? id,
+    DateTime? createdAt,
     String? firstName,
     String? lastName,
     double? weight,
@@ -40,24 +48,35 @@ class UserService {
     DateTime? dob,
     UserGender? gender,
     UserPhysicalFitness? physicalFitness,
+    String? goal,
+    int? exerciseDaysPerWeek,
+    ExerciseIntensity? exercisesIntensity,
+    Map<String, MonthData>? exerciseData,
+    List<String>? disabilities,
+    List<String>? equipment,
   }) async {
-    final id = user.id;
-    final createdAt = user.createdAt;
+    user = user.copyWith(
+      id: id,
+      firstName: firstName,
+      lastName: lastName,
+      weight: weight,
+      height: height,
+      dob: dob,
+      gender: gender,
+      physicalFitness: physicalFitness,
+      disabilities: disabilities,
+      equipment: equipment,
+      goal: goal,
+      exerciseDaysPerWeek: exerciseDaysPerWeek,
+      exercisesIntensity: exercisesIntensity,
+      exerciseData: exerciseData,
+    );
 
-    user =
-        user.copyWith(
-            firstName: firstName,
-            lastName: lastName,
-            weight: weight,
-            height: height,
-            dob: dob,
-            gender: gender,
-            physicalFitness: physicalFitness,
-          )
-          ..id = id
-          ..createdAt = createdAt;
-
-    await _userTable.insert(user.toMap());
+    try {
+      await _userTable.insert(user.toMap());
+    } catch (e) {
+      print(e);
+    }
     return user;
   }
 
@@ -66,15 +85,17 @@ class UserService {
       await _userTable.update(user.toMap()).eq("id", user.id);
       return true;
     } catch (e) {
+      print(e);
       return false;
     }
   }
 
   Future<UserData?> getUser(String id) async {
     try {
-      var response = await _userTable.select().eq("id", id);
+      final response = await _userTable.select().eq("id", id);
       return UserData.fromMap(response.first);
     } catch (e) {
+      print(e);
       return null;
     }
   }

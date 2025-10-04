@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:yourfit/src/models/user_data.dart';
 import 'package:yourfit/src/utils/extensions/widget_extension.dart';
-import 'package:yourfit/src/widgets/auth_form/auth_form.dart';
-import 'package:yourfit/src/widgets/auth_form/auth_form_text_field.dart';
-import 'package:yourfit/src/widgets/onboarding_screen.dart';
+import 'package:yourfit/src/widgets/other/auth_form.dart';
+import 'package:yourfit/src/widgets/textfields/auth_form_text_field.dart';
+import 'package:yourfit/src/widgets/other/onboarding_screen.dart';
 
 class UserInfoOnboardingScreen extends OnboardingScreen {
   const UserInfoOnboardingScreen({super.key});
@@ -31,7 +31,7 @@ class UserInfoOnboardingScreen extends OnboardingScreen {
           decoration: const InputDecoration(labelText: "Gender"),
           onChanged: (value) => _controller.gender = value,
           validator: (value) =>
-              _controller.validateString(value?.toValue(), valueType: "Gender"),
+              _controller.validateString(value?.name, valueName: "Gender"),
         ).sized(width: 360),
         AuthFormTextField(
           labelText: "Weight",
@@ -40,7 +40,7 @@ class UserInfoOnboardingScreen extends OnboardingScreen {
               _controller.weight = double.tryParse(value) ?? 0,
           validator: (value) => _controller.validateString(
             value,
-            valueType: "Weight",
+            valueName: "Weight",
             numeric: true,
           ),
         ),
@@ -50,7 +50,7 @@ class UserInfoOnboardingScreen extends OnboardingScreen {
           onChanged: (value) => _controller.height = int.tryParse(value) ?? 0,
           validator: (value) => _controller.validateString(
             value,
-            valueType: "Height",
+            valueName: "Height",
             numeric: true,
           ),
         ),

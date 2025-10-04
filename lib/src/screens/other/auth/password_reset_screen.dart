@@ -2,12 +2,9 @@ import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:auto_route/annotations.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:yourfit/src/models/auth/auth_response.dart';
 import 'package:yourfit/src/routing/routes.dart';
-import 'package:yourfit/src/utils/objects/auth/auth_code.dart';
-import 'package:yourfit/src/utils/functions/show_snackbar.dart';
-import 'package:yourfit/src/widgets/auth_form/auth_form.dart';
-import 'package:yourfit/src/widgets/auth_form/auth_form_text_field.dart';
+import 'package:yourfit/src/utils/index.dart';
+import 'package:yourfit/src/widgets/index.dart';
 
 @RoutePage()
 class PasswordResetScreen extends StatelessWidget {
@@ -65,7 +62,7 @@ class _PasswordResetScreenController extends AuthFormController {
 
     AuthResponse response = await authService.resetPassword(password);
     if (response.code == AuthCode.error) {
-      showSnackbar(response.error!, AnimatedSnackBarType.error);
+      showSnackbar(response.message!, AnimatedSnackBarType.error);
       return;
     }
 
@@ -83,7 +80,7 @@ class _PasswordResetScreenController extends AuthFormController {
     );
 
     if (response.code == AuthCode.error) {
-      showSnackbar(response.error!, AnimatedSnackBarType.error);
+      showSnackbar(response.message!, AnimatedSnackBarType.error);
       return;
     }
 

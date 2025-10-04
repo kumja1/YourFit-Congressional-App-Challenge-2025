@@ -8,18 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthResponse;
-import 'package:yourfit/src/models/auth/auth_response.dart';
-import 'package:yourfit/src/models/auth/new_user_auth_response.dart';
-import 'package:yourfit/src/routing/router.dart';
-import 'package:yourfit/src/routing/routes.dart';
+import 'package:yourfit/src/routing/index.dart';
 import 'package:yourfit/src/services/index.dart';
-import 'package:yourfit/src/utils/objects/auth/auth_code.dart';
-import 'package:yourfit/src/utils/objects/icons.dart';
-import 'package:yourfit/src/utils/extensions/widget_extension.dart';
-import 'package:yourfit/src/utils/functions/show_snackbar.dart';
-import 'package:yourfit/src/widgets/auth_form/auth_form.dart';
-import 'package:yourfit/src/widgets/auth_form/auth_form_text_field.dart';
-import 'package:yourfit/src/widgets/buttons/oauth_button.dart';
+import 'package:yourfit/src/utils/index.dart';
+import 'package:yourfit/src/widgets/index.dart';
 
 @RoutePage()
 class SignUpScreen extends StatelessWidget {
@@ -55,7 +47,8 @@ class SignUpScreen extends StatelessWidget {
             validator: (value) => controller.validateString(
               value,
               space: true,
-              valueType: "Name",
+              valueName: "Name",
+              message: "must contain a first and last name",
             ),
           ),
           DateTimeField(
@@ -75,7 +68,7 @@ class SignUpScreen extends StatelessWidget {
             onChanged: (value) => controller.password = value,
             validator: (value) =>
                 controller.validatePassword(value, minLength: 6),
-            isPassword:  true,
+            isPassword: true,
           ),
         ],
         onSubmitPressed: () async =>
@@ -114,7 +107,7 @@ class _SignUpScreenController extends AuthFormController {
         }
 
         if (response.code == AuthCode.error) {
-          showSnackbar(response.error!, AnimatedSnackBarType.error);
+          showSnackbar(response.message!, AnimatedSnackBarType.error);
           return;
         }
 
@@ -123,37 +116,39 @@ class _SignUpScreenController extends AuthFormController {
           weight: data["weight"],
           height: data["height"],
           gender: data["gender"],
+          physicalFitness: data["physicalFitness"],
         );
-        router.replacePath(Routes.main);
         return;
       }
 
-      if (!validateForm()) {
-        print("form not valid");
-        return;
-      }
-
+      if (!validateForm()) return;
       AuthResponse response = await authService.signUpWithPassword(
         email,
         password,
       );
-      print("user signup");
+
       if (response.code == AuthCode.error) {
-        print(response.error!);
-        showSnackbar(response.error!, AnimatedSnackBarType.error);
+        showSnackbar(response.message!, AnimatedSnackBarType.error);
         return;
       }
-      print("user created");
+
       final nameParts = name.split(" ");
-      await userService.createUser(
-        nameParts[0],
-        nameParts[1],
-        data["weight"],
-        data["height"],
-        dob!,
-        data["gender"],
-        data["physicalFitness"],
-      );
+      try {
+        await userService.createUser(
+          response.supabaseUser!.id,
+          nameParts[0],
+          nameParts[1],
+          data["weight"],
+          data["height"],
+          dob!,
+          data["gender"],
+          data["physicalFitness"],
+        );
+      } catch (e) {
+        print(e);
+        return;
+      }
+
       router.replacePath(Routes.main);
     } catch (e) {
       print(e);

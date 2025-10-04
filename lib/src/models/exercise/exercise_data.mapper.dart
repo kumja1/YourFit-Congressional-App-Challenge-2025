@@ -483,11 +483,8 @@ class RestIntervalMapper extends ClassMapperBase<RestInterval> {
     'duration',
     _$duration,
   );
-  static Duration _$restAt(RestInterval v) => v.restAt;
-  static const Field<RestInterval, Duration> _f$restAt = Field(
-    'restAt',
-    _$restAt,
-  );
+  static int _$restAt(RestInterval v) => v.restAt;
+  static const Field<RestInterval, int> _f$restAt = Field('restAt', _$restAt);
 
   @override
   final MappableFields<RestInterval> fields = const {
@@ -564,7 +561,7 @@ extension RestIntervalValueCopy<$R, $Out>
 
 abstract class RestIntervalCopyWith<$R, $In extends RestInterval, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  $R call({Duration? duration, Duration? restAt});
+  $R call({Duration? duration, int? restAt});
   RestIntervalCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -577,7 +574,7 @@ class _RestIntervalCopyWithImpl<$R, $Out>
   late final ClassMapperBase<RestInterval> $mapper =
       RestIntervalMapper.ensureInitialized();
   @override
-  $R call({Duration? duration, Duration? restAt}) => $apply(
+  $R call({Duration? duration, int? restAt}) => $apply(
     FieldCopyWithData({
       if (duration != null) #duration: duration,
       if (restAt != null) #restAt: restAt,

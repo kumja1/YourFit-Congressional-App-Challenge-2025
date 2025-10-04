@@ -1,9 +1,11 @@
-import 'package:yourfit/src/utils/objects/auth/auth_code.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+enum AuthCode { newUser, error, success }
 
 class AuthResponse {
-  final String? error;
-
+  final String? message;
   final AuthCode code;
+  final User? supabaseUser;
 
-  AuthResponse({this.error, required this.code});
+  AuthResponse({this.message, required this.code, this.supabaseUser});
 }

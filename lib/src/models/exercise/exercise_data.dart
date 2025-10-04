@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:dart_mappable/dart_mappable.dart';
-import 'package:yourfit/src/utils/objects/mappable/hooks/map_hook.dart';
-import 'package:yourfit/src/utils/objects/mappable/mappers/duration_mapper.dart';
+import 'package:yourfit/src/utils/objects/mappable/map_hook.dart';
+import 'package:yourfit/src/utils/objects/mappable/duration_mapper.dart';
 
 part 'exercise_data.mapper.dart';
 
@@ -82,7 +82,7 @@ class ExerciseData with ExerciseDataMappable {
 @MappableClass(includeCustomMappers: [DurationMapper()])
 class RestInterval with RestIntervalMappable {
   final Duration duration;
-  final Duration restAt;
+  final int restAt;
   RestInterval({required this.duration, required this.restAt});
 
   factory RestInterval.fromJson(String json) =>

@@ -1,9 +1,10 @@
 import 'package:choice/choice.dart';
+import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:yourfit/src/models/user_data.dart';
-import 'package:yourfit/src/widgets/animated_choice_chip.dart';
-import 'package:yourfit/src/widgets/onboarding_screen.dart';
+import 'package:yourfit/src/widgets/other/animated_choice_chip.dart';
+import 'package:yourfit/src/widgets/other/onboarding_screen.dart';
 
 class PhysicalFitnessOnboardingScreen extends OnboardingScreen {
   const PhysicalFitnessOnboardingScreen({super.key});
@@ -28,7 +29,7 @@ class PhysicalFitnessOnboardingScreen extends OnboardingScreen {
           selectedLabelColor: Colors.blue,
           shadowColor: Colors.black12,
           backgroundColor: Colors.white,
-          labelText: controller.choices[i].toString(),
+          labelText: controller.choices[i].name.toTitleCase(),
         ),
         listBuilder: (itemBuilder, count) => Column(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -14,7 +14,7 @@ class MonthDataMapper extends ClassMapperBase<MonthData> {
   static MonthDataMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = MonthDataMapper._());
-      DayDataMapper.ensureInitialized();
+      WorkoutDataMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -22,10 +22,10 @@ class MonthDataMapper extends ClassMapperBase<MonthData> {
   @override
   final String id = 'MonthData';
 
-  static Map<int, DayData> _$days(MonthData v) => v.days;
-  static const Field<MonthData, Map<int, DayData>> _f$days = Field(
-    'days',
-    _$days,
+  static Map<int, WorkoutData> _$workouts(MonthData v) => v.workouts;
+  static const Field<MonthData, Map<int, WorkoutData>> _f$workouts = Field(
+    'workouts',
+    _$workouts,
     hook: MapHook(),
   );
   static double _$caloriesBurned(MonthData v) => v.caloriesBurned;
@@ -37,12 +37,12 @@ class MonthDataMapper extends ClassMapperBase<MonthData> {
 
   @override
   final MappableFields<MonthData> fields = const {
-    #days: _f$days,
+    #workouts: _f$workouts,
     #caloriesBurned: _f$caloriesBurned,
   };
 
   static MonthData _instantiate(DecodingData data) {
-    return MonthData(days: data.dec(_f$days));
+    return MonthData(workouts: data.dec(_f$workouts));
   }
 
   @override
@@ -104,8 +104,14 @@ extension MonthDataValueCopy<$R, $Out> on ObjectCopyWith<$R, MonthData, $Out> {
 
 abstract class MonthDataCopyWith<$R, $In extends MonthData, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
-  MapCopyWith<$R, int, DayData, DayDataCopyWith<$R, DayData, DayData>> get days;
-  $R call({Map<int, DayData>? days});
+  MapCopyWith<
+    $R,
+    int,
+    WorkoutData,
+    WorkoutDataCopyWith<$R, WorkoutData, WorkoutData>
+  >
+  get workouts;
+  $R call({Map<int, WorkoutData>? workouts});
   MonthDataCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -118,18 +124,23 @@ class _MonthDataCopyWithImpl<$R, $Out>
   late final ClassMapperBase<MonthData> $mapper =
       MonthDataMapper.ensureInitialized();
   @override
-  MapCopyWith<$R, int, DayData, DayDataCopyWith<$R, DayData, DayData>>
-  get days => MapCopyWith(
-    $value.days,
+  MapCopyWith<
+    $R,
+    int,
+    WorkoutData,
+    WorkoutDataCopyWith<$R, WorkoutData, WorkoutData>
+  >
+  get workouts => MapCopyWith(
+    $value.workouts,
     (v, t) => v.copyWith.$chain(t),
-    (v) => call(days: v),
+    (v) => call(workouts: v),
   );
   @override
-  $R call({Map<int, DayData>? days}) =>
-      $apply(FieldCopyWithData({if (days != null) #days: days}));
+  $R call({Map<int, WorkoutData>? workouts}) =>
+      $apply(FieldCopyWithData({if (workouts != null) #workouts: workouts}));
   @override
   MonthData $make(CopyWithData data) =>
-      MonthData(days: data.get(#days, or: $value.days));
+      MonthData(workouts: data.get(#workouts, or: $value.workouts));
 
   @override
   MonthDataCopyWith<$R2, MonthData, $Out2> $chain<$R2, $Out2>(

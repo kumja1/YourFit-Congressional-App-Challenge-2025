@@ -9,15 +9,17 @@ import 'package:yourfit/src/routing/router.gr.dart';
 import 'package:yourfit/src/screens/other/onboarding/screens/physical_fitness_onboarding_screen.dart';
 import 'package:yourfit/src/screens/other/onboarding/screens/user_info_onboarding_screen.dart';
 import 'package:yourfit/src/widgets/buttons/animated_button.dart';
-import 'package:yourfit/src/widgets/onboarding_screen.dart';
+import 'package:yourfit/src/widgets/other/onboarding_screen.dart';
 
 @RoutePage()
 class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
+  WelcomeScreen({super.key});
+
+  final String _tag = UniqueKey().toString();
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(_WelcomeScreenController());
+    final controller = Get.put(_WelcomeScreenController(), tag:_tag );
 
     return IntroductionScreen(
       key: controller.onboardingKey,
@@ -30,6 +32,7 @@ class WelcomeScreen extends StatelessWidget {
       globalHeader: Stack(
         children: [
           GetBuilder<_WelcomeScreenController>(
+            tag: _tag,
             builder: (controller) => IconButton(
               constraints: BoxConstraints.tightFor(width: 29.5, height: 29.5),
               iconSize: 30,
@@ -41,6 +44,7 @@ class WelcomeScreen extends StatelessWidget {
             ).showIf(controller.currentIndex >= 1),
           ).align(Alignment.centerLeft).fill(),
           GetBuilder<_WelcomeScreenController>(
+            tag: _tag,
             builder: (controller) => StepProgressIndicator(
               size: 10,
               totalSteps: controller.pages.length,
