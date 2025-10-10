@@ -7,69 +7,69 @@
 
 part of 'workout_data.dart';
 
-class WorkoutTypeMapper extends EnumMapper<WorkoutType> {
-  WorkoutTypeMapper._();
+class WorkoutFocusMapper extends EnumMapper<WorkoutFocus> {
+  WorkoutFocusMapper._();
 
-  static WorkoutTypeMapper? _instance;
-  static WorkoutTypeMapper ensureInitialized() {
+  static WorkoutFocusMapper? _instance;
+  static WorkoutFocusMapper ensureInitialized() {
     if (_instance == null) {
-      MapperContainer.globals.use(_instance = WorkoutTypeMapper._());
+      MapperContainer.globals.use(_instance = WorkoutFocusMapper._());
     }
     return _instance!;
   }
 
-  static WorkoutType fromValue(dynamic value) {
+  static WorkoutFocus fromValue(dynamic value) {
     ensureInitialized();
     return MapperContainer.globals.fromValue(value);
   }
 
   @override
-  WorkoutType decode(dynamic value) {
+  WorkoutFocus decode(dynamic value) {
     switch (value) {
-      case r'legDay':
-        return WorkoutType.leg;
+      case r'leg':
+        return WorkoutFocus.leg;
       case r'upperBody':
-        return WorkoutType.upperBody;
+        return WorkoutFocus.upperBody;
       case r'cardio':
-        return WorkoutType.cardio;
+        return WorkoutFocus.cardio;
       case r'core':
-        return WorkoutType.core;
+        return WorkoutFocus.core;
       case r'fullBody':
-        return WorkoutType.fullBody;
+        return WorkoutFocus.fullBody;
       case r'rest':
-        return WorkoutType.rest;
+        return WorkoutFocus.rest;
       case r'yoga':
-        return WorkoutType.yoga;
+        return WorkoutFocus.yoga;
       default:
         throw MapperException.unknownEnumValue(value);
     }
   }
 
   @override
-  dynamic encode(WorkoutType self) {
+  dynamic encode(WorkoutFocus self) {
     switch (self) {
-      case WorkoutType.leg:
-        return r'legDay';
-      case WorkoutType.upperBody:
+      case WorkoutFocus.leg:
+        return r'leg';
+      case WorkoutFocus.upperBody:
         return r'upperBody';
-      case WorkoutType.cardio:
+      case WorkoutFocus.cardio:
         return r'cardio';
-      case WorkoutType.core:
+      case WorkoutFocus.core:
         return r'core';
-      case WorkoutType.fullBody:
+      case WorkoutFocus.fullBody:
         return r'fullBody';
-      case WorkoutType.rest:
+      case WorkoutFocus.rest:
         return r'rest';
-      case WorkoutType.yoga:
+      case WorkoutFocus.yoga:
         return r'yoga';
     }
   }
 }
 
-extension WorkoutTypeMapperExtension on WorkoutType {
+extension WorkoutFocusMapperExtension on WorkoutFocus {
   String toValue() {
-    WorkoutTypeMapper.ensureInitialized();
-    return MapperContainer.globals.toValue<WorkoutType>(this) as String;
+    WorkoutFocusMapper.ensureInitialized();
+    return MapperContainer.globals.toValue<WorkoutFocus>(this) as String;
   }
 }
 
@@ -81,7 +81,7 @@ class WorkoutDataMapper extends ClassMapperBase<WorkoutData> {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = WorkoutDataMapper._());
       ExerciseDataMapper.ensureInitialized();
-      WorkoutTypeMapper.ensureInitialized();
+      WorkoutFocusMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -94,12 +94,20 @@ class WorkoutDataMapper extends ClassMapperBase<WorkoutData> {
     'exercises',
     _$exercises,
   );
-  static WorkoutType _$type(WorkoutData v) => v.type;
-  static const Field<WorkoutData, WorkoutType> _f$type = Field('type', _$type);
+  static WorkoutFocus _$focus(WorkoutData v) => v.focus;
+  static const Field<WorkoutData, WorkoutFocus> _f$focus = Field(
+    'focus',
+    _$focus,
+  );
   static double _$caloriesBurned(WorkoutData v) => v.caloriesBurned;
   static const Field<WorkoutData, double> _f$caloriesBurned = Field(
     'caloriesBurned',
     _$caloriesBurned,
+  );
+  static Duration _$duration(WorkoutData v) => v.duration;
+  static const Field<WorkoutData, Duration> _f$duration = Field(
+    'duration',
+    _$duration,
   );
   static String _$summary(WorkoutData v) => v.summary;
   static const Field<WorkoutData, String> _f$summary = Field(
@@ -110,16 +118,18 @@ class WorkoutDataMapper extends ClassMapperBase<WorkoutData> {
   @override
   final MappableFields<WorkoutData> fields = const {
     #exercises: _f$exercises,
-    #type: _f$type,
+    #focus: _f$focus,
     #caloriesBurned: _f$caloriesBurned,
+    #duration: _f$duration,
     #summary: _f$summary,
   };
 
   static WorkoutData _instantiate(DecodingData data) {
     return WorkoutData(
       exercises: data.dec(_f$exercises),
-      type: data.dec(_f$type),
+      focus: data.dec(_f$focus),
       caloriesBurned: data.dec(_f$caloriesBurned),
+      duration: data.dec(_f$duration),
       summary: data.dec(_f$summary),
     );
   }
@@ -192,8 +202,9 @@ abstract class WorkoutDataCopyWith<$R, $In extends WorkoutData, $Out>
   get exercises;
   $R call({
     List<ExerciseData>? exercises,
-    WorkoutType? type,
+    WorkoutFocus? focus,
     double? caloriesBurned,
+    Duration? duration,
     String? summary,
   });
   WorkoutDataCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
@@ -221,22 +232,25 @@ class _WorkoutDataCopyWithImpl<$R, $Out>
   @override
   $R call({
     List<ExerciseData>? exercises,
-    WorkoutType? type,
+    WorkoutFocus? focus,
     double? caloriesBurned,
+    Duration? duration,
     String? summary,
   }) => $apply(
     FieldCopyWithData({
       if (exercises != null) #exercises: exercises,
-      if (type != null) #type: type,
+      if (focus != null) #focus: focus,
       if (caloriesBurned != null) #caloriesBurned: caloriesBurned,
+      if (duration != null) #duration: duration,
       if (summary != null) #summary: summary,
     }),
   );
   @override
   WorkoutData $make(CopyWithData data) => WorkoutData(
     exercises: data.get(#exercises, or: $value.exercises),
-    type: data.get(#type, or: $value.type),
+    focus: data.get(#focus, or: $value.focus),
     caloriesBurned: data.get(#caloriesBurned, or: $value.caloriesBurned),
+    duration: data.get(#duration, or: $value.duration),
     summary: data.get(#summary, or: $value.summary),
   );
 

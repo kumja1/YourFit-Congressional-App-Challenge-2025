@@ -38,8 +38,8 @@ dependencies:
   envied: ^1.1.1
   text_divider: ^1.0.0
   google_fonts: ^6.1.0
-
   envied_generator: ^1.1.1
+  maplibre_gl: ^0.24.0
   simple_icons: ^14.6.1
   flutter_svg: ^2.2.0
   google_sign_in: ^7.1.1
@@ -71,11 +71,10 @@ dependencies:
   supabase_flutter: ^2.10.0
   shared_preferences: ^2.5.3
   url_launcher: ^6.3.2
-  flutter_timer_countdown: ^1.0.7
-  http: ^1.5.0
-  json_annotation: ^4.9.0
-  freezed: ^3.2.3
-  freezed_annotation: ^3.1.0
+  circular_countdown_timer: ^0.2.4
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  free_map: ^2.5.0
 
 dev_dependencies:
 
@@ -89,6 +88,7 @@ dev_dependencies:
   auto_route_generator: ^10.2.3
   build_runner: ^2.7.0
   json_serializable: ^6.11.1
+  lean_builder: ^0.1.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

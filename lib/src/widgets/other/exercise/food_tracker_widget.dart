@@ -1,6 +1,5 @@
 // lib/src/screens/tabs/roadmap/widgets/food_tracker_widgets.dart
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:yourfit/src/screens/tabs/roadmap_screen.dart';
 import '../../../models/roadmap/food_entry.dart';
 

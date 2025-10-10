@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthResponse;
+import 'package:yourfit/src/models/auth/auth_response.dart';
+import 'package:yourfit/src/models/auth/new_user_auth_response.dart';
 import 'package:yourfit/src/routing/index.dart';
 import 'package:yourfit/src/services/index.dart';
 import 'package:yourfit/src/utils/index.dart';
@@ -83,7 +85,7 @@ class SignUpScreen extends StatelessWidget {
           "Existing User? Sign in",
           style: TextStyle(color: Colors.black12),
         ),
-      ).center().scrollable(),
+      ).center(),
     );
   }
 }

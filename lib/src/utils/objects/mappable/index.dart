@@ -1,2 +1,2 @@
-export 'map_hook.dart';
+export 'hooks/map_hook.dart';
 export 'duration_mapper.dart';

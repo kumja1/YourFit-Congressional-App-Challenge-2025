@@ -5,7 +5,7 @@ import 'package:yourfit/src/models/exercise/exercise_data.dart';
 part 'workout_data.mapper.dart';
 
 @MappableEnum()
-enum WorkoutType {
+enum WorkoutFocus {
   leg('Leg Day', Colors.blue, Icons.directions_walk, 'LEG'),
   upperBody('Upper Body', Colors.green, Icons.fitness_center, 'UP'),
   cardio('Cardio', Colors.orange, Icons.directions_run, 'CRD'),
@@ -18,20 +18,25 @@ enum WorkoutType {
   final Color color;
   final IconData icon;
   final String abbrev;
-  const WorkoutType(this.label, this.color, this.icon, this.abbrev);
+  const WorkoutFocus(this.label, this.color, this.icon, this.abbrev);
+
+  factory WorkoutFocus.fromValue(String value) =>
+      WorkoutFocusMapper.fromValue(value);
 }
 
 @MappableClass()
 class WorkoutData with WorkoutDataMappable {
   final List<ExerciseData> exercises;
   final double caloriesBurned;
-  final WorkoutType type;
+  final Duration duration;
+  final WorkoutFocus focus;
   final String summary;
 
   WorkoutData({
     required this.exercises,
-    required this.type,
+    required this.focus,
     required this.caloriesBurned,
+    required this.duration,
     required this.summary,
   });
 

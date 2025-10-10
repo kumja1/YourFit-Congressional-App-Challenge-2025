@@ -4,22 +4,23 @@ import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/people/v1.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthResponse;
+import 'package:yourfit/src/models/auth/auth_response.dart';
+import 'package:yourfit/src/models/auth/new_user_auth_response.dart';
 import 'package:yourfit/src/models/index.dart';
 import 'package:yourfit/src/services/user_service.dart';
-import 'package:yourfit/src/utils/objects/auth/index.dart';
+import 'package:yourfit/src/utils/index.dart' hide Supabase;
 
 class AuthService extends GetxService {
   final UserService _userService = Get.find();
   final GoTrueClient _auth = Supabase.instance.client.auth;
   final Rx<UserData?> currentUser = Rx<UserData?>(null);
-  
+
   /// Returns true if the user is signed in.
   bool get isSignedIn => currentUser.value != null;
 
   @override
   void onInit() {
     super.onInit();
-    print("AuthService.onInit");
     _auth.onAuthStateChange.listen((event) async {
       try {
         switch (event.event) {
@@ -230,7 +231,7 @@ class AuthService extends GetxService {
             height: 0,
             weight: 0,
             physicalFitness: UserPhysicalFitness.minimal,
-            stats: UserStats()
+            stats: UserStats(),
           ),
           supabaseUser: response.user,
         );

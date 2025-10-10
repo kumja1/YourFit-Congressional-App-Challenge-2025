@@ -1,11 +1,10 @@
-import 'dart:async';
 import 'package:auto_route/auto_route.dart';
+import 'package:circular_countdown_timer/circular_countdown_timer.dart';
+import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_timer_countdown/flutter_timer_countdown.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide WidgetPaddingX;
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 import 'package:yourfit/src/models/exercise/exercise_data.dart';
-import 'package:yourfit/src/utils/extensions/date_time_extensions.dart';
 
 @RoutePage()
 class BasicExerciseScreen extends StatelessWidget {
@@ -13,7 +12,9 @@ class BasicExerciseScreen extends StatelessWidget {
   final VoidCallback onSetComplete;
   final VoidCallback onExerciseComplete;
 
-  const BasicExerciseScreen({
+  final _tag = UniqueKey().toString();
+
+  BasicExerciseScreen({
     super.key,
     required this.exercise,
     required this.onSetComplete,
@@ -22,72 +23,86 @@ class BasicExerciseScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        GetBuilder<_BasicExerciseScreenController>(
-          init: _BasicExerciseScreenController(exercise, onExerciseComplete, onSetComplete),
-          builder: (controller) => StepProgressIndicator(
-            totalSteps: exercise.sets,
-            currentStep: controller.setsDone,
-            size: 5,
-            unselectedColor: Colors.black12,
-            selectedColor: Colors.blue,
+    final controller = Get.put(
+      _BasicExerciseScreenController(
+        exercise,
+        onExerciseComplete,
+        onSetComplete,
+      ),
+      tag: _tag,
+    );
+    return Scaffold(
+      body: Column(
+        children: [
+          GetBuilder<_BasicExerciseScreenController>(
+            tag: _tag,
+            builder: (controller) => StepProgressIndicator(
+              size: 10,
+              totalSteps: controller.exercise.sets,
+              padding: 0,
+              currentStep: controller.exercise.state.setsDone,
+              roundedEdges: const Radius.circular(10),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              unselectedColor: Colors.grey[200]!,
+              selectedColor: Colors.blue,
+              progressDirection: TextDirection.ltr,
+            ).paddingOnly(left: 30, right: 30, top: 20),
           ),
-        ),
-        Align(
-          alignment: Alignment.center,
-          child: TimerCountdown(
-            endTime: exercise.durationPerSet.toDateTime(),
-            format: CountDownTimerFormat.minutesSeconds,
-            timeTextStyle: const TextStyle(color: Colors.blue),
-            colonsTextStyle: const TextStyle(color: Colors.blue),
-          ),
-        ),
-        Row(children: []),
-      ],
+          Align(
+            alignment: Alignment.center,
+            child: CircularCountDownTimer(
+              duration: controller.exercise.duration.inSeconds,
+              autoStart: true,
+              controller: controller.countdownController,
+              isReverse: true,
+              isReverseAnimation: true,
+              isTimerTextShown: true,
+              textFormat: CountdownTextFormat.MM_SS,
+              onComplete: controller.completeSet,
+              ringColor: Colors.grey[200]!,
+              fillColor: Colors.blue,
+              backgroundColor: Colors.transparent,
+              strokeWidth: 12.0,
+              strokeCap: StrokeCap.round,
+              textStyle: const TextStyle(
+                color: Colors.blue,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+              width: 90,
+              height: 90,
+            ),
+          ).flexible(),
+        ],
+      ),
     );
   }
 }
 
 class _BasicExerciseScreenController extends GetxController {
-  late int setsDone;
-  late Timer timer;
   final ExerciseData exercise;
   final VoidCallback onSetComplete;
   final VoidCallback onExerciseComplete;
+  final CountDownController countdownController = CountDownController();
 
   _BasicExerciseScreenController(
     this.exercise,
     this.onExerciseComplete,
     this.onSetComplete,
-  ) {
-    setsDone = exercise.state.setsDone;
-    timer = Timer.periodic(exercise.durationPerSet, (timer) {
-      if (setsDone >= exercise.sets) {
-        completeExercise();
-        return;
-      }
-
-      completeSet();
-    });
-  }
+  );
 
   void completeExercise() {
     exercise.state.completed = true;
-    timer.cancel();
-
     onExerciseComplete();
   }
 
   void completeSet() {
-    setsDone++;
-    exercise.state.setsDone = setsDone;
-    onSetComplete();
+    if (exercise.state.setsDone++ >= exercise.sets) {
+      completeExercise();
+      return;
+    }
     update();
-  }
-
-  @override
-  void onClose() {
-    timer.cancel();
+    onSetComplete();
+    countdownController.restart();
   }
 }

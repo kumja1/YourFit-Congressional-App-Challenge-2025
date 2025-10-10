@@ -107,8 +107,8 @@ class RoadmapController extends GetxController {
   DateTime selectedDay = DateTime.now();
   SharedPreferences? _prefs;
 
-  Map<String, WorkoutType> workoutPlans = {};
-  WorkoutType? get selectedWorkout => getWorkoutForDate(selectedDay);
+  Map<String, WorkoutFocus> workoutPlans = {};
+  WorkoutFocus? get selectedWorkout => getWorkoutForDate(selectedDay);
 
   String get selectedDateName =>
       DateUtils.isSameDay(selectedDay, DateTime.now())
@@ -150,7 +150,7 @@ class RoadmapController extends GetxController {
   }
 
   // ---------- Plans ----------
-  WorkoutType? getWorkoutForDate(DateTime date) {
+  WorkoutFocus? getWorkoutForDate(DateTime date) {
     final key = _dateKey(date);
     return workoutPlans[key];
   }
@@ -174,7 +174,7 @@ class RoadmapController extends GetxController {
     update();
   }
 
-  Future<Map<String, WorkoutType>> _generateAIPlan(
+  Future<Map<String, WorkoutFocus>> _generateAIPlan(
     int age,
     UserPhysicalFitness activity,
   ) async {
@@ -237,7 +237,7 @@ Example:
           }
         }
 
-        final Map<String, WorkoutType> plan = {};
+        final Map<String, WorkoutFocus> plan = {};
         planJson.forEach((key, value) {
           final type = _parseWorkoutType(value.toString());
           if (type != null) plan[key] = type;
@@ -251,36 +251,36 @@ Example:
     return _generateDefaultPlan();
   }
 
-  WorkoutType? _parseWorkoutType(String raw) {
+  WorkoutFocus? _parseWorkoutType(String raw) {
     final s = raw.toLowerCase().replaceAll(RegExp(r'[\s_-]'), '');
-    if (s.contains('rest')) return WorkoutType.rest;
-    if (s.contains('full')) return WorkoutType.fullBody;
+    if (s.contains('rest')) return WorkoutFocus.rest;
+    if (s.contains('full')) return WorkoutFocus.fullBody;
     if (s.contains('upper') || s.contains('push') || s.contains('pull')) {
-      return WorkoutType.upperBody;
+      return WorkoutFocus.upperBody;
     }
-    if (s.contains('leg') || s.contains('lower')) return WorkoutType.leg;
+    if (s.contains('leg') || s.contains('lower')) return WorkoutFocus.leg;
     if (s.contains('cardio') || s.contains('hiit') || s.contains('interval')) {
-      return WorkoutType.cardio;
+      return WorkoutFocus.cardio;
     }
-    if (s.contains('core') || s.contains('abs')) return WorkoutType.core;
+    if (s.contains('core') || s.contains('abs')) return WorkoutFocus.core;
     if (s.contains('yoga') || s.contains('stretch') || s.contains('mobility')) {
-      return WorkoutType.yoga;
+      return WorkoutFocus.yoga;
     }
     return null;
   }
 
-  Map<String, WorkoutType> _generateDefaultPlan() {
-    final plan = <String, WorkoutType>{};
+  Map<String, WorkoutFocus> _generateDefaultPlan() {
+    final plan = <String, WorkoutFocus>{};
     final today = DateTime.now();
 
     final pattern = [
-      WorkoutType.upperBody,
-      WorkoutType.cardio,
-      WorkoutType.leg,
-      WorkoutType.yoga,
-      WorkoutType.core,
-      WorkoutType.fullBody,
-      WorkoutType.rest,
+      WorkoutFocus.upperBody,
+      WorkoutFocus.cardio,
+      WorkoutFocus.leg,
+      WorkoutFocus.yoga,
+      WorkoutFocus.core,
+      WorkoutFocus.fullBody,
+      WorkoutFocus.rest,
     ];
 
     for (int i = 0; i < 30; i++) {
@@ -291,7 +291,7 @@ Example:
     return plan;
   }
 
-  Future<void> _savePlans(Map<String, WorkoutType> plans) async {
+  Future<void> _savePlans(Map<String, WorkoutFocus> plans) async {
     final Map<String, String> stringPlans = {};
     plans.forEach((key, value) => stringPlans[key] = value.name);
     await _prefs?.setString('workout_plans', jsonEncode(stringPlans));

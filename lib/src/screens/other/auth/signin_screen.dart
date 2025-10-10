@@ -4,6 +4,7 @@ import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthResponse;
+import 'package:yourfit/src/models/auth/auth_response.dart';
 import 'package:yourfit/src/services/index.dart';
 import 'package:yourfit/src/utils/index.dart';
 import 'package:yourfit/src/routing/index.dart';
@@ -39,13 +40,13 @@ class SignInScreen extends StatelessWidget {
             onChanged: (value) => controller.password = value,
             validator: controller.validatePassword,
             passwordChild: TextButton(
-              onPressed: () => Get.rootDelegate.toNamed(Routes.passwordReset),
+              onPressed: () => context.router.pushPath(Routes.passwordReset),
               style: const ButtonStyle(
                 overlayColor: WidgetStatePropertyAll(Colors.transparent),
               ),
-              child: const Text(
+              child:  Text(
                 "Forgot?",
-                style: TextStyle(color: Colors.black12, fontSize: 16.2),
+                style: TextStyle(color: Colors.grey[300], fontSize: 16.2),
               ),
             ),
           ),

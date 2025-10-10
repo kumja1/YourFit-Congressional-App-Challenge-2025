@@ -1,7 +1,5 @@
-import 'dart:convert';
-
 import 'package:dart_mappable/dart_mappable.dart';
-import 'package:yourfit/src/utils/objects/mappable/map_hook.dart';
+import 'package:yourfit/src/utils/objects/mappable/hooks/map_hook.dart';
 import 'package:yourfit/src/utils/objects/mappable/duration_mapper.dart';
 
 part 'exercise_data.mapper.dart';
@@ -37,12 +35,12 @@ enum ExerciseType {
       ExerciseTypeMapper.fromValue(value);
 }
 
-@MappableClass(includeCustomMappers: [DurationMapper()])
+@MappableClass(includeCustomMappers: [DurationMapper()], discriminatorKey: "base")
 class ExerciseData with ExerciseDataMappable {
   final ExerciseDifficulty difficulty;
   final ExerciseIntensity intensity;
   final ExerciseType type;
-  final Duration durationPerSet;
+  final Duration duration;
   final double caloriesBurned;
   final String instructions;
   final String summary;
@@ -54,7 +52,8 @@ class ExerciseData with ExerciseDataMappable {
   final String name;
   final int sets;
   final int reps;
-  final ExerciseState state;
+  final ExerciseState _state = ExerciseState(completed: false, setsDone: 0);
+  ExerciseState get state => _state;
 
   ExerciseData({
     required this.difficulty,
@@ -66,11 +65,11 @@ class ExerciseData with ExerciseDataMappable {
     required this.summary,
     required this.sets,
     required this.reps,
-    required this.durationPerSet,
+    required this.duration,
     this.targetMuscles = const [],
     this.equipment = const [],
     this.restIntervals = const [],
-  }) : state = ExerciseState(completed: false, setsDone: 0);
+  });
 
   factory ExerciseData.fromJson(String json) =>
       ExerciseDataMapper.fromJson(json);

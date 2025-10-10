@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthResponse;
 import 'package:text_divider/text_divider.dart';
+import 'package:yourfit/src/models/auth/auth_response.dart';
 import 'package:yourfit/src/services/auth_service.dart';
 import 'package:yourfit/src/utils/index.dart';
 import 'package:yourfit/src/widgets/buttons/animated_button.dart';

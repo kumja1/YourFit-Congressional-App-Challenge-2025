@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:yourfit/src/routing/guards/auth_guard.dart';
 import 'package:yourfit/src/routing/router.gr.dart';
 import 'package:yourfit/src/routing/routes.dart';
 
@@ -8,7 +9,12 @@ class AppRouter extends RootStackRouter {
 
   @override
   List<AutoRoute> get routes => [
-    AutoRoute(page: SplashRoute.page, path: Routes.splash),
+    AutoRoute(
+      page: SplashRoute.page,
+      path: Routes.splash,
+      initial: true,
+      guards: [AuthGuard()],
+    ),
     AutoRoute(page: LandingRoute.page, path: Routes.landing),
     AutoRoute(page: WelcomeRoute.page, path: Routes.welcome),
     AutoRoute(page: SignInRoute.page, path: Routes.signIn),
@@ -19,9 +25,10 @@ class AppRouter extends RootStackRouter {
       path: Routes.main,
       children: [
         AutoRoute(page: RoadmapRoute.page, path: "roadmap"),
-        AutoRoute(page: WorkoutsRoute.page, path: "workouts"),
+        AutoRoute(page: ExerciseRoute.page, path: "workouts"),
         AutoRoute(page: ProfileRoute.page, path: "profile"),
       ],
     ),
+    AutoRoute(page: BasicExerciseRoute.page),
   ];
 }

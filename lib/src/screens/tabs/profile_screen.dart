@@ -5,7 +5,6 @@ import 'package:get/get.dart' hide WidgetPaddingX;
 import 'package:yourfit/src/models/user_data.dart';
 import 'package:yourfit/src/services/auth_service.dart';
 import 'package:yourfit/src/utils/mixins/input_validation_mixin.dart';
-import 'package:yourfit/src/widgets/other/profile_section_card.dart';
 import 'package:yourfit/src/widgets/textfields/number_form_field.dart';
 
 @RoutePage()
@@ -135,7 +134,8 @@ class _ProfileScreenController extends GetxController
         NumberFormField(
           initialValue: currentUser.value?.exerciseDaysPerWeek,
           labelText: 'Days / week',
-          onSaved: (v) => currentUser.update((user) => user?.exerciseDaysPerWeek = v),
+          onSaved: (v) =>
+              currentUser.update((user) => user?.exerciseDaysPerWeek = v),
         ),
       ],
     );
@@ -156,7 +156,9 @@ class _ProfileScreenController extends GetxController
           ),
           onSaved: (v) => currentUser.update((user) {
             user?.equipment.clear();
-            user?.equipment.addAll(_parseList(v));
+            user?.equipment.addAll(
+              v == null || v.isEmpty ? [] : v.removeAllWhitespace.split(","),
+            );
           }),
         ),
       ],
@@ -246,9 +248,52 @@ class _ProfileScreenController extends GetxController
       ),
     ),
   );
+}
 
-  List<String> _parseList(String? s) =>
-      s == null || s.isEmpty ? [] : s.removeAllWhitespace.split(",");
+class _ProfileSectionCard extends StatelessWidget {
+  final String title;
+  final Widget child;
+  final Widget? trailing;
+
+  const _ProfileSectionCard({
+    required this.title,
+    required this.child,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.black12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const Spacer(),
+                if (trailing != null) trailing!,
+              ],
+            ),
+            const SizedBox(height: 10),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _ProfileHeader extends StatelessWidget {
@@ -323,7 +368,8 @@ class _ProfileHeader extends StatelessWidget {
                                 ),
                               ),
                               _Pill(
-                                currentUser.value?.gender.name.toTitleCase() ?? '—',
+                                currentUser.value?.gender.name.toTitleCase() ??
+                                    '—',
                               ),
                             ],
                           ),
@@ -356,7 +402,7 @@ class _GoalSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return currentUser.value == null
         ? const SizedBox.shrink()
-        : ProfileSectionCard(
+        : _ProfileSectionCard(
             title: 'Goal',
             trailing: IconButton(
               onPressed: () => controller.editGoal(),
@@ -386,7 +432,7 @@ class _TrainingSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return currentUser.value == null
         ? const SizedBox.shrink()
-        : ProfileSectionCard(
+        : _ProfileSectionCard(
             title: 'Training',
             trailing: IconButton(
               onPressed: () => controller.editTraining(),
@@ -409,7 +455,8 @@ class _TrainingSection extends StatelessWidget {
                 Obx(
                   () => _InfoTile(
                     'Intensity',
-                    currentUser.value?.exercisesIntensity.name.toTitleCase() ?? '—',
+                    currentUser.value?.exercisesIntensity.name.toTitleCase() ??
+                        '—',
                   ),
                 ),
               ],
@@ -429,7 +476,7 @@ class _EquipmentSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return currentUser.value == null
         ? const SizedBox.shrink()
-        : ProfileSectionCard(
+        : _ProfileSectionCard(
             title: 'Equipment & Disabilties',
             trailing: Row(
               mainAxisSize: MainAxisSize.min,

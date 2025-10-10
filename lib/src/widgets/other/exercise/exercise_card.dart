@@ -1,6 +1,6 @@
 // lib/src/screens/tabs/exercise/widgets/exercise_card.dart
+import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:yourfit/src/models/exercise/exercise_data.dart';
 import 'package:yourfit/src/widgets/buttons/animated_button.dart';
 
@@ -16,45 +16,24 @@ class ExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(_ExerciseCardController());
+    final screenWidth = MediaQuery.maybeWidthOf(context);
     return AnimatedButton(
-      shadowColor: Colors.amber,
-      backgroundColor: Colors.amberAccent,
-      width: 300,
-      height: 50,
+      shadowColor: Colors.black12,
+      backgroundColor: Colors.white,
+      width: screenWidth,
+      height: 80,
       borderRadius: 10,
       onPressed: () => onStart(exercise),
-      child: ExpansionTile(
-        onExpansionChanged: (v) => controller.toggleExpanded(),
-        title: Text(exercise.name),
+      child: ListTile(
+        title: Text(exercise.name, style: const TextStyle(color: Colors.blue)),
+        titleAlignment: ListTileTitleAlignment.titleHeight,
         subtitle: Text(
           '${exercise.sets} x ${exercise.reps}  •  ${exercise.state.setsDone}/${exercise.sets} sets',
+          style: TextStyle(color: Colors.grey[400]),
         ),
-        trailing: Wrap(
-          spacing: 6,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.ondemand_video),
-              tooltip: 'YouTube tutorial',
-              onPressed: () {},
-            ),
-            FilledButton(
-              onPressed: () {},
-              child: Text(exercise.state.completed ? 'Done' : 'Start'),
-            ),
-          ],
-        ),
-        children: [Text(exercise.summary)],
-      ),
-    );
-  }
-}
-
-class _ExerciseCardController extends GetxController {
-  bool expanded = false;
-
-  void toggleExpanded() {
-    expanded = !expanded;
-    update();
+        iconColor: Colors.blue,
+        // children: [Text(exercise.summary)],
+      ).constrains(minHeight: 80, maxWidth: 290),
+    ).paddingAll(10);
   }
 }

@@ -1,12 +1,13 @@
 // lib/src/screens/tabs/exercise/workouts_screen.dart
-import 'dart:convert';
 
 import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:free_map/free_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:yourfit/src/models/exercise/running_exercise_data.dart';
 import 'package:yourfit/src/models/index.dart';
 import 'package:yourfit/src/routing/router.gr.dart';
 import 'package:yourfit/src/services/index.dart';
@@ -14,16 +15,17 @@ import 'package:yourfit/src/utils/functions/show_snackbar.dart';
 import 'package:yourfit/src/widgets/other/exercise/index.dart';
 
 @RoutePage()
-class WorkoutsScreen extends StatelessWidget {
-  const WorkoutsScreen({super.key});
+class ExerciseScreen extends StatelessWidget {
+  const ExerciseScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final c = Get.put(_WorkoutsScreenController());
+    final c = Get.put(_ExerciseScreenController());
     return Scaffold(
       appBar: AppBar(title: const Text('Workouts')),
-      floatingActionButton: GetBuilder<_WorkoutsScreenController>(
-        init: _WorkoutsScreenController(),
+      floatingActionButton: GetBuilder<_ExerciseScreenController>(
+        init: _ExerciseScreenController(),
+        id: "loading",
         builder: (c) => FloatingActionButton.extended(
           onPressed: c.loading ? null : c.generate,
           icon: c.loading
@@ -54,17 +56,17 @@ class WorkoutsScreen extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                       child: CompactHeader(
-                        level: c.currentUserStats?.level ?? 1,
-                        xp: c.currentUserStats?.xp ?? 0,
-                        xpToNext: c.currentUserStats?.xpToNext ?? 0,
-                        streak: c.currentUserStats?.streak ?? 0,
+                        level: c.currentStats?.level ?? 1,
+                        xp: c.currentStats?.xp ?? 0,
+                        xpToNext: c.currentStats?.xpToNext ?? 0,
+                        streak: c.currentStats?.streak ?? 0,
                       ),
                     ),
                   ),
                 ),
               ),
 
-              if (c.dayFocus != null && c.dayFocus!.isNotEmpty)
+              if (c.workoutFocus != null && c.workoutFocus!.label.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
@@ -91,7 +93,7 @@ class WorkoutsScreen extends StatelessWidget {
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                c.dayFocus!,
+                                c.workoutFocus!.label,
                                 style: Theme.of(context).textTheme.headlineSmall
                                     ?.copyWith(fontWeight: FontWeight.bold),
                                 overflow: TextOverflow.ellipsis,
@@ -122,18 +124,32 @@ class WorkoutsScreen extends StatelessWidget {
               else
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
-                  sliver: SliverList.builder(
-                    itemCount: c.exercises.length,
-                    itemBuilder: (_, i) => ExerciseCard(
-                      exercise: c.exercises[i],
-                      onStart: (exercise) => context.router.navigate(
-                        BasicExerciseRoute(
-                          exercise: exercise,
-                          onSetComplete: () => c.updateXp(exercise),
-                          onExerciseComplete: () {},
+                  sliver: GetBuilder<_ExerciseScreenController>(
+                    id: "exercises",
+                    builder: (controller) => SliverPadding(
+                      padding: EdgeInsetsGeometry.only(bottom: 16),
+                      sliver: SliverList.builder(
+                        itemCount: controller.exercises.length,
+                        itemBuilder: (_, i) => ExerciseCard(
+                          exercise: controller.exercises[i],
+                          onStart: (exercise) => context.router.push(
+                            exercise is RunningExerciseData
+                                ? RunningExerciseRoute(
+                                    exercise: exercise,
+                                    onSetComplete: () =>
+                                        controller.updateXp(exercise),
+                                    onExerciseComplete: () {},
+                                  )
+                                : BasicExerciseRoute(
+                                    exercise: exercise,
+                                    onSetComplete: () =>
+                                        controller.updateXp(exercise),
+                                    onExerciseComplete: () {},
+                                  ),
+                          ),
                         ),
                       ),
-                    ).paddingOnly(bottom: 16),
+                    ),
                   ),
                 ),
             ],
@@ -150,33 +166,97 @@ class WorkoutsScreen extends StatelessWidget {
   }
 }
 
-class _WorkoutsScreenController extends GetxController {
-  _WorkoutsScreenController();
+class _ExerciseScreenController extends GetxController {
+  _ExerciseScreenController();
+
+  WorkoutFocus? workoutFocus; // label for UI (e.g., "Leg Day")
+  final Rx<UserData?> currentUser = Get.find<AuthService>().currentUser;
+  final ExerciseService exerciseService = Get.find();
+  final UserService userService = Get.find();
+  final FmService geocodingService = Get.find();
+  final SharedPreferences preferences = Get.find();
 
   // ---- Screen State ----
   bool loading = false;
-  List<ExerciseData> exercises = [];
-  String? dayFocus; // label for UI (e.g., "Leg Day")
-  UserStats? get currentUserStats => _currentUser.value?.stats;
+  List<ExerciseData> exercises = [
+    RunningExerciseData(
+      difficulty: ExerciseDifficulty.medium,
+      intensity: ExerciseIntensity.high,
+      type: ExerciseType.cardio,
+      caloriesBurned: 300.0,
+      name: "Waterfront Lake Loop Run",
+      instructions:
+          "Run the Waterfront Lake Loop at a steady pace. Focus on consistent breathing and maintaining good form. Warm up before starting and cool down after completing the loop.",
+      summary:
+          "A 3.3-mile outdoor run improving cardiovascular endurance and leg strength",
+      sets: 1,
+      reps: 1,
+      duration: Duration(minutes: 30),
+      targetMuscles: ["legs", "core", "cardiovascular system"],
+      equipment: ["running shoes"],
+      restIntervals: [RestInterval(duration: Duration(seconds: 90), restAt: 1)],
+      distance: 3.3, // miles
+      speed: 9, // average speed in minutes per mile
+      destination: "Waterfront Lake Loop, Short Pump, VA",
+    ),
+  ];
+  UserStats? get currentStats => currentUser.value?.stats;
 
-  final Rx<UserData?> _currentUser = Get.find<AuthService>().currentUser;
-  final ExerciseService _exerciseService = Get.find();
-  final UserService _userService = Get.find();
+  @override
+  void onInit() async {
+    super.onInit();
+
+    if (preferences.containsKey("location_permission")) {
+      return;
+    }
+
+    final permission = await Geolocator.requestPermission();
+    final denied =
+        permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever ||
+        permission == LocationPermission.unableToDetermine;
+
+    if (!denied) {
+      preferences.setBool("location_permission", true);
+    }
+
+    final now = DateTime.now();
+    final timestamp =
+        DateTime.tryParse(preferences.getString("last_generation") ?? "") ??
+        now;
+
+    if (now.difference(timestamp).inDays < 1) {
+      return;
+    }
+
+    preferences.setString("last_generation", now.toIso8601String());
+    await generate();
+  }
 
   Future<void> generate() async {
     if (loading) return;
     loading = true;
-    update();
-    final canonicalFocus = await _canonicalFocusForToday();
-    dayFocus = _labelForCanonical(canonicalFocus);
+    update(["loading"]);
+    workoutFocus = await exerciseService.getWorkoutFocus(currentUser.value);
     try {
-      final result = await _exerciseService.getExercises(_currentUser.value);
+      final currentPosition = await Geolocator.getCurrentPosition();
+      final result = await exerciseService.getExercises(
+        currentUser.value,
+        additionalParameters: {
+          "user_address": await geocodingService.getAddress(
+            lat: currentPosition.latitude,
+            lng: currentPosition.longitude,
+          ),
+        },
+      );
       exercises = result?.exercises ?? [];
+      update(["exercises"]);
+      print(currentUser.value);
     } on Error catch (e, st) {
       print("Generate: $e, $st");
     } finally {
       loading = false;
-      update();
+      update(["loading"]);
     }
   }
 
@@ -186,16 +266,13 @@ class _WorkoutsScreenController extends GetxController {
     update();
 
     try {
-      final canonicalFocus = await _canonicalFocusForToday();
-      dayFocus = _labelForCanonical(canonicalFocus);
-
-      final res = await _exerciseService.getExercises(
-        _currentUser.value,
+      final res = await exerciseService.getExercises(
+        currentUser.value,
         count: exercises.length,
+        additionalParameters: {"instruction": instruction},
       );
 
       exercises = res?.exercises ?? [];
-      // aiExplanation = res.explanation;
     } catch (e) {
       showSnackbar(e.toString(), AnimatedSnackBarType.error);
     } finally {
@@ -206,68 +283,10 @@ class _WorkoutsScreenController extends GetxController {
 
   void updateXp(ExerciseData exercise) async {
     final gained =
-        8 + (exercise.reps ~/ 5) + (_currentUser.value?.stats.streak ?? 0 ~/ 5);
-    
-    _currentUser.value?.stats.addXp(gained);
-    await _userService.updateUser(_currentUser.value!);
-  }
+        8 + (exercise.reps ~/ 5) + (currentUser.value?.stats.streak ?? 0 ~/ 5);
 
-  // ----------------- Focus (from Roadmap prefs) -----------------
-  Future<String?> _canonicalFocusForToday() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString('workout_plans');
-      if (raw == null) return null;
-
-      final Map<String, dynamic> decoded =
-          jsonDecode(raw) as Map<String, dynamic>;
-      final key = _dateKey(DateTime.now());
-      final v = decoded[key]?.toString();
-      if (v == null) return null;
-      return _canonFocus(v);
-    } catch (e) {
-      if (kDebugMode) print('focus load error: $e');
-      return null;
-    }
-  }
-
-  String _dateKey(DateTime d) =>
-      "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-
-  String _canonFocus(String v) {
-    final s = v.toLowerCase();
-    if (s.contains('upper') || s.contains('push') || s.contains('pull'))
-      return 'upperBody';
-    if (s.contains('leg') || s.contains('lower')) return 'legDay';
-    if (s.contains('cardio') || s.contains('hiit') || s.contains('interval'))
-      return 'cardio';
-    if (s.contains('core') || s.contains('abs')) return 'core';
-    if (s.contains('full')) return 'fullBody';
-    if (s.contains('rest')) return 'rest';
-    if (s.contains('yoga') || s.contains('stretch') || s.contains('mobility'))
-      return 'yoga';
-    return 'fullBody';
-  }
-
-  String? _labelForCanonical(String? canon) {
-    switch (canon) {
-      case 'upperBody':
-        return 'Upper Body';
-      case 'legDay':
-        return 'Leg Day';
-      case 'cardio':
-        return 'Cardio';
-      case 'core':
-        return 'Core';
-      case 'fullBody':
-        return 'Full Body';
-      case 'rest':
-        return 'Rest Day';
-      case 'yoga':
-        return 'Yoga/Stretch';
-      default:
-        return null;
-    }
+    currentUser.value?.stats.addXp(gained);
+    await userService.updateUser(currentUser.value!);
   }
 }
 

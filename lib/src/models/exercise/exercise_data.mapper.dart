@@ -216,10 +216,10 @@ class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
   static const Field<ExerciseData, int> _f$sets = Field('sets', _$sets);
   static int _$reps(ExerciseData v) => v.reps;
   static const Field<ExerciseData, int> _f$reps = Field('reps', _$reps);
-  static Duration _$durationPerSet(ExerciseData v) => v.durationPerSet;
-  static const Field<ExerciseData, Duration> _f$durationPerSet = Field(
-    'durationPerSet',
-    _$durationPerSet,
+  static Duration _$duration(ExerciseData v) => v.duration;
+  static const Field<ExerciseData, Duration> _f$duration = Field(
+    'duration',
+    _$duration,
   );
   static List<String> _$targetMuscles(ExerciseData v) => v.targetMuscles;
   static const Field<ExerciseData, List<String>> _f$targetMuscles = Field(
@@ -261,7 +261,7 @@ class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
     #summary: _f$summary,
     #sets: _f$sets,
     #reps: _f$reps,
-    #durationPerSet: _f$durationPerSet,
+    #duration: _f$duration,
     #targetMuscles: _f$targetMuscles,
     #equipment: _f$equipment,
     #restIntervals: _f$restIntervals,
@@ -279,7 +279,7 @@ class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
       summary: data.dec(_f$summary),
       sets: data.dec(_f$sets),
       reps: data.dec(_f$reps),
-      durationPerSet: data.dec(_f$durationPerSet),
+      duration: data.dec(_f$duration),
       targetMuscles: data.dec(_f$targetMuscles),
       equipment: data.dec(_f$equipment),
       restIntervals: data.dec(_f$restIntervals),
@@ -367,7 +367,7 @@ abstract class ExerciseDataCopyWith<$R, $In extends ExerciseData, $Out>
     String? summary,
     int? sets,
     int? reps,
-    Duration? durationPerSet,
+    Duration? duration,
     List<String>? targetMuscles,
     List<String>? equipment,
     List<RestInterval>? restIntervals,
@@ -419,7 +419,7 @@ class _ExerciseDataCopyWithImpl<$R, $Out>
     String? summary,
     int? sets,
     int? reps,
-    Duration? durationPerSet,
+    Duration? duration,
     List<String>? targetMuscles,
     List<String>? equipment,
     List<RestInterval>? restIntervals,
@@ -434,7 +434,7 @@ class _ExerciseDataCopyWithImpl<$R, $Out>
       if (summary != null) #summary: summary,
       if (sets != null) #sets: sets,
       if (reps != null) #reps: reps,
-      if (durationPerSet != null) #durationPerSet: durationPerSet,
+      if (duration != null) #duration: duration,
       if (targetMuscles != null) #targetMuscles: targetMuscles,
       if (equipment != null) #equipment: equipment,
       if (restIntervals != null) #restIntervals: restIntervals,
@@ -451,7 +451,7 @@ class _ExerciseDataCopyWithImpl<$R, $Out>
     summary: data.get(#summary, or: $value.summary),
     sets: data.get(#sets, or: $value.sets),
     reps: data.get(#reps, or: $value.reps),
-    durationPerSet: data.get(#durationPerSet, or: $value.durationPerSet),
+    duration: data.get(#duration, or: $value.duration),
     targetMuscles: data.get(#targetMuscles, or: $value.targetMuscles),
     equipment: data.get(#equipment, or: $value.equipment),
     restIntervals: data.get(#restIntervals, or: $value.restIntervals),

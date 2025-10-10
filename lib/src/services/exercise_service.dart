@@ -3,7 +3,7 @@ import 'package:yourfit/src/models/index.dart';
 import 'package:langchain/langchain.dart';
 import 'package:langchain_google/langchain_google.dart';
 import 'package:yourfit/src/services/auth_service.dart';
-import 'package:yourfit/src/utils/objects/env/env.dart';
+import 'package:yourfit/src/utils/objects/constants/env/env.dart';
 import 'package:yourfit/src/utils/objects/vectorstore/supabase_vectorstore.dart';
 
 class ExerciseService extends GetxService {
@@ -21,10 +21,13 @@ class ExerciseService extends GetxService {
 {context}
 
 ---- Instructions ----
-You are a thoughtful, detailed, medically accurate fitness trainer that provides the user with appropriate exercise(s) to perform at their age, height, weight, gender, physicalFitness, and any other additional parameters provided. 
-You are also excellent at math which enables you to give out mathematically correct, evidence based solutions when necessary. 
-Your response should only be related to the given information provided to you by the user and relevant information found in the dataset. 
-Your response should not repeat any of the information provided to and should contain no introduction or explanation, only the information necessary in a valid JSON format. 
+You are a compassionate, medically accurate fitness trainer.
+Your task: Provide the user with appropriate exercise(s) to perform at their age, height, weight, gender, physicalFitness, and any other additional parameters provided.
+Follow these rules:
+1. Response should be based on given information as well as any additional information found in the dataset.
+2. Response should be varied.
+3. Response should not repeat any of the information provided .
+4. Response should be in a JSON format.
 """),
 
             ChatMessagePromptTemplate.human("""
@@ -50,7 +53,6 @@ Below is the information you will take into consideration when formulating your 
             apiKey: Env.geminiKey,
             defaultOptions: ChatGoogleGenerativeAIOptions(
               model: "gemini-2.5-pro",
-              tools: const [],
               safetySettings: const [
                 ChatGoogleGenerativeAISafetySetting(
                   category: ChatGoogleGenerativeAISafetySettingCategory
@@ -101,7 +103,7 @@ Below is the information you will take into consideration when formulating your 
                     final str = (data as Map<String, MonthData>).entries
                         .map(
                           (entry) =>
-                              "{'${entry.key}':${entry.value.toJson()})}",
+                              "{'${entry.key}':${entry.value.toJson()}}",
                         )
                         .join(" | ");
                     print(str);
@@ -147,16 +149,14 @@ Below is the information you will take into consideration when formulating your 
   }) async {
     print("Invoking LLM with parameters: $params");
     try {
-      final chain = llmChain.bind(
-        ChatGoogleGenerativeAIOptions(
-          tools: [responseType ?? ResponseType.workout],
-        ),
-      );
+      final chain = responseType == null
+          ? llmChain
+          : llmChain.bind(ChatGoogleGenerativeAIOptions(tools: [responseType]));
       List<ParsedToolCall> results =
           await chain.invoke(params) as List<ParsedToolCall>;
       return results.isEmpty ? {} : results[0].arguments;
     } on Error catch (e) {
-      print("ERROR:$e, ${e.stackTrace.toString()}");
+      e.printError();
       return {};
     }
   }
@@ -183,41 +183,66 @@ Below is the information you will take into consideration when formulating your 
         "additionalParameters": additionalParameters,
       }, responseType: responseType);
     } catch (e) {
-      print("Error: $e");
-      return {};
+      e.printError();
+      return null;
+    }
+  }
+
+  Future<WorkoutFocus> getWorkoutFocus(UserData? user) async {
+    try {
+      final result = await invokeWithUser(
+        user,
+        "Please provide the user with a workout focus (${WorkoutFocus.values.join(",")}) ",
+        responseType: ResponseType.workoutFocus,
+      );
+
+      return result == null
+          ? WorkoutFocus.rest
+          : WorkoutFocus.fromValue(result['focus']);
+    } catch (e) {
+      e.printError();
+      return WorkoutFocus.rest;
     }
   }
 
   Future<WorkoutData?> getExercises(
     UserData? user, {
     ExerciseType? type,
+    WorkoutFocus? focus,
     ExerciseDifficulty? difficulty,
     ExerciseIntensity? intensity,
     ToolSpec? responseType,
-    Map<String, dynamic> additionalParameters = const {},
     int count = 3,
+    Map<String, dynamic> additionalParameters = const {},
   }) async {
-    final result = await invokeWithUser(
-      user,
-      "Please provide the user with $count exercises",
-      additionalParameters: {
-        ...additionalParameters,
-        "exercise_type": type?.name,
-        "exercise_difficulty": difficulty?.name,
-        "exercise_intensity": intensity?.name,
-      },
-      responseType: responseType,
-    );
-    print(result);
-    return result == null ? null : WorkoutData.fromMap(result);
+    responseType ??= ResponseType.workout;
+    try {
+      final result = await invokeWithUser(
+        user,
+        "Please provide the user with $count exercises",
+        additionalParameters: {
+          ...additionalParameters,
+          "exercise_difficulty": difficulty?.name,
+          "exercise_intensity": intensity?.name,
+          "exercise_type": type?.name,
+          "workout_focus": focus?.name,
+        },
+        responseType: responseType,
+      );
+      print("Result is $result");
+      return result == null ? null : WorkoutData.fromMap(result);
+    } on Error catch (e) {
+      e.printError();
+      return null;
+    }
   }
 }
 
 class ResponseType {
   static final workout = const ToolSpec(
-    name: 'workout_data',
+    name: 'workout',
     description:
-        'Validate a WorkoutData object (list of exercises and total calories burned) using the JSON schema.',
+        'A JSON object containing a list of exercises, a summary of the exercises, total calories burned from the exercises, and the total duration of the exercises.',
     inputJsonSchema: {
       'type': 'object',
       'properties': {
@@ -266,9 +291,9 @@ class ResponseType {
                 'items': {'type': 'string'},
                 'description': 'List of equipment',
               },
-              'durationPerSet': {
+              'duration': {
                 'type': 'object',
-                'description': 'Duration of each set (in seconds)',
+                'description': 'Duration of exercise (in seconds)',
                 'properties': {
                   'inSeconds': {
                     "type": "integer",
@@ -303,6 +328,20 @@ class ResponseType {
                 },
               },
               'reps': {'type': 'integer', 'description': 'Number of reps'},
+              'distance': {
+                'type': 'number',
+                'description': 'Distance in miles for a running exercise',
+              },
+              'speed': {
+                'type': 'integer',
+                'description':
+                    'Speed the user would have to use for a running exercise',
+              },
+              'destination': {
+                'type': 'string',
+                'description':
+                    'The address of where the user would run to for a running exercise',
+              },
             },
             'required': [
               'difficulty',
@@ -310,7 +349,7 @@ class ResponseType {
               "restIntervals",
               'type',
               'equipment',
-              'durationPerSet',
+              'duration',
               'caloriesBurned',
               'name',
               'summary',
@@ -324,13 +363,23 @@ class ResponseType {
         },
         'caloriesBurned': {
           'type': 'number',
-          'description': 'Total calories burned for the day',
+          'description': 'Total calories burned in workout ',
         },
         'summary': {
           'type': 'string',
-          'description': 'A summary of the exercises for the day',
+          'description': 'A summary of the workout',
         },
-        'type': {
+        'duration': {
+          'type': 'object',
+          'description': 'Total duration of the exercises for the day',
+          'properties': {
+            'inSeconds': {
+              "type": "integer",
+              "description": "The duration length (in seconds)",
+            },
+          },
+        },
+        'focus': {
           'type': 'string',
           'enum': [
             'leg',
@@ -341,10 +390,39 @@ class ResponseType {
             'rest',
             'yoga',
           ],
-          'description': 'The type of exercises for the day',
+          'description':
+              'The focus of the workout. Influences a majority of the workout exercises',
         },
       },
-      'required': ['exercises', 'caloriesBurned', 'summary', 'type'],
+      'required': [
+        'exercises',
+        'caloriesBurned',
+        'summary',
+        'focus',
+        'duration',
+      ],
+    },
+  );
+
+  static final workoutFocus = const ToolSpec(
+    name: "workout_focus",
+    description: "The focus of the workout",
+    inputJsonSchema: {
+      'type': 'object',
+      'properties': {
+        'focus': {
+          'type': 'string',
+          'enum': [
+            'leg',
+            'upperBody',
+            'cardio',
+            'core',
+            'fullBody',
+            'rest',
+            'yoga',
+          ],
+        },
+      },
     },
   );
 
@@ -355,8 +433,8 @@ class ResponseType {
       "type": "object",
       "properties": {
         "answer": {"type": "string", "description": "The answer to a question"},
-        'required': ['answer'],
       },
+      'required': ['answer'],
     },
   );
 }

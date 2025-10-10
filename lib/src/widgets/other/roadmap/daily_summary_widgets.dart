@@ -38,7 +38,7 @@ class AiGenerationBanner extends StatelessWidget {
 }
 
 class SelectedWorkoutCard extends StatelessWidget {
-  final WorkoutType? workout;
+  final WorkoutFocus? workout;
   const SelectedWorkoutCard({super.key, required this.workout});
 
   @override

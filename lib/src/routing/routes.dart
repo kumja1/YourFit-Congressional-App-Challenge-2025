@@ -1,6 +1,6 @@
 class Routes {
-  static const splash = '/splash';
-  static const landing = '/';
+  static const splash = '/';
+  static const landing = '/landing';
   static const welcome = '/welcome';
   static const signIn = '/signin';
   static const signUp = '/signup';
