@@ -2,7 +2,7 @@ name: yourfit
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -37,28 +37,24 @@ dependencies:
   animated_snack_bar: ^0.4.0
   envied: ^1.1.1
   text_divider: ^1.0.0
-  google_fonts: ^6.1.0
-  envied_generator: ^1.1.1
+  # google_fonts: ^6.1.0
   maplibre_gl: ^0.24.0
-  simple_icons: ^14.6.1
   flutter_svg: ^2.2.0
   google_sign_in: ^7.1.1
   google_sign_in_web: ^1.0.0
   get: ^4.7.2
-  build_web_compilers: ^4.2.0
   step_progress_indicator: ^1.0.2
   table_calendar: ^3.2.0
   date_picker_plus: ^4.2.0
   extensions_plus: ^1.6.0
   const_date_time: ^1.2.1
   dart_mappable: ^4.5.0
-  columnbuilder: ^0.0.3
-  animated_switcher_plus: ^1.2.0
+  # columnbuilder: ^0.0.3
+  # animated_switcher_plus: ^1.2.0
   introduction_screen: ^4.0.0
   custom_button_builder: ^0.0.4
   datetime_picker_formfield_new: ^2.1.0
   intl: ^0.20.2
-  calendar_date_picker2: ^2.0.1
   googleapis: ^14.0.0
   extension_google_sign_in_as_googleapis_auth: ^3.0.0
   choice: ^2.3.2
@@ -73,11 +69,13 @@ dependencies:
   url_launcher: ^6.3.2
   circular_countdown_timer: ^0.2.4
   geolocator: ^14.0.2
-  geocoding: ^4.0.0
   free_map: ^2.5.0
+  http: ^1.5.0
+  flutter_form_builder: ^10.2.0
+  form_builder_validators: ^11.2.0
+  osrm: ^0.0.8
 
 dev_dependencies:
-
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
@@ -86,9 +84,9 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   dart_mappable_builder: ^4.5.0
   auto_route_generator: ^10.2.3
+  envied_generator: ^1.1.1
   build_runner: ^2.7.0
   json_serializable: ^6.11.1
-  lean_builder: ^0.1.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

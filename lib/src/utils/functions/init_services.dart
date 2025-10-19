@@ -1,10 +1,9 @@
 import 'package:flutter/foundation.dart';
-import 'package:free_map/fm_service.dart';
 import 'package:get/instance_manager.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:yourfit/src/routing/router.dart';
+import 'package:yourfit/src/services/device_service.dart';
 import 'package:yourfit/src/services/index.dart';
 import 'package:yourfit/src/utils/objects/constants/env/env.dart';
 
@@ -20,12 +19,12 @@ Future<void> initServices() async {
   );
 
   // Intialize services
+  Get.putAsync(() async {
+    final deviceService = DeviceService();
+    await deviceService.initialize();
+    return deviceService;
+  });
   Get.lazyPut(() => AuthService());
   Get.lazyPut(() => UserService());
   Get.lazyPut(() => ExerciseService());
-  Get.lazyPut(() => FmService());
-
-  // Intialize miscellaneous
-  Get.put(AppRouter());
-  Get.putAsync(() async => await SharedPreferences.getInstance());
 }

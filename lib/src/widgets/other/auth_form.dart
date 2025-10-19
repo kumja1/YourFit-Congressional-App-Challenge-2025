@@ -1,5 +1,6 @@
 import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthResponse;
 import 'package:text_divider/text_divider.dart';
@@ -12,7 +13,7 @@ import 'package:yourfit/src/widgets/buttons/async_animated_button.dart';
 class AuthForm extends StatelessWidget {
   final List<Widget>? oauthButtons;
   final List<Widget>? fields;
-  final double fieldsSpacing;
+  final double spacing;
   final Key? formKey;
 
   final Color? submitButtonForegroundColor;
@@ -32,6 +33,7 @@ class AuthForm extends StatelessWidget {
 
   const AuthForm({
     super.key,
+    this.formKey,
     this.onSubmitPressed,
     this.submitButtonChild,
     this.showFields = true,
@@ -39,7 +41,7 @@ class AuthForm extends StatelessWidget {
     this.showSubmitButton = true,
     this.showTitle = true,
     this.showOAuth = true,
-    this.fieldsSpacing = 10,
+    this.spacing = 10,
     this.submitButtonPadding,
     this.onBottomButtonPressed,
     this.fields,
@@ -48,7 +50,6 @@ class AuthForm extends StatelessWidget {
     this.submitButtonForegroundColor,
     this.oauthButtons,
     this.bottomButtonChild,
-    this.formKey,
   });
 
   @override
@@ -78,10 +79,10 @@ class AuthForm extends StatelessWidget {
               ).paddingSymmetric(vertical: 20),
             ],
             if (showFields && fields != null)
-              Form(
+              FormBuilder(
                 key: formKey,
                 autovalidateMode: AutovalidateMode.onUnfocus,
-                child: Column(spacing: fieldsSpacing, children: fields!),
+                child: Column(spacing: spacing, children: fields!),
               ),
 
             if (showSubmitButton && submitButtonChild != null) ...[
@@ -125,8 +126,8 @@ class AuthForm extends StatelessWidget {
   }
 }
 
-class AuthFormController extends GetxController with InputValidationMixin {
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+class AuthFormController extends GetxController {
+  final GlobalKey<FormBuilderState> formKey = GlobalKey();
   final AuthService authService = Get.find();
 
   String email = '';
@@ -145,6 +146,6 @@ class AuthFormController extends GetxController with InputValidationMixin {
       return false;
     }
 
-    return formKey.currentState!.validate();
+    return formKey.currentState!.saveAndValidate();
   }
 }

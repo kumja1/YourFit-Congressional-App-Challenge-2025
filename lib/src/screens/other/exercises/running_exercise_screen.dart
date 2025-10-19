@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:geocoding/geocoding.dart';
+import 'package:free_map/fm_models.dart';
+import 'package:free_map/fm_service.dart';
 import 'package:get/get.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:yourfit/src/models/exercise/running_exercise_data.dart';
@@ -30,15 +31,19 @@ class RunningExerciseScreen extends BasicExerciseScreen {
 }
 
 class _RunningExerciseScreenController extends GetxController {
-  late final LatLng destination;
   final RunningExerciseData exercise;
+  final FmService geocodingService = Get.find();
+  LatLng? destination;
 
   _RunningExerciseScreenController({required this.exercise});
 
   @override
   void onInit() async {
     super.onInit();
-    List<Location> locations = await locationFromAddress(exercise.destination);
-    destination = LatLng(locations[0].latitude, locations[0].longitude);
+    FmData? location = await geocodingService.getGeocode(
+      address: exercise.destination,
+    );
+    if (location == null) return;
+    destination = LatLng(location.lat, location.lng);
   }
 }

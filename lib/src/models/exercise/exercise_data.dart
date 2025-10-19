@@ -1,6 +1,6 @@
 import 'package:dart_mappable/dart_mappable.dart';
-import 'package:yourfit/src/utils/objects/mappable/hooks/map_hook.dart';
-import 'package:yourfit/src/utils/objects/mappable/duration_mapper.dart';
+import 'package:yourfit/src/utils/objects/other/mapping/hooks/map_hook.dart';
+import 'package:yourfit/src/utils/objects/other/mapping/duration_mapper.dart';
 
 part 'exercise_data.mapper.dart';
 
@@ -35,12 +35,16 @@ enum ExerciseType {
       ExerciseTypeMapper.fromValue(value);
 }
 
-@MappableClass(includeCustomMappers: [DurationMapper()], discriminatorKey: "base")
+@MappableClass(
+  includeCustomMappers: [DurationMapper()],
+  discriminatorKey: "basic",
+)
 class ExerciseData with ExerciseDataMappable {
   final ExerciseDifficulty difficulty;
   final ExerciseIntensity intensity;
   final ExerciseType type;
-  final Duration duration;
+  final Duration duration; // Total duration of the exercise
+  final Duration setDuration; // Duration of each set
   final double caloriesBurned;
   final String instructions;
   final String summary;
@@ -66,6 +70,7 @@ class ExerciseData with ExerciseDataMappable {
     required this.sets,
     required this.reps,
     required this.duration,
+    required this.setDuration,
     this.targetMuscles = const [],
     this.equipment = const [],
     this.restIntervals = const [],

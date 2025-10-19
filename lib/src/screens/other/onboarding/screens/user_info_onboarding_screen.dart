@@ -2,12 +2,14 @@ import 'package:const_date_time/const_date_time.dart';
 import 'package:date_picker_plus/date_picker_plus.dart';
 import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
 import 'package:yourfit/src/models/user_data.dart';
-import 'package:yourfit/src/utils/extensions/widget_extension.dart';
 import 'package:yourfit/src/widgets/other/auth_form.dart';
 import 'package:yourfit/src/widgets/textfields/auth_form_text_field.dart';
 import 'package:yourfit/src/widgets/other/onboarding_screen.dart';
+import 'package:yourfit/src/widgets/textfields/number_form_field.dart';
 
 class UserInfoOnboardingScreen extends OnboardingScreen {
   const UserInfoOnboardingScreen({super.key});
@@ -22,58 +24,39 @@ class UserInfoOnboardingScreen extends OnboardingScreen {
       showSubmitButton: false,
       showBottomButton: false,
       fields: [
-        DropdownButtonFormField(
+        FormBuilderDropdown(
+          name: "gender",
           icon: Icon(Icons.arrow_drop_down_rounded, color: Colors.blue),
           items: const [
             DropdownMenuItem(value: UserGender.male, child: Text("Male")),
             DropdownMenuItem(value: UserGender.female, child: Text("Female")),
           ],
           decoration: const InputDecoration(labelText: "Gender"),
-          onChanged: (value) => _controller.gender = value,
-          validator: (value) =>
-              _controller.validateString(value?.name, valueName: "Gender"),
-        ).sized(width: 360),
-        AuthFormTextField(
-          labelText: "Weight",
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          onChanged: (value) =>
-              _controller.weight = double.tryParse(value) ?? 0,
-          validator: (value) => _controller.validateString(
-            value,
-            valueName: "Weight",
-            numeric: true,
+          validator: FormBuilderValidators.required(
+            errorText: "Gender is required",
           ),
+        ).constrains(maxWidth: 360),
+        NumberFormField<double>(
+          name: "weight",
+          labelText: "Weight (lb)",
         ),
-        AuthFormTextField(
+        NumberFormField<double>(
+          name: "height",
           labelText: "Height (cm)",
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          onChanged: (value) => _controller.height = int.tryParse(value) ?? 0,
-          validator: (value) => _controller.validateString(
-            value,
-            valueName: "Height",
-            numeric: true,
-          ),
         ),
       ],
     ).center();
   }
 
   @override
-  Map<String, dynamic> getData() => {
-    "weight": _controller.weight,
-    "height": _controller.height,
-    "gender": _controller.gender,
-  };
+  Map<String, dynamic> getData() =>
+      _controller.formKey.currentState?.value ?? {};
 
   @override
   bool canProgress() => _controller.validateForm();
 }
 
 class _UserInfoOnboardingScreenController extends AuthFormController {
-  UserGender? gender;
-  double weight = 0;
-  int height = 0;
-
   Future<DateTime?> showDateDialog(
     BuildContext context,
     DateTime? _,

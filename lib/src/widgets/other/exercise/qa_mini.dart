@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:yourfit/src/services/index.dart';
+import 'package:yourfit/src/utils/objects/constants/exercise/response_schema.dart';
 
 class QaMiniButton extends StatelessWidget {
   const QaMiniButton({super.key});
@@ -87,7 +88,7 @@ class _QaMiniSheetState extends State<_QaMiniSheet> {
       final result = await _service.invokeWithUser(
         currentUser.value,
         q,
-        responseType: ResponseType.answer,
+        responseSchema: ResponseSchema.answer,
       );
       if (result == null) return;
       ans = (result["answer"] as String).trim();

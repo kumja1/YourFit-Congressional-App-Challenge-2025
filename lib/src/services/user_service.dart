@@ -51,7 +51,7 @@ class UserService {
     String? goal,
     int? exerciseDaysPerWeek,
     ExerciseIntensity? exercisesIntensity,
-    Map<String, MonthData>? exerciseData,
+    Map<String, MonthData>? workoutData,
     List<String>? disabilities,
     List<String>? equipment,
   }) async {
@@ -69,7 +69,7 @@ class UserService {
       goal: goal,
       exerciseDaysPerWeek: exerciseDaysPerWeek,
       exercisesIntensity: exercisesIntensity,
-      exerciseData: exerciseData,
+      workoutData: workoutData,
     );
 
     try {

@@ -6,7 +6,7 @@ import "package:get/get.dart";
 import "package:maplibre_gl/maplibre_gl.dart";
 
 class NavigationMap extends StatelessWidget {
-  final LatLng end;
+  final LatLng? end;
   final VoidCallback onEnd;
 
   const NavigationMap({super.key, required this.end, required this.onEnd});
@@ -14,6 +14,7 @@ class NavigationMap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(_NavMapController(onEnd: onEnd));
+    if (end == null) return const SizedBox.shrink();
     final start = LatLng(
       controller.lastPosition.latitude,
       controller.lastPosition.longitude,
@@ -24,7 +25,7 @@ class NavigationMap extends StatelessWidget {
       onMapCreated: (c) => controller.mapController = c,
       initialCameraPosition: CameraPosition(target: start, zoom: 15),
       cameraTargetBounds: CameraTargetBounds(
-        LatLngBounds(northeast: end, southwest: start),
+        LatLngBounds(northeast: end!, southwest: start),
       ),
     );
   }
@@ -47,7 +48,6 @@ class _NavMapController extends GetxController {
       LineOptions(
         geometry: [LatLng(lastPosition.latitude, lastPosition.longitude)],
         lineColor: "blue",
-
       ),
     );
 
@@ -65,21 +65,23 @@ class _NavMapController extends GetxController {
           {
             end(); // For now end the map when they cheat
           }
-          
+
           await Future.wait([
-          mapController.animateCamera(
-            CameraUpdate.newLatLng(
-              LatLng(position.latitude, position.longitude),
+            mapController.animateCamera(
+              CameraUpdate.newLatLng(
+                LatLng(position.latitude, position.longitude),
+              ),
             ),
-          ),
-          mapController.updateLine(line, LineOptions(
-            geometry: [
-              LatLng(lastPosition.latitude, lastPosition.longitude),
-              LatLng(position.latitude, position.longitude),
-            ],
-            lineColor: "blue",
-            
-          ))
+            mapController.updateLine(
+              line,
+              LineOptions(
+                geometry: [
+                  LatLng(lastPosition.latitude, lastPosition.longitude),
+                  LatLng(position.latitude, position.longitude),
+                ],
+                lineColor: "blue",
+              ),
+            ),
           ]);
         });
   }

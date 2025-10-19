@@ -118,6 +118,7 @@ class UserDataMapper extends ClassMapperBase<UserData> {
       UserPhysicalFitnessMapper.ensureInitialized();
       UserStatsMapper.ensureInitialized();
       ExerciseIntensityMapper.ensureInitialized();
+      ExerciseDifficultyMapper.ensureInitialized();
       MonthDataMapper.ensureInitialized();
     }
     return _instance!;
@@ -189,11 +190,21 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     opt: true,
     def: ExerciseIntensity.low,
   );
-  static Map<String, MonthData> _$exerciseData(UserData v) => v.exerciseData;
-  static const Field<UserData, Map<String, MonthData>> _f$exerciseData = Field(
-    'exerciseData',
-    _$exerciseData,
-    key: r'exercise_data',
+  static ExerciseDifficulty _$exercisesDifficulty(UserData v) =>
+      v.exercisesDifficulty;
+  static const Field<UserData, ExerciseDifficulty> _f$exercisesDifficulty =
+      Field(
+        'exercisesDifficulty',
+        _$exercisesDifficulty,
+        key: r'exercises_difficulty',
+        opt: true,
+        def: ExerciseDifficulty.easy,
+      );
+  static Map<String, MonthData> _$workoutData(UserData v) => v.workoutData;
+  static const Field<UserData, Map<String, MonthData>> _f$workoutData = Field(
+    'workoutData',
+    _$workoutData,
+    key: r'workout_data',
     opt: true,
     def: const {},
   );
@@ -246,7 +257,8 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     #goal: _f$goal,
     #exerciseDaysPerWeek: _f$exerciseDaysPerWeek,
     #exercisesIntensity: _f$exercisesIntensity,
-    #exerciseData: _f$exerciseData,
+    #exercisesDifficulty: _f$exercisesDifficulty,
+    #workoutData: _f$workoutData,
     #disabilities: _f$disabilities,
     #equipment: _f$equipment,
     #fullName: _f$fullName,
@@ -269,7 +281,8 @@ class UserDataMapper extends ClassMapperBase<UserData> {
       goal: data.dec(_f$goal),
       exerciseDaysPerWeek: data.dec(_f$exerciseDaysPerWeek),
       exercisesIntensity: data.dec(_f$exercisesIntensity),
-      exerciseData: data.dec(_f$exerciseData),
+      exercisesDifficulty: data.dec(_f$exercisesDifficulty),
+      workoutData: data.dec(_f$workoutData),
       disabilities: data.dec(_f$disabilities),
       equipment: data.dec(_f$equipment),
     );
@@ -339,7 +352,7 @@ abstract class UserDataCopyWith<$R, $In extends UserData, $Out>
     MonthData,
     MonthDataCopyWith<$R, MonthData, MonthData>
   >
-  get exerciseData;
+  get workoutData;
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get disabilities;
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get equipment;
   $R call({
@@ -356,7 +369,8 @@ abstract class UserDataCopyWith<$R, $In extends UserData, $Out>
     String? goal,
     int? exerciseDaysPerWeek,
     ExerciseIntensity? exercisesIntensity,
-    Map<String, MonthData>? exerciseData,
+    ExerciseDifficulty? exercisesDifficulty,
+    Map<String, MonthData>? workoutData,
     List<String>? disabilities,
     List<String>? equipment,
   });
@@ -381,10 +395,10 @@ class _UserDataCopyWithImpl<$R, $Out>
     MonthData,
     MonthDataCopyWith<$R, MonthData, MonthData>
   >
-  get exerciseData => MapCopyWith(
-    $value.exerciseData,
+  get workoutData => MapCopyWith(
+    $value.workoutData,
     (v, t) => v.copyWith.$chain(t),
-    (v) => call(exerciseData: v),
+    (v) => call(workoutData: v),
   );
   @override
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
@@ -415,7 +429,8 @@ class _UserDataCopyWithImpl<$R, $Out>
     String? goal,
     int? exerciseDaysPerWeek,
     ExerciseIntensity? exercisesIntensity,
-    Map<String, MonthData>? exerciseData,
+    ExerciseDifficulty? exercisesDifficulty,
+    Map<String, MonthData>? workoutData,
     List<String>? disabilities,
     List<String>? equipment,
   }) => $apply(
@@ -434,7 +449,9 @@ class _UserDataCopyWithImpl<$R, $Out>
       if (exerciseDaysPerWeek != null)
         #exerciseDaysPerWeek: exerciseDaysPerWeek,
       if (exercisesIntensity != null) #exercisesIntensity: exercisesIntensity,
-      if (exerciseData != null) #exerciseData: exerciseData,
+      if (exercisesDifficulty != null)
+        #exercisesDifficulty: exercisesDifficulty,
+      if (workoutData != null) #workoutData: workoutData,
       if (disabilities != null) #disabilities: disabilities,
       if (equipment != null) #equipment: equipment,
     }),
@@ -460,7 +477,11 @@ class _UserDataCopyWithImpl<$R, $Out>
       #exercisesIntensity,
       or: $value.exercisesIntensity,
     ),
-    exerciseData: data.get(#exerciseData, or: $value.exerciseData),
+    exercisesDifficulty: data.get(
+      #exercisesDifficulty,
+      or: $value.exercisesDifficulty,
+    ),
+    workoutData: data.get(#workoutData, or: $value.workoutData),
     disabilities: data.get(#disabilities, or: $value.disabilities),
     equipment: data.get(#equipment, or: $value.equipment),
   );

@@ -1,6 +1,6 @@
 import 'package:dart_mappable/dart_mappable.dart';
 import 'package:extensions_plus/extensions_plus.dart';
-import 'package:yourfit/src/utils/objects/mappable/hooks/map_hook.dart';
+import 'package:yourfit/src/utils/objects/other/mapping/hooks/map_hook.dart';
 import 'workout_data.dart';
 
 part 'month_data.mapper.dart';

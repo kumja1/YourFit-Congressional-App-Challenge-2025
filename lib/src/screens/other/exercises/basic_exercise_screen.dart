@@ -51,7 +51,7 @@ class BasicExerciseScreen extends StatelessWidget {
           Align(
             alignment: Alignment.center,
             child: CircularCountDownTimer(
-              duration: controller.exercise.duration.inSeconds,
+              duration: controller.exercise.setDuration.inSeconds,
               autoStart: true,
               controller: controller.countdownController,
               isReverse: true,

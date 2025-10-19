@@ -221,6 +221,11 @@ class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
     'duration',
     _$duration,
   );
+  static Duration _$setDuration(ExerciseData v) => v.setDuration;
+  static const Field<ExerciseData, Duration> _f$setDuration = Field(
+    'setDuration',
+    _$setDuration,
+  );
   static List<String> _$targetMuscles(ExerciseData v) => v.targetMuscles;
   static const Field<ExerciseData, List<String>> _f$targetMuscles = Field(
     'targetMuscles',
@@ -262,6 +267,7 @@ class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
     #sets: _f$sets,
     #reps: _f$reps,
     #duration: _f$duration,
+    #setDuration: _f$setDuration,
     #targetMuscles: _f$targetMuscles,
     #equipment: _f$equipment,
     #restIntervals: _f$restIntervals,
@@ -280,6 +286,7 @@ class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
       sets: data.dec(_f$sets),
       reps: data.dec(_f$reps),
       duration: data.dec(_f$duration),
+      setDuration: data.dec(_f$setDuration),
       targetMuscles: data.dec(_f$targetMuscles),
       equipment: data.dec(_f$equipment),
       restIntervals: data.dec(_f$restIntervals),
@@ -368,6 +375,7 @@ abstract class ExerciseDataCopyWith<$R, $In extends ExerciseData, $Out>
     int? sets,
     int? reps,
     Duration? duration,
+    Duration? setDuration,
     List<String>? targetMuscles,
     List<String>? equipment,
     List<RestInterval>? restIntervals,
@@ -420,6 +428,7 @@ class _ExerciseDataCopyWithImpl<$R, $Out>
     int? sets,
     int? reps,
     Duration? duration,
+    Duration? setDuration,
     List<String>? targetMuscles,
     List<String>? equipment,
     List<RestInterval>? restIntervals,
@@ -435,6 +444,7 @@ class _ExerciseDataCopyWithImpl<$R, $Out>
       if (sets != null) #sets: sets,
       if (reps != null) #reps: reps,
       if (duration != null) #duration: duration,
+      if (setDuration != null) #setDuration: setDuration,
       if (targetMuscles != null) #targetMuscles: targetMuscles,
       if (equipment != null) #equipment: equipment,
       if (restIntervals != null) #restIntervals: restIntervals,
@@ -452,6 +462,7 @@ class _ExerciseDataCopyWithImpl<$R, $Out>
     sets: data.get(#sets, or: $value.sets),
     reps: data.get(#reps, or: $value.reps),
     duration: data.get(#duration, or: $value.duration),
+    setDuration: data.get(#setDuration, or: $value.setDuration),
     targetMuscles: data.get(#targetMuscles, or: $value.targetMuscles),
     equipment: data.get(#equipment, or: $value.equipment),
     restIntervals: data.get(#restIntervals, or: $value.restIntervals),

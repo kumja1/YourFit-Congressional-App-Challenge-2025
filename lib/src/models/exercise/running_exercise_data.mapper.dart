@@ -62,6 +62,11 @@ class RunningExerciseDataMapper
   static const Field<RunningExerciseData, int> _f$sets = Field('sets', _$sets);
   static int _$reps(RunningExerciseData v) => v.reps;
   static const Field<RunningExerciseData, int> _f$reps = Field('reps', _$reps);
+  static Duration _$setDuration(RunningExerciseData v) => v.setDuration;
+  static const Field<RunningExerciseData, Duration> _f$setDuration = Field(
+    'setDuration',
+    _$setDuration,
+  );
   static Duration _$duration(RunningExerciseData v) => v.duration;
   static const Field<RunningExerciseData, Duration> _f$duration = Field(
     'duration',
@@ -120,6 +125,7 @@ class RunningExerciseDataMapper
     #summary: _f$summary,
     #sets: _f$sets,
     #reps: _f$reps,
+    #setDuration: _f$setDuration,
     #duration: _f$duration,
     #targetMuscles: _f$targetMuscles,
     #equipment: _f$equipment,
@@ -149,6 +155,7 @@ class RunningExerciseDataMapper
       summary: data.dec(_f$summary),
       sets: data.dec(_f$sets),
       reps: data.dec(_f$reps),
+      setDuration: data.dec(_f$setDuration),
       duration: data.dec(_f$duration),
       targetMuscles: data.dec(_f$targetMuscles),
       equipment: data.dec(_f$equipment),
@@ -252,6 +259,7 @@ abstract class RunningExerciseDataCopyWith<
     String? summary,
     int? sets,
     int? reps,
+    Duration? setDuration,
     Duration? duration,
     List<String>? targetMuscles,
     List<String>? equipment,
@@ -309,6 +317,7 @@ class _RunningExerciseDataCopyWithImpl<$R, $Out>
     String? summary,
     int? sets,
     int? reps,
+    Duration? setDuration,
     Duration? duration,
     List<String>? targetMuscles,
     List<String>? equipment,
@@ -327,6 +336,7 @@ class _RunningExerciseDataCopyWithImpl<$R, $Out>
       if (summary != null) #summary: summary,
       if (sets != null) #sets: sets,
       if (reps != null) #reps: reps,
+      if (setDuration != null) #setDuration: setDuration,
       if (duration != null) #duration: duration,
       if (targetMuscles != null) #targetMuscles: targetMuscles,
       if (equipment != null) #equipment: equipment,
@@ -347,6 +357,7 @@ class _RunningExerciseDataCopyWithImpl<$R, $Out>
     summary: data.get(#summary, or: $value.summary),
     sets: data.get(#sets, or: $value.sets),
     reps: data.get(#reps, or: $value.reps),
+    setDuration: data.get(#setDuration, or: $value.setDuration),
     duration: data.get(#duration, or: $value.duration),
     targetMuscles: data.get(#targetMuscles, or: $value.targetMuscles),
     equipment: data.get(#equipment, or: $value.equipment),

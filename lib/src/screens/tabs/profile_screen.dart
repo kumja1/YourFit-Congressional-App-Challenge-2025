@@ -1,10 +1,14 @@
+import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:auto_route/annotations.dart';
 import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart' hide WidgetPaddingX;
 import 'package:yourfit/src/models/user_data.dart';
 import 'package:yourfit/src/services/auth_service.dart';
-import 'package:yourfit/src/utils/mixins/input_validation_mixin.dart';
+import 'package:yourfit/src/services/user_service.dart';
+import 'package:yourfit/src/utils/functions/show_snackbar.dart';
 import 'package:yourfit/src/widgets/textfields/number_form_field.dart';
 
 @RoutePage()
@@ -37,32 +41,23 @@ class ProfileScreen extends StatelessWidget {
   }
 }
 
-class _ProfileScreenController extends GetxController
-    with InputValidationMixin {
+class _ProfileScreenController extends GetxController {
   final Rx<UserData?> currentUser = Get.find<AuthService>().currentUser;
-  final formKey = GlobalKey<FormState>();
+  final UserService userService = Get.find();
+  final formKey = GlobalKey<FormBuilderState>();
 
   void editBasics() async {
     if (currentUser.value == null) return;
-
     await showBottomFormSheet(
       title: 'Edit Basics',
       fields: [
-        TextFormField(
-          initialValue: currentUser.value!.firstName,
-          decoration: const InputDecoration(labelText: 'First name'),
-          validator: (v) => validateString(v, valueName: "First Name"),
-          onSaved: (v) =>
-              currentUser.update((user) => user?.firstName = v!.trim()),
+        FormBuilderTextField(
+          name: "name",
+          initialValue: currentUser.value?.fullName,
+          validator: FormBuilderValidators.match(RegExp(r"^\S+ \S+(?: \S+)*$")),
         ),
-        TextFormField(
-          initialValue: currentUser.value!.lastName,
-          decoration: const InputDecoration(labelText: 'Last name'),
-          validator: (v) => validateString(v, valueName: "Last Name"),
-          onSaved: (v) =>
-              currentUser.update((user) => user?.lastName = v!.trim()),
-        ),
-        DropdownButtonFormField<UserGender>(
+        FormBuilderDropdown<UserGender>(
+          name: "gender",
           initialValue: currentUser.value?.gender,
           items: [UserGender.male, UserGender.female]
               .map(
@@ -76,19 +71,16 @@ class _ProfileScreenController extends GetxController
             labelText: 'Gender',
             border: OutlineInputBorder(),
           ),
-          onSaved: (v) =>
-              currentUser.update((user) => v == null ? null : user?.gender = v),
-          onChanged: null,
         ),
         NumberFormField(
+          name: "height",
           initialValue: currentUser.value?.height,
           labelText: 'Height (cm)',
-          onSaved: (v) => currentUser.update((user) => user?.height = v),
         ),
         NumberFormField(
+          name: "weight",
           initialValue: currentUser.value?.weight,
-          labelText: 'Weight (kg)',
-          onSaved: (v) => currentUser.update((user) => user?.weight = v),
+          labelText: 'Weight (lb)',
         ),
       ],
     );
@@ -100,15 +92,11 @@ class _ProfileScreenController extends GetxController
     await showBottomFormSheet(
       title: 'Edit Goal',
       fields: [
-        TextFormField(
+        FormBuilderTextField(
+          name: "goal",
           initialValue: currentUser.value?.goal,
           maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: 'Goal',
-            border: OutlineInputBorder(),
-          ),
-          onSaved: (v) =>
-              currentUser.update((user) => user?.goal = v?.trim() ?? ""),
+          decoration: const InputDecoration(labelText: 'Goal'),
         ),
       ],
     );
@@ -116,78 +104,77 @@ class _ProfileScreenController extends GetxController
 
   void editTraining() async {
     if (currentUser.value == null) return;
-
-    await showBottomFormSheet(
-      title: 'Edit Training',
-      fields: [
-        DropdownButtonFormField<UserPhysicalFitness>(
-          initialValue: currentUser.value?.physicalFitness,
-          items: UserPhysicalFitness.values
-              .map((e) => DropdownMenuItem(value: e, child: Text(e.toString())))
-              .toList(),
-          decoration: const InputDecoration(labelText: 'Activity'),
-          onSaved: (v) => currentUser.update(
-            (user) => v == null ? null : user?.physicalFitness = v,
+    try {
+      await showBottomFormSheet(
+        title: 'Edit Training',
+        fields: [
+          FormBuilderDropdown(
+            name: "physicalFitness",
+            initialValue: currentUser.value?.physicalFitness.name,
+            items: UserPhysicalFitness.values
+                .map(
+                  (e) => DropdownMenuItem(
+                    value: e,
+                    child: Text(e.name.toTitleCase()),
+                  ),
+                )
+                .toList(),
+            decoration: const InputDecoration(labelText: 'Activity'),
           ),
-          onChanged: null,
-        ),
-        NumberFormField(
-          initialValue: currentUser.value?.exerciseDaysPerWeek,
-          labelText: 'Days / week',
-          onSaved: (v) =>
-              currentUser.update((user) => user?.exerciseDaysPerWeek = v),
-        ),
-      ],
-    );
+          NumberFormField(
+            name: "exerciseDaysPerWeek",
+            labelText: "Days / week",
+            initialValue: currentUser.value?.exerciseDaysPerWeek,
+          ),
+        ],
+      );
+    } catch (e) {
+      print(e);
+    }
   }
 
   void editEquipment() async {
     if (currentUser.value == null) return;
-
-    await showBottomFormSheet(
-      title: 'Edit Equipment',
-      fields: [
-        TextFormField(
-          initialValue: (currentUser.value!.equipment).join(', '),
-          maxLines: 2,
-          decoration: const InputDecoration(
-            labelText: 'Equipment (comma-separated)',
-            border: OutlineInputBorder(),
+    try {
+      await showBottomFormSheet(
+        title: 'Edit Equipment',
+        fields: [
+          FormBuilderTextField(
+            name: "equipment",
+            initialValue: (currentUser.value!.equipment).join(', '),
+            maxLines: 2,
+            valueTransformer: (v) => v?.split(',') ?? [],
+            decoration: const InputDecoration(
+              labelText: 'Equipment (comma-separated)',
+            ),
           ),
-          onSaved: (v) => currentUser.update((user) {
-            user?.equipment.clear();
-            user?.equipment.addAll(
-              v == null || v.isEmpty ? [] : v.removeAllWhitespace.split(","),
-            );
-          }),
-        ),
-      ],
-    );
+        ],
+      );
+    } catch (e) {
+      print(e);
+    }
   }
 
-  void editDisabilities() {
+  void editDisabilities() async {
     if (currentUser.value == null) return;
-
-    showBottomFormSheet(
-      title: 'Edit Disabilities',
-      fields: [
-        TextFormField(
-          initialValue: (currentUser.value!.disabilities).join(', '),
-          maxLines: 2,
-          decoration: const InputDecoration(
-            labelText: 'Disabilities (comma-separated)',
-            border: OutlineInputBorder(),
+    try {
+      await showBottomFormSheet(
+        title: 'Edit Disabilities',
+        fields: [
+          FormBuilderTextField(
+            name: "disabilities",
+            initialValue: (currentUser.value!.disabilities).join(', '),
+            maxLines: 2,
+            valueTransformer: (v) => v?.split(',') ?? [],
+            decoration: const InputDecoration(
+              labelText: 'Disabilities (comma-separated)',
+            ),
           ),
-          validator: (v) => validateString(v, valueName: "Disabilities"),
-          onSaved: (v) => currentUser.update((user) {
-            user?.disabilities.clear();
-            user?.disabilities.addAll(
-              v!.isEmpty ? [] : v.removeAllWhitespace.split(","),
-            );
-          }),
-        ),
-      ],
-    );
+        ],
+      );
+    } catch (e) {
+      Get.log(e.toString());
+    }
   }
 
   Future<void> showBottomFormSheet({
@@ -207,7 +194,7 @@ class _ProfileScreenController extends GetxController
         16,
         MediaQuery.of(ctx).viewInsets.bottom + 12,
       ),
-      child: Form(
+      child: FormBuilder(
         key: formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -233,9 +220,39 @@ class _ProfileScreenController extends GetxController
                 Expanded(
                   child: FilledButton(
                     onPressed: () async {
-                      if (formKey.currentState?.validate() ?? false) {
-                        formKey.currentState?.save();
-                        if (ctx.mounted) Navigator.pop(ctx);
+                      try {
+                        if (!formKey.currentState!.saveAndValidate()) {
+                          return;
+                        }
+
+                        Get.back();
+                        if (currentUser.value == null) {
+                          return;
+                        }
+
+                        currentUser.update((user) {
+                          final name =
+                              (formKey.currentState!.value['name'] as String)
+                                  .split(" ");
+                          user!.firstName = name[0];
+                          user.lastName = name[1];
+                          user.goal = formKey.currentState!.value['goal'];
+                          user.height = formKey.currentState!.value['height'];
+                          user.weight = formKey.currentState!.value['weight'];
+                          user.gender = formKey.currentState!.value['gender'];
+                          user.equipment =
+                              formKey.currentState!.value['equipment'];
+                          user.disabilities =
+                              formKey.currentState!.value['disabilities'];
+                          user.exerciseDaysPerWeek = formKey
+                              .currentState!
+                              .value['exerciseDaysPerWeek'];
+                        });
+
+                        userService.updateUser(currentUser.value!);
+                      } on Exception catch (e) {
+                        e.printError();
+                        showSnackbar("An error ocurred while updating your profile.", AnimatedSnackBarType.error);
                       }
                     },
                     child: const Text('Save'),
@@ -344,41 +361,47 @@ class _ProfileHeader extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Obx(
-                          () => Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              _Pill(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            Obx(
+                              () => _Pill(
                                 _formatValue(
                                   currentUser.value?.age,
                                   suffix: ' yrs',
                                 ),
                               ),
-                              _Pill(
+                            ),
+                            Obx(
+                              () => _Pill(
                                 _formatValue(
                                   currentUser.value?.height,
                                   suffix: ' cm',
                                 ),
                               ),
-                              _Pill(
+                            ),
+                            Obx(
+                              () => _Pill(
                                 _formatValue(
                                   currentUser.value?.weight,
                                   suffix: ' kg',
                                 ),
                               ),
-                              _Pill(
+                            ),
+                            Obx(
+                              () => _Pill(
                                 currentUser.value?.gender.name.toTitleCase() ??
                                     '—',
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    onPressed: () => controller.editBasics(),
+                    onPressed: controller.editBasics,
                     icon: const Icon(Icons.edit),
                   ),
                 ],
@@ -405,7 +428,7 @@ class _GoalSection extends StatelessWidget {
         : _ProfileSectionCard(
             title: 'Goal',
             trailing: IconButton(
-              onPressed: () => controller.editGoal(),
+              onPressed: controller.editGoal,
               icon: const Icon(Icons.edit),
             ),
             child: Obx(
@@ -435,7 +458,7 @@ class _TrainingSection extends StatelessWidget {
         : _ProfileSectionCard(
             title: 'Training',
             trailing: IconButton(
-              onPressed: () => controller.editTraining(),
+              onPressed: () => controller.editTraining,
               icon: const Icon(Icons.edit),
             ),
             child: Column(
@@ -482,11 +505,11 @@ class _EquipmentSection extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  onPressed: () => controller.editEquipment(),
+                  onPressed: controller.editEquipment,
                   icon: const Icon(Icons.edit),
                 ),
                 IconButton(
-                  onPressed: () => controller.editDisabilities(),
+                  onPressed: controller.editDisabilities,
                   icon: const Icon(Icons.healing),
                 ),
               ],

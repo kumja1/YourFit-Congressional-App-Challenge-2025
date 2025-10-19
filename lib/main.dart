@@ -4,7 +4,7 @@ import 'package:yourfit/src/routing/router.dart';
 import 'package:yourfit/src/utils/functions/init_services.dart';
 
 void main() async {
-  // WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
   await initServices();
   runApp(const YourFitApp());
 }
@@ -14,7 +14,7 @@ class YourFitApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final AppRouter router = Get.find();
+    final AppRouter router = Get.put(AppRouter(navigatorKey: Get.key));
 
     return GetMaterialApp.router(
       routerDelegate: router.delegate(),
@@ -59,7 +59,11 @@ class YourFitApp extends StatelessWidget {
             borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
         ),
+        dropdownMenuTheme: const DropdownMenuThemeData(menuStyle: MenuStyle(
+          shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10)))
+        ),
+        )
       ),
-    );
+    ));
   }
 }

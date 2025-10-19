@@ -1,6 +1,6 @@
 import 'package:dart_mappable/dart_mappable.dart';
 import 'package:yourfit/src/models/exercise/index.dart';
-import 'package:yourfit/src/utils/objects/mappable/hooks/map_hook.dart';
+import 'package:yourfit/src/utils/objects/other/mapping/hooks/map_hook.dart';
 part 'running_exercise_data.mapper.dart';
 
 @MappableClass(discriminatorKey: "running")
@@ -20,6 +20,7 @@ class RunningExerciseData extends ExerciseData
     required super.summary,
     required super.sets,
     required super.reps,
+    required super.setDuration,
     required super.duration,
     super.targetMuscles,
     super.equipment,

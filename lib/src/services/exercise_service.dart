@@ -1,161 +1,153 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:yourfit/src/models/index.dart';
 import 'package:langchain/langchain.dart';
 import 'package:langchain_google/langchain_google.dart';
-import 'package:yourfit/src/services/auth_service.dart';
+import 'package:yourfit/src/services/device_service.dart';
 import 'package:yourfit/src/utils/objects/constants/env/env.dart';
-import 'package:yourfit/src/utils/objects/vectorstore/supabase_vectorstore.dart';
+import 'package:yourfit/src/utils/objects/constants/exercise/response_schema.dart';
+import 'package:yourfit/src/utils/objects/other/exercise/parameter.dart';
+import 'package:yourfit/src/utils/objects/other/supabase/supabase_vectorstore.dart';
 
 class ExerciseService extends GetxService {
   late final Runnable llmChain;
-  final Rx<UserData?> currentUser = Get.find<AuthService>().currentUser;
+  final DeviceService deviceService = Get.find();
+
 
   @override
   void onInit() {
-    try {
-      super.onInit();
-      final model =
-          ChatPromptTemplate.fromPromptMessages([
-            ChatMessagePromptTemplate.system("""
+    super.onInit();
+    final model = ChatGoogleGenerativeAI(
+      apiKey: Env.geminiKey,
+      defaultOptions: ChatGoogleGenerativeAIOptions(
+        model: "gemini-2.5-pro",
+        responseMimeType: "application/json",
+        safetySettings: const [
+          ChatGoogleGenerativeAISafetySetting(
+            category:
+                ChatGoogleGenerativeAISafetySettingCategory.sexuallyExplicit,
+            threshold:
+                ChatGoogleGenerativeAISafetySettingThreshold.blockLowAndAbove,
+          ),
+          ChatGoogleGenerativeAISafetySetting(
+            category: ChatGoogleGenerativeAISafetySettingCategory.hateSpeech,
+            threshold:
+                ChatGoogleGenerativeAISafetySettingThreshold.blockLowAndAbove,
+          ),
+          ChatGoogleGenerativeAISafetySetting(
+            category:
+                ChatGoogleGenerativeAISafetySettingCategory.dangerousContent,
+            threshold: ChatGoogleGenerativeAISafetySettingThreshold
+                .blockMediumAndAbove,
+          ),
+        ],
+      ),
+    );
+
+    final vectorStore = Supabase(
+      tableName: "documents",
+      supabaseUrl: Env.supabaseUrl,
+      supabaseKey: Env.supabaseKey,
+      embeddings: GoogleGenerativeAIEmbeddings(
+        model: "gemini-embedding-001",
+        apiKey: Env.geminiKey,
+        dimensions: 1024,
+      ),
+    );
+
+    final nearestLocationsTool = Tool.fromFunction(
+      name: "nearest_locations",
+      description:
+          "Returns the nearest locations to the user. Used for choosing destinations for running exercises",
+      inputJsonSchema: {},
+      func: (_) async {
+        final locations = await deviceService.getPositionsNearDevice();
+        return {"locations": locations.map((e) => e.toJson()).toList()};
+      },
+    );
+
+    final agent = ToolsAgent.fromLLMAndTools(
+      llm: model,
+      tools: [nearestLocationsTool],
+      systemChatMessage: SystemChatMessagePromptTemplate(
+        prompt: PromptTemplate.fromTemplate("""
+---- Instructions ----
+You are a extremly considerate, medically accurate fitness trainer.
+Your task: Provide the user with an appropriate response to the prompt, taking into consideration their age, height, weight, gender, physicalFitness, and any other additional parameters provided.
+Follow these rules:
+1. Response should be based on the given information as well as any additional information found in the dataset.
+2. Response should not contain anything redundant.
+3. Response should be in a JSON format and follow the schema provided.
+
 ---- Context ----
 {context}
-
----- Instructions ----
-You are a compassionate, medically accurate fitness trainer.
-Your task: Provide the user with appropriate exercise(s) to perform at their age, height, weight, gender, physicalFitness, and any other additional parameters provided.
-Follow these rules:
-1. Response should be based on given information as well as any additional information found in the dataset.
-2. Response should be varied.
-3. Response should not repeat any of the information provided .
-4. Response should be in a JSON format.
 """),
-
-            ChatMessagePromptTemplate.human("""
+      ),
+      extraPromptMessages: [
+        ChatMessagePromptTemplate.human("""
 Below is the information you will take into consideration when formulating your response.
 
----- User Information ----
-  age: {age}
-  height: {height} cm
-  weight: {weight} lbs
-  physicalFitness: {physicalFitness}
-  gender: {gender}
-  equipment: {equipment}
-  disabilities: {disabilities}
-  exercisesData: {exerciseData}
-
----- Additional Information ----
-  {additionalParameters}
+---- Information ----
+  {params}
 """),
 
-            ChatMessagePromptTemplate.human("User Input: {prompt}"),
-          ]) |
-          ChatGoogleGenerativeAI(
-            apiKey: Env.geminiKey,
-            defaultOptions: ChatGoogleGenerativeAIOptions(
-              model: "gemini-2.5-pro",
-              safetySettings: const [
-                ChatGoogleGenerativeAISafetySetting(
-                  category: ChatGoogleGenerativeAISafetySettingCategory
-                      .sexuallyExplicit,
-                  threshold: ChatGoogleGenerativeAISafetySettingThreshold
-                      .blockLowAndAbove,
-                ),
-                ChatGoogleGenerativeAISafetySetting(
-                  category:
-                      ChatGoogleGenerativeAISafetySettingCategory.hateSpeech,
-                  threshold: ChatGoogleGenerativeAISafetySettingThreshold
-                      .blockLowAndAbove,
-                ),
-                ChatGoogleGenerativeAISafetySetting(
-                  category: ChatGoogleGenerativeAISafetySettingCategory
-                      .dangerousContent,
-                  threshold: ChatGoogleGenerativeAISafetySettingThreshold
-                      .blockMediumAndAbove,
-                ),
-              ],
-            ),
-          );
+        ChatMessagePromptTemplate.human("User Prompt: {prompt}"),
+      ],
+    );
 
-      final vectorStore = Supabase(
-        tableName: "documents",
-        supabaseUrl: Env.supabaseUrl,
-        supabaseKey: Env.supabaseKey,
-        embeddings: GoogleGenerativeAIEmbeddings(
-          model: "gemini-embedding-001",
-          apiKey: Env.geminiKey,
-          dimensions: 1024,
-        ),
-      );
-      try {
-        llmChain =
-            Runnable.fromMap({
-              "context":
-                  Runnable.getItemFromMap("prompt") |
-                  (vectorStore.asRetriever(
-                        defaultOptions: VectorStoreRetrieverOptions(
-                          searchType: VectorStoreMMRSearch(k: 20),
-                        ),
-                      ) |
-                      Runnable.mapInput((docs) => docs.join("\n"))),
-              "exerciseData":
-                  Runnable.getItemFromMap("exerciseData") |
-                  Runnable.mapInput((data) {
-                    final str = (data as Map<String, MonthData>).entries
-                        .map(
-                          (entry) =>
-                              "{'${entry.key}':${entry.value.toJson()}}",
-                        )
-                        .join(" | ");
-                    print(str);
-                    return str;
-                  }),
-              "equipment":
-                  Runnable.getItemFromMap("equipment") |
-                  Runnable.mapInput(
-                    (equipment) => (equipment as List<String>).join(", "),
-                  ),
-              "disabilities":
-                  Runnable.getItemFromMap("disabilities") |
-                  Runnable.mapInput(
-                    (disabilties) => (disabilties as List<String>).join(", "),
-                  ),
-              "gender": Runnable.getItemFromMap("gender"),
-              "physicalFitness": Runnable.getItemFromMap("physicalFitness"),
-              "age": Runnable.getItemFromMap("age"),
-              "height": Runnable.getItemFromMap("height"),
-              "weight": Runnable.getItemFromMap("weight"),
-              "prompt": Runnable.getItemFromMap("prompt"),
-              "additionalParameters":
-                  Runnable.getItemFromMap("additionalParameters") |
-                  Runnable.mapInput(
-                    (input) => (input as Map<String, dynamic>).entries
-                        .map((entry) => "${entry.key}: ${entry.value}")
-                        .join("\n"),
-                  ),
-            }) |
-            model |
-            ToolsOutputParser();
-      } on Error catch (e) {
-        print("$e, ${e.stackTrace}");
-      }
-    } catch (e) {
-      print(e);
-    }
+    llmChain =
+        AgentExecutor(agent: agent, maxExecutionTime: Duration(seconds: 15)) |
+        Runnable.fromMap({
+          "context":
+              Runnable.getItemFromMap("prompt") |
+              (vectorStore.asRetriever(
+                    defaultOptions: VectorStoreRetrieverOptions(
+                      searchType: VectorStoreMMRSearch(k: 20),
+                    ),
+                  ) |
+                  Runnable.mapInput((docs) => docs.join("\n"))),
+          "prompt": Runnable.getItemFromMap("prompt"),
+          "params":
+              Runnable.getItemFromMap("params") |
+              Runnable.mapInput((params) {
+                int i = 0;
+                StringBuffer buffer = StringBuffer();
+                for (MapEntry<String, Parameter> entry
+                    in (params as Map<String, Parameter>).entries) {
+                  i++;
+                  buffer.writeln(
+                    "${entry.key}: ${entry.value.value} (priority: ${entry.value.priority ?? i}) (description: ${entry.value.description})",
+                  );
+                }
+
+                return buffer.toString();
+              }),
+        }) |
+        JsonOutputParser();
   }
 
   Future<Map<String, dynamic>> invoke(
-    Map<String, dynamic> params, {
-    ToolSpec? responseType,
+    String prompt,
+    Map<String, Parameter> params, {
+    Map<String, dynamic>? responseSchema,
   }) async {
-    print("Invoking LLM with parameters: $params");
+    Get.log("Invoking LLM with parameters: $params");
     try {
-      final chain = responseType == null
-          ? llmChain
-          : llmChain.bind(ChatGoogleGenerativeAIOptions(tools: [responseType]));
-      List<ParsedToolCall> results =
-          await chain.invoke(params) as List<ParsedToolCall>;
-      return results.isEmpty ? {} : results[0].arguments;
-    } on Error catch (e) {
+      Map<String, dynamic> results =
+          await llmChain.invoke(
+                {"params": params, "prompt": prompt},
+                options: responseSchema == null
+                    ? null
+                    : ChatGoogleGenerativeAIOptions(
+                        responseSchema: responseSchema,
+                      ),
+              )
+              as Map<String, dynamic>;
+
+      Get.log("Results: $results");
+      return results;
+    } on Exception catch (e) {
       e.printError();
       return {};
     }
@@ -164,277 +156,118 @@ Below is the information you will take into consideration when formulating your 
   Future<Map<String, dynamic>?> invokeWithUser(
     UserData? user,
     String prompt, {
-    ToolSpec? responseType,
-    Map<String, dynamic> additionalParameters = const {},
+    Map<String, dynamic>? responseSchema,
+    Map<String, Parameter> additionalParams = const {},
   }) async {
     try {
       if (user == null) return null;
-
-      return await invoke({
-        "equipment": user.equipment,
-        "disabilities": user.disabilities,
-        "weight": user.weight,
-        "height": user.height,
-        "age": user.age,
-        "gender": user.gender,
-        "exerciseData": user.exerciseData,
-        "physicalFitness": user.physicalFitness,
-        "prompt": prompt,
-        "additionalParameters": additionalParameters,
-      }, responseType: responseType);
-    } catch (e) {
+      return await invoke(prompt, {
+        "age": Parameter(
+          priority: 1,
+          value: user.age,
+          description: "User's age in years",
+        ),
+        "goal": Parameter(
+          priority: 1,
+          value: user.goal,
+          description: "User's fitness goal",
+        ),
+        "bmi": Parameter(
+          priority: 1,
+          value: user.bmi,
+          description: "User's body mass index",
+        ),
+        "physicalFitness": Parameter(
+          priority: 2,
+          value: user.physicalFitness,
+          description: "User's current physical fitness level",
+        ),
+        "height": Parameter(
+          priority: 2,
+          value: user.height,
+          description: "User's height in centimeters",
+        ),
+        "weight": Parameter(
+          priority: 2,
+          value: user.weight,
+          description: "User's weight in pounds",
+        ),
+        "gender": Parameter(
+          priority: 3,
+          value: user.gender,
+          description: "User's gender",
+        ),
+        "equipment": Parameter(
+          priority: 3,
+          value: user.equipment,
+          description: "Available equipment for workout",
+        ),
+        "disabilities": Parameter(
+          priority: 3,
+          value: user.disabilities,
+          description: "User's physical limitations or disabilities",
+        ),
+        "workoutData": Parameter(
+          priority: 4,
+          value: user.workoutData,
+          description: "User's historical workout data",
+        ),
+        ...additionalParams,
+      }, responseSchema: responseSchema);
+    } on Error catch (e) {
+      debugPrintStack(stackTrace: e.stackTrace);
       e.printError();
       return null;
-    }
-  }
-
-  Future<WorkoutFocus> getWorkoutFocus(UserData? user) async {
-    try {
-      final result = await invokeWithUser(
-        user,
-        "Please provide the user with a workout focus (${WorkoutFocus.values.join(",")}) ",
-        responseType: ResponseType.workoutFocus,
-      );
-
-      return result == null
-          ? WorkoutFocus.rest
-          : WorkoutFocus.fromValue(result['focus']);
-    } catch (e) {
-      e.printError();
-      return WorkoutFocus.rest;
     }
   }
 
   Future<WorkoutData?> getExercises(
     UserData? user, {
+    String? prompt,
     ExerciseType? type,
     WorkoutFocus? focus,
     ExerciseDifficulty? difficulty,
     ExerciseIntensity? intensity,
-    ToolSpec? responseType,
     int count = 3,
-    Map<String, dynamic> additionalParameters = const {},
+    Map<String, Parameter> additionalParams = const {},
   }) async {
-    responseType ??= ResponseType.workout;
     try {
       final result = await invokeWithUser(
         user,
-        "Please provide the user with $count exercises",
-        additionalParameters: {
-          ...additionalParameters,
-          "exercise_difficulty": difficulty?.name,
-          "exercise_intensity": intensity?.name,
-          "exercise_type": type?.name,
-          "workout_focus": focus?.name,
+        "Provide the user with a workout with $count exercises. ${prompt ?? ''}",
+        additionalParams: {
+          ...additionalParams,
+          "workout_exercise_difficulty": Parameter(
+            priority: 5,
+            value: difficulty?.name,
+            description: "Desired difficulty level for workout exercises",
+          ),
+          "workout_exercise_intensity": Parameter(
+            priority: 5,
+            value: intensity?.name,
+            description: "Desired intensity level for workout exercises",
+          ),
+          "workout_exercise_type": Parameter(
+            priority: 5,
+            value: type?.name,
+            description: "Type of exercise (strength, cardio, etc.)",
+          ),
+          "workout_focus": Parameter(
+            priority: 5,
+            value: focus?.name,
+            description:
+                "Indicates the main (but not only) focus area for the workout. Shouldn't completely overshadow similar parameters. ",
+          ),
         },
-        responseType: responseType,
+        responseSchema: ResponseSchema.workout,
       );
-      print("Result is $result");
-      return result == null ? null : WorkoutData.fromMap(result);
-    } on Error catch (e) {
+      Get.log("[getExercises] Result $result");
+      return result == null || result.isEmpty
+          ? null
+          : WorkoutData.fromMap(result);
+    } on Exception catch (e) {
       e.printError();
       return null;
     }
   }
-}
-
-class ResponseType {
-  static final workout = const ToolSpec(
-    name: 'workout',
-    description:
-        'A JSON object containing a list of exercises, a summary of the exercises, total calories burned from the exercises, and the total duration of the exercises.',
-    inputJsonSchema: {
-      'type': 'object',
-      'properties': {
-        'exercises': {
-          'type': 'array',
-          'items': {
-            'type': 'object',
-            'properties': {
-              'difficulty': {
-                'type': 'string',
-                'enum': ['easy', 'medium', 'hard'],
-                'description': 'Difficulty level of the exercise',
-              },
-              'intensity': {
-                'type': 'string',
-                'enum': ['low', 'medium', 'high'],
-                'description': 'Intensity level of the exercise',
-              },
-              'type': {
-                'type': 'string',
-                'enum': ['strength', 'cardio', 'flexibility', 'balance'],
-                'description':
-                    'The exercise type of the exercise. Must be one of: cardio (Improves heart and lung function, builds endurance for sustained physical activity), strength (Develops muscle power and force production for lifting, throwing, and resistance movements), flexibility (Increases range of motion and mobility for better movement quality and injury prevention), balance (Enhances stability, coordination, and body control during static and dynamic activities)',
-              },
-              'caloriesBurned': {
-                'type': 'number',
-                'description': 'Calories burned per exercise',
-              },
-              'name': {'type': 'string', 'description': 'Exercise name'},
-              'instructions': {
-                'type': 'string',
-                'description': 'Instructions for the exercise.',
-              },
-              'summary': {
-                'type': 'string',
-                'description': 'A quick summary of the exercise. ',
-              },
-              'targetMuscles': {
-                'type': 'array',
-                'items': {'type': 'string'},
-                'description': 'List of target muscles',
-              },
-              'sets': {'type': 'integer', 'description': 'Number of sets'},
-              'equipment': {
-                'type': 'array',
-                'items': {'type': 'string'},
-                'description': 'List of equipment',
-              },
-              'duration': {
-                'type': 'object',
-                'description': 'Duration of exercise (in seconds)',
-                'properties': {
-                  'inSeconds': {
-                    "type": "integer",
-                    "description": "The duration length (in seconds)",
-                  },
-                },
-                'required': ['inSeconds'],
-              },
-              'restIntervals': {
-                'type': 'array',
-                'description': 'Rest intervals for the exercise.',
-                'minItems': 1,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'restAt': {
-                      'type': 'integer',
-                      'description': 'Second the rest starts',
-                    },
-                    'duration': {
-                      'type': 'object',
-                      'description': 'Duration of the rest interval',
-                      'properties': {
-                        'inSeconds': {
-                          "type": "integer",
-                          "description": "The duration length (in seconds)",
-                        },
-                      },
-                    },
-                  },
-                  'required': ['restAt', 'duration'],
-                },
-              },
-              'reps': {'type': 'integer', 'description': 'Number of reps'},
-              'distance': {
-                'type': 'number',
-                'description': 'Distance in miles for a running exercise',
-              },
-              'speed': {
-                'type': 'integer',
-                'description':
-                    'Speed the user would have to use for a running exercise',
-              },
-              'destination': {
-                'type': 'string',
-                'description':
-                    'The address of where the user would run to for a running exercise',
-              },
-            },
-            'required': [
-              'difficulty',
-              'intensity',
-              "restIntervals",
-              'type',
-              'equipment',
-              'duration',
-              'caloriesBurned',
-              'name',
-              'summary',
-              'instructions',
-              'targetMuscles',
-              'sets',
-              'reps',
-            ],
-          },
-          'description': 'List of exercises with full details.',
-        },
-        'caloriesBurned': {
-          'type': 'number',
-          'description': 'Total calories burned in workout ',
-        },
-        'summary': {
-          'type': 'string',
-          'description': 'A summary of the workout',
-        },
-        'duration': {
-          'type': 'object',
-          'description': 'Total duration of the exercises for the day',
-          'properties': {
-            'inSeconds': {
-              "type": "integer",
-              "description": "The duration length (in seconds)",
-            },
-          },
-        },
-        'focus': {
-          'type': 'string',
-          'enum': [
-            'leg',
-            'upperBody',
-            'cardio',
-            'core',
-            'fullBody',
-            'rest',
-            'yoga',
-          ],
-          'description':
-              'The focus of the workout. Influences a majority of the workout exercises',
-        },
-      },
-      'required': [
-        'exercises',
-        'caloriesBurned',
-        'summary',
-        'focus',
-        'duration',
-      ],
-    },
-  );
-
-  static final workoutFocus = const ToolSpec(
-    name: "workout_focus",
-    description: "The focus of the workout",
-    inputJsonSchema: {
-      'type': 'object',
-      'properties': {
-        'focus': {
-          'type': 'string',
-          'enum': [
-            'leg',
-            'upperBody',
-            'cardio',
-            'core',
-            'fullBody',
-            'rest',
-            'yoga',
-          ],
-        },
-      },
-    },
-  );
-
-  static final answer = const ToolSpec(
-    name: "answer",
-    description: "The answer to a question",
-    inputJsonSchema: {
-      "type": "object",
-      "properties": {
-        "answer": {"type": "string", "description": "The answer to a question"},
-      },
-      'required': ['answer'],
-    },
-  );
 }

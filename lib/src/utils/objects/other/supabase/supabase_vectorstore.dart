@@ -1,10 +1,10 @@
-import 'dart:math' as Math;
-
+import 'dart:math' as math;
 import 'package:extensions_plus/extensions_plus.dart';
+import 'package:get/utils.dart';
 import 'package:http/http.dart' as http;
 import 'package:langchain/langchain.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:yourfit/src/utils/objects/vectorstore/vector_store_hybrid_search.dart';
+import 'package:yourfit/src/utils/objects/other/supabase/vector_store_hybrid_search.dart';
 
 /// {@template supabase}
 /// Vector store for [Supabase Vector](https://supabase.com/vector)
@@ -130,7 +130,7 @@ class Supabase extends VectorStore {
       };
       return docs as List<Document>;
     } catch (e) {
-      print("Error during search: $e");
+      e.printError(info: "Error during search");
       return [];
     }
   }
@@ -160,7 +160,7 @@ class Supabase extends VectorStore {
           .map((final id) => id.toString())
           .toList(growable: false);
     } catch (e) {
-      print("Error adding vectors: $e");
+      e.printError(info: "Error adding vectors");
       return [];
     }
   }
@@ -186,7 +186,7 @@ class Supabase extends VectorStore {
           .map((doc) => (doc.document, doc.similarity))
           .toList(growable: false);
     } catch (e) {
-      print("Error performing similarity search with scores: $e");
+      e.printError(info:"Error during similarity search with scores");
       return [];
     }
   }
@@ -230,9 +230,7 @@ class Supabase extends VectorStore {
           )
           .toList(growable: false);
     } catch (e) {
-      print(
-        "Error performing similarity search with scores and embeddings: $e, ${e is Error ? e.stackTrace : "No Stack Trace"}",
-      );
+      e.printError(info: "Error during similarity search with scores and embeddings");
       return [];
     }
   }
@@ -242,7 +240,7 @@ class Supabase extends VectorStore {
     final VectorStoreMMRSearch config = const VectorStoreMMRSearch(),
   }) async {
     try {
-      print(
+      Get.log(
         "MMR search: fetching ${config.fetchK} candidates, target: ${config.k}, λ: ${config.lambdaMult}",
       );
 
@@ -253,7 +251,7 @@ class Supabase extends VectorStore {
       );
 
       if (docs.isEmpty) {
-        print("MMR: no documents retrieved");
+        Get.log("MMR: no documents retrieved");
         return [];
       }
 
@@ -261,8 +259,8 @@ class Supabase extends VectorStore {
         ...docs.map((doc) => doc.embeddings),
       ];
 
-      print("MMR: ${embeddings.length} embeddings retrieved");
-      print(
+      Get.log("MMR: ${embeddings.length} embeddings retrieved");
+      Get.log(
         "MMR: initial similarities: ${docs.map((d) => d.similarity.toStringAsFixed(3)).join(', ')}",
       );
 
@@ -271,7 +269,9 @@ class Supabase extends VectorStore {
         embeddings,
       ).first;
 
-      print("MMR: starting with most similar index $mostSimilarEmbeddingIndex");
+      Get.log(
+        "MMR: starting with most similar index $mostSimilarEmbeddingIndex",
+      );
 
       final selectedEmbeddings = [embeddings[mostSimilarEmbeddingIndex]];
       final selectedEmbeddingsIndexes = [mostSimilarEmbeddingIndex];
@@ -279,16 +279,16 @@ class Supabase extends VectorStore {
         (index, doc) => MapEntry(index, doc.similarity),
       );
 
-      print(
+      Get.log(
         "MMR: similarity map keys: ${similaritiesAndIndexes.keys.toList()}",
       );
 
       int iteration = 0;
       while (selectedEmbeddingsIndexes.length <
-          Math.min(config.k, embeddings.length)) {
+          math.min(config.k, embeddings.length)) {
         iteration++;
-        print("\n--- MMR Iteration $iteration ---");
-        print("Current selection: ${selectedEmbeddingsIndexes.join(', ')}");
+        Get.log("\n--- MMR Iteration $iteration ---");
+        Get.log("Current selection: ${selectedEmbeddingsIndexes.join(', ')}");
 
         double bestScore = double.negativeInfinity;
         int bestIndex = -1;
@@ -300,7 +300,7 @@ class Supabase extends VectorStore {
             ),
           ];
 
-          print(
+          Get.log(
             "Similarity matrix: ${similarityToSelected.length} rows × ${similarityToSelected.first.length} cols",
           );
 
@@ -323,24 +323,24 @@ class Supabase extends VectorStore {
             if (score > bestScore) {
               bestScore = score;
               bestIndex = index;
-              print("  ^ NEW BEST");
+              Get.log("  ^ NEW BEST");
             }
           });
 
-          print("Checked $candidatesChecked candidates");
+          Get.log("Checked $candidatesChecked candidates");
 
           if (bestIndex == -1) {
-            print("No valid candidate found, breaking");
+            Get.log("No valid candidate found, breaking");
             break;
           }
 
           selectedEmbeddings.add(embeddings[bestIndex]);
           selectedEmbeddingsIndexes.add(bestIndex);
-          print(
+          Get.log(
             "Selected index $bestIndex with MMR score ${bestScore.toStringAsFixed(3)}",
           );
         } catch (e) {
-          print("MMR iteration $iteration error: $e");
+          Get.log("MMR iteration $iteration error: $e");
           break;
         }
       }
@@ -349,7 +349,7 @@ class Supabase extends VectorStore {
           .map((item) => item.$2.document)
           .toList();
     } catch (e) {
-      print("MMR search failed: $e");
+      e.printError(info: "Error during MMR search");
       return [];
     }
   }
@@ -366,7 +366,7 @@ class Supabase extends VectorStore {
         config: config,
       );
     } catch (e) {
-      print("Error performing hybrid search: $e");
+      e.printError(info: "Error during hybrid search");
       return [];
     }
   }
@@ -402,7 +402,7 @@ class Supabase extends VectorStore {
           )
           .toList(growable: false);
     } catch (e) {
-      print("Error performing hybrid search by vector: $e");
+      e.printError(info: "Error during hybrid search by vector");
       return [];
     }
   }

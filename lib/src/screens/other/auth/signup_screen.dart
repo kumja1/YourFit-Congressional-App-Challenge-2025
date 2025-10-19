@@ -5,6 +5,7 @@ import 'package:date_picker_plus/date_picker_plus.dart';
 import 'package:datetime_picker_formfield_new/datetime_picker_formfield.dart';
 import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthResponse;
@@ -46,11 +47,9 @@ class SignUpScreen extends StatelessWidget {
             labelText: "Name",
             keyboardType: TextInputType.name,
             onChanged: (value) => controller.name = value,
-            validator: (value) => controller.validateString(
-              value,
-              space: true,
-              valueName: "Name",
-              message: "must contain a first and last name",
+            validator: FormBuilderValidators.match(
+              RegExp(r"^\S+ \S+(?: \S+)*$"),
+              errorText: "Name must contain a first name and last name",
             ),
           ),
           DateTimeField(
@@ -59,17 +58,19 @@ class SignUpScreen extends StatelessWidget {
             onChanged: (value) => controller.dob = value,
             format: DateFormat.yMMMMEEEEd(),
             resetIcon: const Icon(Icons.close_rounded, color: Colors.blue),
-          ).sized(width: 360),
+          ).constrains(maxWidth: 360),
           AuthFormTextField(
             labelText: "Email",
             onChanged: (value) => controller.email = value,
-            validator: controller.validateEmail,
+            validator: FormBuilderValidators.email(errorText: "Invalid email"),
           ),
           AuthFormTextField(
             labelText: "Password",
             onChanged: (value) => controller.password = value,
-            validator: (value) =>
-                controller.validatePassword(value, minLength: 6),
+            validator: FormBuilderValidators.password(
+              errorText: "Password must be at least 6 characters long",
+              minLength: 6,
+            ),
             isPassword: true,
           ),
         ],

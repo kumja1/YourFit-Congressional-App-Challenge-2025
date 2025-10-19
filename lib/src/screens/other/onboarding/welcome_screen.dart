@@ -52,7 +52,7 @@ class WelcomeScreen extends StatelessWidget {
               currentStep: controller.currentIndex,
               roundedEdges: const Radius.circular(10),
               crossAxisAlignment: CrossAxisAlignment.start,
-              unselectedColor: Colors.black12,
+              unselectedColor: Colors.grey[200]!,
               selectedColor: Colors.blue,
               progressDirection: TextDirection.ltr,
             ),
@@ -101,7 +101,7 @@ class _WelcomeScreenController extends GetxController {
     onboardingKey.currentState?.dispose();
   }
 
-  Future<void> next() async {
+  void next() {
     bool progress = pages[currentIndex].canProgress();
     if (progress) {
       onboardingKey.currentState?.next();

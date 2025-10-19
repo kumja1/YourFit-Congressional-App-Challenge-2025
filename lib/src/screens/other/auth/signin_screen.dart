@@ -2,10 +2,10 @@ import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthResponse;
 import 'package:yourfit/src/models/auth/auth_response.dart';
-import 'package:yourfit/src/services/index.dart';
 import 'package:yourfit/src/utils/index.dart';
 import 'package:yourfit/src/routing/index.dart';
 import 'package:yourfit/src/widgets/index.dart';
@@ -20,7 +20,7 @@ class SignInScreen extends StatelessWidget {
     return Scaffold(
       body: AuthForm(
         formKey: controller.formKey,
-
+        spacing: 15,
         oauthButtons: [
           OAuthButton(
             icon: AppIcons.googleIcon,
@@ -32,19 +32,29 @@ class SignInScreen extends StatelessWidget {
           AuthFormTextField(
             labelText: "Email",
             onChanged: (value) => controller.email = value,
-            validator: controller.validateEmail,
+            validator: FormBuilderValidators.required<String>(
+              errorText: "Email is required",
+            ).and(FormBuilderValidators.email(errorText: "Invalid email")),
           ),
           AuthFormTextField(
             labelText: "Password",
             isPassword: true,
             onChanged: (value) => controller.password = value,
-            validator: controller.validatePassword,
-            passwordChild: TextButton(
+            validator:
+                FormBuilderValidators.required(
+                  errorText: "Password is required",
+                ).and(
+                  FormBuilderValidators.minLength(
+                    6,
+                    errorText: "Password must be at least 6 characters long",
+                  ),
+                ),
+            leading: TextButton(
               onPressed: () => context.router.pushPath(Routes.passwordReset),
               style: const ButtonStyle(
                 overlayColor: WidgetStatePropertyAll(Colors.transparent),
               ),
-              child:  Text(
+              child: Text(
                 "Forgot?",
                 style: TextStyle(color: Colors.grey[300], fontSize: 16.2),
               ),

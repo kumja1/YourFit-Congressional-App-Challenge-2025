@@ -1,6 +1,7 @@
 import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:auto_route/annotations.dart';
 import 'package:flutter/material.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
 import 'package:yourfit/src/models/auth/auth_response.dart';
 import 'package:yourfit/src/routing/routes.dart';
@@ -19,7 +20,7 @@ class PasswordResetScreen extends StatelessWidget {
     return Scaffold(
       body: Center(
         child: AuthForm(
-          formKey: controller.formKey,
+          key: controller.formKey,
           title: Padding(
             padding: const EdgeInsets.only(bottom: 30),
             child: resetPassword
@@ -34,19 +35,19 @@ class PasswordResetScreen extends StatelessWidget {
                   ? controller.password = value
                   : controller.email = value,
               labelText: resetPassword ? "New Password" : "Email",
-              validator: resetPassword ? null : controller.validateEmail,
+              validator: resetPassword ? null : FormBuilderValidators.email(errorText: "Invalid Email"),
             ),
           ],
           onSubmitPressed: () => resetPassword
               ? controller.resetPassword()
-              : controller.sendPasswordReset(),
+              : controller.forgetPassword(),
           submitButtonChild: resetPassword
               ? const Text(
                   "Reset Password",
                   style: TextStyle(color: Colors.white),
                 )
               : const Text(
-                  "Send Password Reset",
+                  "Forget Password",
                   style: TextStyle(color: Colors.white),
                 ),
         ),
@@ -70,7 +71,7 @@ class _PasswordResetScreenController extends AuthFormController {
     showSnackbar("Password Reset", AnimatedSnackBarType.success);
   }
 
-  Future<void> sendPasswordReset() async {
+  Future<void> forgetPassword() async {
     if (!validateForm()) {
       return;
     }

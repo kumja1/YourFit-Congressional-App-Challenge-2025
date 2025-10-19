@@ -7,7 +7,6 @@ import 'package:yourfit/src/widgets/buttons/animated_button.dart';
 class ExerciseCard extends StatelessWidget {
   final ExerciseData exercise;
   final Function(ExerciseData) onStart;
-
   const ExerciseCard({
     super.key,
     required this.exercise,
@@ -33,7 +32,7 @@ class ExerciseCard extends StatelessWidget {
         ),
         iconColor: Colors.blue,
         // children: [Text(exercise.summary)],
-      ).constrains(minHeight: 80, maxWidth: 290),
+      ).responsiveConstrains(maxWidth: 290, maxHeight: 80),
     ).paddingAll(10);
   }
 }

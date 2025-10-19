@@ -1,17 +1,16 @@
 // lib/src/screens/tabs/exercise/workouts_screen.dart
-
 import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:free_map/free_map.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:langchain/langchain.dart';
 import 'package:yourfit/src/models/exercise/running_exercise_data.dart';
 import 'package:yourfit/src/models/index.dart';
 import 'package:yourfit/src/routing/router.gr.dart';
+import 'package:yourfit/src/services/device_service.dart';
 import 'package:yourfit/src/services/index.dart';
 import 'package:yourfit/src/utils/functions/show_snackbar.dart';
+import 'package:yourfit/src/utils/objects/other/exercise/parameter.dart';
 import 'package:yourfit/src/widgets/other/exercise/index.dart';
 
 @RoutePage()
@@ -20,11 +19,9 @@ class ExerciseScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = Get.put(_ExerciseScreenController());
+    final controller = Get.put(_ExerciseScreenController());
     return Scaffold(
-      appBar: AppBar(title: const Text('Workouts')),
       floatingActionButton: GetBuilder<_ExerciseScreenController>(
-        init: _ExerciseScreenController(),
         id: "loading",
         builder: (c) => FloatingActionButton.extended(
           onPressed: c.loading ? null : c.generate,
@@ -55,103 +52,111 @@ class ExerciseScreen extends StatelessWidget {
                     color: Theme.of(context).scaffoldBackgroundColor,
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                      child: CompactHeader(
-                        level: c.currentStats?.level ?? 1,
-                        xp: c.currentStats?.xp ?? 0,
-                        xpToNext: c.currentStats?.xpToNext ?? 0,
-                        streak: c.currentStats?.streak ?? 0,
+                      child: Obx(
+                        () => CompactHeader(
+                          level: controller.currentStats?.level ?? 1,
+                          xp: controller.currentStats?.xp ?? 0,
+                          xpToNext: controller.currentStats?.xpToNext ?? 0,
+                          streak: controller.currentStats?.streak ?? 0,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
 
-              if (c.workoutFocus != null && c.workoutFocus!.label.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "TODAY'S FOCUS",
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.8,
-                              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "TODAY'S FOCUS",
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.8,
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.flag_outlined,
-                              color: Theme.of(context).primaryColor,
-                              size: 26,
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.flag_outlined,
+                            color: Theme.of(context).primaryColor,
+                            size: 26,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: GetBuilder<_ExerciseScreenController>(
+                              builder: (controller) =>
+                                  controller.workout?.focus == null
+                                  ? const SizedBox.shrink()
+                                  : Text(
+                                      controller.workout!.focus.label,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                c.workoutFocus!.label,
-                                style: Theme.of(context).textTheme.headlineSmall
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
+              ),
 
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                   child: AiInsightsPanel(
+                    loading: controller.loading,
                     explanation: "",
-                    onTweak: (instruction) => c.tweakWorkout(instruction),
+                    onTweak: controller.modifyWorkout,
                   ),
                 ),
               ),
 
-              if (c.loading)
-                const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
-                  sliver: GetBuilder<_ExerciseScreenController>(
-                    id: "exercises",
-                    builder: (controller) => SliverPadding(
-                      padding: EdgeInsetsGeometry.only(bottom: 16),
+              controller.loading
+                  ? const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  : SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
                       sliver: SliverList.builder(
-                        itemCount: controller.exercises.length,
-                        itemBuilder: (_, i) => ExerciseCard(
-                          exercise: controller.exercises[i],
-                          onStart: (exercise) => context.router.push(
-                            exercise is RunningExerciseData
-                                ? RunningExerciseRoute(
-                                    exercise: exercise,
-                                    onSetComplete: () =>
-                                        controller.updateXp(exercise),
-                                    onExerciseComplete: () {},
-                                  )
-                                : BasicExerciseRoute(
-                                    exercise: exercise,
-                                    onSetComplete: () =>
-                                        controller.updateXp(exercise),
-                                    onExerciseComplete: () {},
+                        itemCount: controller.workout?.exercises.length,
+                        itemBuilder: (_, i) {
+                          final exercise = controller.workout?.exercises[i];
+                          return exercise == null
+                              ? const SizedBox.shrink()
+                              : ExerciseCard(
+                                  exercise: exercise,
+                                  onStart: (exercise) => context.router.push(
+                                    exercise is RunningExerciseData
+                                        ? RunningExerciseRoute(
+                                            exercise: exercise,
+                                            onSetComplete: () =>
+                                                controller.updateXp(exercise),
+                                            onExerciseComplete: () {},
+                                          )
+                                        : BasicExerciseRoute(
+                                            exercise: exercise,
+                                            onSetComplete: () =>
+                                                controller.updateXp(exercise),
+                                            onExerciseComplete: () {},
+                                          ),
                                   ),
-                          ),
-                        ),
+                                );
+                        },
                       ),
                     ),
-                  ),
-                ),
             ],
           ),
 
@@ -167,112 +172,84 @@ class ExerciseScreen extends StatelessWidget {
 }
 
 class _ExerciseScreenController extends GetxController {
-  _ExerciseScreenController();
-
-  WorkoutFocus? workoutFocus; // label for UI (e.g., "Leg Day")
-  final Rx<UserData?> currentUser = Get.find<AuthService>().currentUser;
-  final ExerciseService exerciseService = Get.find();
   final UserService userService = Get.find();
-  final FmService geocodingService = Get.find();
-  final SharedPreferences preferences = Get.find();
+  final Rx<UserData?> currentUser = Get.find<AuthService>().currentUser;
+  UserStats? get currentStats => currentUser.value?.stats;
 
   // ---- Screen State ----
   bool loading = false;
-  List<ExerciseData> exercises = [
-    RunningExerciseData(
-      difficulty: ExerciseDifficulty.medium,
-      intensity: ExerciseIntensity.high,
-      type: ExerciseType.cardio,
-      caloriesBurned: 300.0,
-      name: "Waterfront Lake Loop Run",
-      instructions:
-          "Run the Waterfront Lake Loop at a steady pace. Focus on consistent breathing and maintaining good form. Warm up before starting and cool down after completing the loop.",
-      summary:
-          "A 3.3-mile outdoor run improving cardiovascular endurance and leg strength",
-      sets: 1,
-      reps: 1,
-      duration: Duration(minutes: 30),
-      targetMuscles: ["legs", "core", "cardiovascular system"],
-      equipment: ["running shoes"],
-      restIntervals: [RestInterval(duration: Duration(seconds: 90), restAt: 1)],
-      distance: 3.3, // miles
-      speed: 9, // average speed in minutes per mile
-      destination: "Waterfront Lake Loop, Short Pump, VA",
-    ),
-  ];
-  UserStats? get currentStats => currentUser.value?.stats;
+  WorkoutData? workout;
 
   @override
-  void onInit() async {
-    super.onInit();
-
-    if (preferences.containsKey("location_permission")) {
-      return;
-    }
-
-    final permission = await Geolocator.requestPermission();
-    final denied =
-        permission == LocationPermission.denied ||
-        permission == LocationPermission.deniedForever ||
-        permission == LocationPermission.unableToDetermine;
-
-    if (!denied) {
-      preferences.setBool("location_permission", true);
-    }
-
-    final now = DateTime.now();
-    final timestamp =
-        DateTime.tryParse(preferences.getString("last_generation") ?? "") ??
-        now;
-
-    if (now.difference(timestamp).inDays < 1) {
-      return;
-    }
-
-    preferences.setString("last_generation", now.toIso8601String());
-    await generate();
+  void onReady() {
+    /**
+      final now = DateTime.now();
+      final timestamp =
+          deviceService.getDevicePreference<DateTime>(
+            "last_generation",
+            converter: (v) => DateTime.tryParse(v),
+          ) ??
+          now;
+  
+      if (now.difference(timestamp).inDays < 1) {
+        return;
+      }
+  
+      deviceService.setDevicePreference(
+        "last_generation",
+        now,
+        converter: (d) => d.toIso8601String(),
+      );
+  */
   }
 
   Future<void> generate() async {
-    if (loading) return;
-    loading = true;
-    update(["loading"]);
-    workoutFocus = await exerciseService.getWorkoutFocus(currentUser.value);
-    try {
-      final currentPosition = await Geolocator.getCurrentPosition();
-      final result = await exerciseService.getExercises(
-        currentUser.value,
-        additionalParameters: {
-          "user_address": await geocodingService.getAddress(
-            lat: currentPosition.latitude,
-            lng: currentPosition.longitude,
-          ),
-        },
-      );
-      exercises = result?.exercises ?? [];
-      update(["exercises"]);
-      print(currentUser.value);
-    } on Error catch (e, st) {
-      print("Generate: $e, $st");
-    } finally {
-      loading = false;
-      update(["loading"]);
-    }
+    /**
+     if (loading) return;
+     loading = true;
+     update(["loading"]);
+     try {
+       final result = await exerciseService.getExercises(
+         currentUser.value,
+         difficulty: currentUser.value?.exercisesDifficulty,
+         intensity: currentUser.value?.exercisesIntensity,
+         focus: WorkoutFocus.cardio,
+       );
+ 
+       if (result == null) return;
+       workout = result;
+       update();
+       Get.log(currentUser.value?.toJson() ?? "User null");
+     } catch (e) {
+       e.printError();
+     } finally {
+       loading = false;
+       update(["loading"]);
+     }
+   */
   }
 
-  Future<void> tweakWorkout(String instruction) async {
-    if (loading) return;
+  Future<void> modifyWorkout(String instruction) async {
+    if (loading || workout == null) return;
     loading = true;
     update();
 
     try {
-      final res = await exerciseService.getExercises(
-        currentUser.value,
-        count: exercises.length,
-        additionalParameters: {"instruction": instruction},
-      );
-
-      exercises = res?.exercises ?? [];
+      /**
+        final res = await exerciseService.getExercises(
+          currentUser.value,
+          prompt: instruction,
+          additionalParams: {
+            "current_workout": Parameter(
+              description: "The workout to modify",
+              value: workout?.toJson(),
+            ),
+          },
+          count: workout!.exercises.length,
+        );
+  
+        workout = res;
+    */
     } catch (e) {
       showSnackbar(e.toString(), AnimatedSnackBarType.error);
     } finally {

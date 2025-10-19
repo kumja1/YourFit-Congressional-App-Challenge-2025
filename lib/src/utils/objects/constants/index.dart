@@ -1,3 +1,3 @@
 export 'env/env.dart';
 export 'icons.dart';
-export 'auth_error.dart';
+export 'auth/auth_error.dart';

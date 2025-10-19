@@ -38,6 +38,9 @@ class UserData with UserDataMappable {
 
   int get age => dob.age;
 
+  double get bmi =>
+      (weight * 0.45359237) / ((height / 100.0) * (height / 100.0));
+
   String firstName;
 
   String lastName;
@@ -46,8 +49,10 @@ class UserData with UserDataMappable {
 
   DateTime dob;
 
+  /// Height in cm
   double height;
 
+  /// Weight in lbs
   double weight;
 
   UserPhysicalFitness physicalFitness;
@@ -56,13 +61,14 @@ class UserData with UserDataMappable {
 
   int exerciseDaysPerWeek;
 
+  ExerciseDifficulty exercisesDifficulty;
+
   ExerciseIntensity exercisesIntensity;
 
-  final Map<String, MonthData> exerciseData;
+  List<String> disabilities;
+  List<String> equipment;
 
-  final List<String> disabilities;
-
-  final List<String> equipment;
+  final Map<String, MonthData> workoutData;
 
   final UserStats stats;
 
@@ -80,24 +86,25 @@ class UserData with UserDataMappable {
     this.goal = "",
     this.exerciseDaysPerWeek = 3,
     this.exercisesIntensity = ExerciseIntensity.low,
-    this.exerciseData = const {},
+    this.exercisesDifficulty = ExerciseDifficulty.easy,
+    this.workoutData = const {},
     this.disabilities = const [],
     this.equipment = const [],
   });
 
-  void addExerciseData(WorkoutData dayData) {
+  void addWorkoutData(WorkoutData workoutData) {
     final now = DateTime.now();
     final monthData = getMonthData(now);
-    monthData.workouts[now.day] ??= dayData;
+    monthData.workouts[now.day] ??= workoutData;
   }
 
-  WorkoutData getExerciseData(DateTime date) {
+  WorkoutData getWorkoutData(DateTime date) {
     final monthData = getMonthData(date);
     return monthData.workouts[date.day]!;
   }
 
   MonthData getMonthData(DateTime date) =>
-      exerciseData["${date.year}.${date.month}"] ??= MonthData(workouts: {});
+      workoutData["${date.year}.${date.month}"] ??= MonthData(workouts: {});
 
   factory UserData.fromJson(String json) => UserDataMapper.fromJson(json);
 

@@ -1,9 +1,9 @@
+import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart' hide WidgetPaddingX;
-import 'package:yourfit/src/utils/extensions/widget_extension.dart';
 
-class AuthFormTextField extends GetWidget {
+class AuthFormTextField extends StatelessWidget {
   final Function(String value)? onChanged;
   final String labelText;
   final TextStyle? labelStyle;
@@ -15,7 +15,7 @@ class AuthFormTextField extends GetWidget {
   final TextInputType? keyboardType;
   final double? width;
   final double? height;
-  final Widget? passwordChild;
+  final Widget? leading;
 
   const AuthFormTextField({
     super.key,
@@ -28,7 +28,7 @@ class AuthFormTextField extends GetWidget {
     this.passwordVisibilityColor = Colors.blue,
     this.width = 360,
     this.height,
-    this.passwordChild,
+    this.leading,
     this.labelStyle = const TextStyle(color: Colors.black12),
     this.floatingLabelStyle = const TextStyle(color: Colors.blue),
   });
@@ -47,7 +47,7 @@ class AuthFormTextField extends GetWidget {
           decoration: InputDecoration(
             suffixIcon: !isPassword
                 ? null
-                : passwordChild ??
+                : leading ??
                       IconButton(
                         padding: EdgeInsets.zero,
                         onPressed: () => controller.togglePasswordVisibility(),
@@ -71,7 +71,10 @@ class AuthFormTextField extends GetWidget {
             ),
           ),
         ),
-      ).sized(width: width, height: height);
+      ).constrains(
+        maxWidth: width ?? double.infinity,
+        maxHeight: height ?? double.infinity,
+      );
 }
 
 class _AuthFormTextFieldController extends GetxController {
