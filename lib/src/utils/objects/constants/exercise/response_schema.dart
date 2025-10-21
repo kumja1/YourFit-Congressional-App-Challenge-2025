@@ -26,11 +26,6 @@ class ResponseSchema {
               'description':
                   'The exercise type of the exercise. Must be one of: cardio (Improves heart and lung function, builds endurance for sustained physical activity), strength (Develops muscle power and force production for lifting, throwing, and resistance movements), flexibility (Increases range of motion and mobility for better movement quality and injury prevention), balance (Enhances stability, coordination, and body control during static and dynamic activities)',
             },
-            'model_type':{
-              'type':'string',
-              'enum':['running', 'basic'],
-              'description':'The model type this object should be parsed into'
-            },
             'caloriesBurned': {
               'type': 'number',
               'description': 'Calories burned per exercise',

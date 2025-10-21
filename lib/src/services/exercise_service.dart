@@ -14,7 +14,6 @@ class ExerciseService extends GetxService {
   late final Runnable llmChain;
   final DeviceService deviceService = Get.find();
 
-
   @override
   void onInit() {
     super.onInit();
@@ -44,7 +43,6 @@ class ExerciseService extends GetxService {
         ],
       ),
     );
-
     final vectorStore = Supabase(
       tableName: "documents",
       supabaseUrl: Env.supabaseUrl,
@@ -60,10 +58,18 @@ class ExerciseService extends GetxService {
       name: "nearest_locations",
       description:
           "Returns the nearest locations to the user. Used for choosing destinations for running exercises",
-      inputJsonSchema: {},
+      inputJsonSchema: {"type": "object", "properties": {
+        "nothing": {"type": "string", "description": "Nothing"}
+      }},
       func: (_) async {
+        Get.log("Getting nearest locations");
         final locations = await deviceService.getPositionsNearDevice();
+        Get.log("Locations: $locations");
         return {"locations": locations.map((e) => e.toJson()).toList()};
+      },
+      handleToolError: (e) {
+        e.printError();
+        return {};
       },
     );
 
@@ -92,12 +98,11 @@ Below is the information you will take into consideration when formulating your 
   {params}
 """),
 
-        ChatMessagePromptTemplate.human("User Prompt: {prompt}"),
+        ChatMessagePromptTemplate.human("User Prompt: {input}"),
       ],
     );
 
     llmChain =
-        AgentExecutor(agent: agent, maxExecutionTime: Duration(seconds: 15)) |
         Runnable.fromMap({
           "context":
               Runnable.getItemFromMap("prompt") |
@@ -107,7 +112,7 @@ Below is the information you will take into consideration when formulating your 
                     ),
                   ) |
                   Runnable.mapInput((docs) => docs.join("\n"))),
-          "prompt": Runnable.getItemFromMap("prompt"),
+          "input": Runnable.getItemFromMap("prompt"),
           "params":
               Runnable.getItemFromMap("params") |
               Runnable.mapInput((params) {
@@ -117,13 +122,14 @@ Below is the information you will take into consideration when formulating your 
                     in (params as Map<String, Parameter>).entries) {
                   i++;
                   buffer.writeln(
-                    "${entry.key}: ${entry.value.value} (priority: ${entry.value.priority ?? i}) (description: ${entry.value.description})",
+                    "${entry.key}: ${entry.value.value.toString()} (priority: ${entry.value.priority ?? i}) (description: ${entry.value.description})",
                   );
                 }
 
                 return buffer.toString();
               }),
         }) |
+        AgentExecutor(agent: agent, maxExecutionTime: Duration(seconds: 15)) |
         JsonOutputParser();
   }
 
@@ -147,8 +153,9 @@ Below is the information you will take into consideration when formulating your 
 
       Get.log("Results: $results");
       return results;
-    } on Exception catch (e) {
+    } on Error catch (e) {
       e.printError();
+      print(e.stackTrace);
       return {};
     }
   }
@@ -265,7 +272,7 @@ Below is the information you will take into consideration when formulating your 
       return result == null || result.isEmpty
           ? null
           : WorkoutData.fromMap(result);
-    } on Exception catch (e) {
+    } on Error catch (e) {
       e.printError();
       return null;
     }

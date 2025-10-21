@@ -241,6 +241,12 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     _$age,
     mode: FieldMode.member,
   );
+  static double _$bmi(UserData v) => v.bmi;
+  static const Field<UserData, double> _f$bmi = Field(
+    'bmi',
+    _$bmi,
+    mode: FieldMode.member,
+  );
 
   @override
   final MappableFields<UserData> fields = const {
@@ -264,6 +270,7 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     #fullName: _f$fullName,
     #intials: _f$intials,
     #age: _f$age,
+    #bmi: _f$bmi,
   };
 
   static UserData _instantiate(DecodingData data) {

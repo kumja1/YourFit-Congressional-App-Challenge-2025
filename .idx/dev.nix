@@ -6,7 +6,6 @@
   # Use https://search.nixos.org/packages to find packages
   packages = [
     pkgs.jdk17
-    pkgs.unzip
     pkgs.gh
 ];
   # Sets environment variables in the workspace

@@ -88,22 +88,18 @@ class ExerciseScreen extends StatelessWidget {
                             size: 26,
                           ),
                           const SizedBox(width: 12),
-                          Expanded(
-                            child: GetBuilder<_ExerciseScreenController>(
-                              builder: (controller) =>
-                                  controller.workout?.focus == null
-                                  ? const SizedBox.shrink()
-                                  : Text(
-                                      controller.workout!.focus.label,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineSmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                            ),
+                          GetBuilder<_ExerciseScreenController>(
+                            builder: (controller) =>
+                                controller.workout?.focus == null
+                                ? const SizedBox.shrink()
+                                : Text(
+                                    controller.workout!.focus.label,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineSmall
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                           ),
                         ],
                       ),
@@ -111,7 +107,6 @@ class ExerciseScreen extends StatelessWidget {
                   ),
                 ),
               ),
-
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -131,7 +126,7 @@ class ExerciseScreen extends StatelessWidget {
                   : SliverPadding(
                       padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
                       sliver: SliverList.builder(
-                        itemCount: controller.workout?.exercises.length,
+                        itemCount: controller.workout?.exercises.length ?? 0,
                         itemBuilder: (_, i) {
                           final exercise = controller.workout?.exercises[i];
                           return exercise == null
@@ -173,6 +168,8 @@ class ExerciseScreen extends StatelessWidget {
 
 class _ExerciseScreenController extends GetxController {
   final UserService userService = Get.find();
+  final ExerciseService exerciseService = Get.find();
+  final DeviceService deviceService = Get.find();
   final Rx<UserData?> currentUser = Get.find<AuthService>().currentUser;
   UserStats? get currentStats => currentUser.value?.stats;
 
@@ -204,7 +201,7 @@ class _ExerciseScreenController extends GetxController {
   }
 
   Future<void> generate() async {
-    /**
+    
      if (loading) return;
      loading = true;
      update(["loading"]);
@@ -226,7 +223,7 @@ class _ExerciseScreenController extends GetxController {
        loading = false;
        update(["loading"]);
      }
-   */
+  
   }
 
   Future<void> modifyWorkout(String instruction) async {

@@ -137,7 +137,7 @@ class RunningExerciseDataMapper
   };
 
   @override
-  final String discriminatorKey = 'base';
+  final String discriminatorKey = 'basic';
   @override
   final dynamic discriminatorValue = 'RunningExerciseData';
   @override
