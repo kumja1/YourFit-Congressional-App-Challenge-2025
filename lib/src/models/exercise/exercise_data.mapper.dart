@@ -246,7 +246,6 @@ class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
     _$restIntervals,
     opt: true,
     def: const [],
-    hook: MapHook(),
   );
   static ExerciseState _$state(ExerciseData v) => v.state;
   static const Field<ExerciseData, ExerciseState> _f$state = Field(

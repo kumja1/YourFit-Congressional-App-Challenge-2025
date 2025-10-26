@@ -3,9 +3,9 @@ class Parameter {
   final String? description;
   final Object? value;
 
-  const Parameter({
-    this.priority,
-    this.description,
-    this.value,
-  });
+  const Parameter({this.priority, this.description, this.value});
+
+  @override
+  String toString() =>
+      'Parameter(priority: $priority, description: $description, value: $value)';
 }

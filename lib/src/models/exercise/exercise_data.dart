@@ -1,5 +1,4 @@
 import 'package:dart_mappable/dart_mappable.dart';
-import 'package:yourfit/src/utils/objects/other/mapping/hooks/map_hook.dart';
 import 'package:yourfit/src/utils/objects/other/mapping/duration_mapper.dart';
 
 part 'exercise_data.mapper.dart';
@@ -37,7 +36,8 @@ enum ExerciseType {
 
 @MappableClass(
   includeCustomMappers: [DurationMapper()],
-  discriminatorKey: "basic",
+  discriminatorKey: "model_type",
+  discriminatorValue: "basic"
 )
 class ExerciseData with ExerciseDataMappable {
   final ExerciseDifficulty difficulty;
@@ -49,7 +49,6 @@ class ExerciseData with ExerciseDataMappable {
   final String instructions;
   final String summary;
 
-  @MappableField(hook: MapHook())
   final List<RestInterval> restIntervals;
   final List<String> equipment;
   final List<String> targetMuscles;

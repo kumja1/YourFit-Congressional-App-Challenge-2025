@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:yourfit/src/models/index.dart';
 import 'package:langchain/langchain.dart';
@@ -11,38 +10,63 @@ import 'package:yourfit/src/utils/objects/other/exercise/parameter.dart';
 import 'package:yourfit/src/utils/objects/other/supabase/supabase_vectorstore.dart';
 
 class ExerciseService extends GetxService {
-  late final Runnable llmChain;
   final DeviceService deviceService = Get.find();
+  late final Runnable llmChain;
 
   @override
   void onInit() {
     super.onInit();
-    final model = ChatGoogleGenerativeAI(
-      apiKey: Env.geminiKey,
-      defaultOptions: ChatGoogleGenerativeAIOptions(
-        model: "gemini-2.5-pro",
-        responseMimeType: "application/json",
-        safetySettings: const [
-          ChatGoogleGenerativeAISafetySetting(
-            category:
-                ChatGoogleGenerativeAISafetySettingCategory.sexuallyExplicit,
-            threshold:
-                ChatGoogleGenerativeAISafetySettingThreshold.blockLowAndAbove,
+    final model =
+        ChatPromptTemplate.fromPromptMessages([
+          ChatMessagePromptTemplate.system("""
+---- Instructions ----
+You are a extremly considerate, medically accurate fitness trainer.
+Your task: Provide the user with an appropriate response to the prompt, taking into consideration their age, height, weight, gender, physicalFitness, and any other additional parameters provided.
+Follow these rules:
+1. Response should be based on the given information as well as any additional information found in the dataset.
+2. Response should not contain anything redundant but remain relatively consistent with the historical data provided, upscaling if necessary.
+3. Response should be in a JSON format and follow the schema provided.
+
+---- Context ----
+{context}
+"""),
+          ChatMessagePromptTemplate.human("""
+Below is the information you will take into consideration when formulating your response.
+
+---- Information ----
+  {params}
+"""),
+
+          ChatMessagePromptTemplate.human("User Prompt: {prompt}"),
+        ]) |
+        ChatGoogleGenerativeAI(
+          apiKey: Env.geminiKey,
+          defaultOptions: ChatGoogleGenerativeAIOptions(
+            model: "gemini-2.5-flash",
+            responseMimeType: "application/json",
+            safetySettings: const [
+              ChatGoogleGenerativeAISafetySetting(
+                category: ChatGoogleGenerativeAISafetySettingCategory
+                    .sexuallyExplicit,
+                threshold: ChatGoogleGenerativeAISafetySettingThreshold
+                    .blockLowAndAbove,
+              ),
+              ChatGoogleGenerativeAISafetySetting(
+                category:
+                    ChatGoogleGenerativeAISafetySettingCategory.hateSpeech,
+                threshold: ChatGoogleGenerativeAISafetySettingThreshold
+                    .blockLowAndAbove,
+              ),
+              ChatGoogleGenerativeAISafetySetting(
+                category: ChatGoogleGenerativeAISafetySettingCategory
+                    .dangerousContent,
+                threshold: ChatGoogleGenerativeAISafetySettingThreshold
+                    .blockLowAndAbove,
+              ),
+            ],
           ),
-          ChatGoogleGenerativeAISafetySetting(
-            category: ChatGoogleGenerativeAISafetySettingCategory.hateSpeech,
-            threshold:
-                ChatGoogleGenerativeAISafetySettingThreshold.blockLowAndAbove,
-          ),
-          ChatGoogleGenerativeAISafetySetting(
-            category:
-                ChatGoogleGenerativeAISafetySettingCategory.dangerousContent,
-            threshold: ChatGoogleGenerativeAISafetySettingThreshold
-                .blockMediumAndAbove,
-          ),
-        ],
-      ),
-    );
+        );
+
     final vectorStore = Supabase(
       tableName: "documents",
       supabaseUrl: Env.supabaseUrl,
@@ -52,54 +76,6 @@ class ExerciseService extends GetxService {
         apiKey: Env.geminiKey,
         dimensions: 1024,
       ),
-    );
-
-    final nearestLocationsTool = Tool.fromFunction(
-      name: "nearest_locations",
-      description:
-          "Returns the nearest locations to the user. Used for choosing destinations for running exercises",
-      inputJsonSchema: {"type": "object", "properties": {
-        "nothing": {"type": "string", "description": "Nothing"}
-      }},
-      func: (_) async {
-        Get.log("Getting nearest locations");
-        final locations = await deviceService.getPositionsNearDevice();
-        Get.log("Locations: $locations");
-        return {"locations": locations.map((e) => e.toJson()).toList()};
-      },
-      handleToolError: (e) {
-        e.printError();
-        return {};
-      },
-    );
-
-    final agent = ToolsAgent.fromLLMAndTools(
-      llm: model,
-      tools: [nearestLocationsTool],
-      systemChatMessage: SystemChatMessagePromptTemplate(
-        prompt: PromptTemplate.fromTemplate("""
----- Instructions ----
-You are a extremly considerate, medically accurate fitness trainer.
-Your task: Provide the user with an appropriate response to the prompt, taking into consideration their age, height, weight, gender, physicalFitness, and any other additional parameters provided.
-Follow these rules:
-1. Response should be based on the given information as well as any additional information found in the dataset.
-2. Response should not contain anything redundant.
-3. Response should be in a JSON format and follow the schema provided.
-
----- Context ----
-{context}
-"""),
-      ),
-      extraPromptMessages: [
-        ChatMessagePromptTemplate.human("""
-Below is the information you will take into consideration when formulating your response.
-
----- Information ----
-  {params}
-"""),
-
-        ChatMessagePromptTemplate.human("User Prompt: {input}"),
-      ],
     );
 
     llmChain =
@@ -112,7 +88,7 @@ Below is the information you will take into consideration when formulating your 
                     ),
                   ) |
                   Runnable.mapInput((docs) => docs.join("\n"))),
-          "input": Runnable.getItemFromMap("prompt"),
+          "prompt": Runnable.getItemFromMap("prompt"),
           "params":
               Runnable.getItemFromMap("params") |
               Runnable.mapInput((params) {
@@ -122,14 +98,14 @@ Below is the information you will take into consideration when formulating your 
                     in (params as Map<String, Parameter>).entries) {
                   i++;
                   buffer.writeln(
-                    "${entry.key}: ${entry.value.value.toString()} (priority: ${entry.value.priority ?? i}) (description: ${entry.value.description})",
+                    "${entry.key}: ${entry.value.value} (priority: ${entry.value.priority ?? i}) (description: ${entry.value.description})",
                   );
                 }
-
+                buffer.printInfo();
                 return buffer.toString();
               }),
         }) |
-        AgentExecutor(agent: agent, maxExecutionTime: Duration(seconds: 15)) |
+        model |
         JsonOutputParser();
   }
 
@@ -155,19 +131,19 @@ Below is the information you will take into consideration when formulating your 
       return results;
     } on Error catch (e) {
       e.printError();
-      print(e.stackTrace);
       return {};
     }
   }
 
-  Future<Map<String, dynamic>?> invokeWithUser(
+  Future<Map<String, dynamic>> invokeWithUser(
     UserData? user,
     String prompt, {
     Map<String, dynamic>? responseSchema,
     Map<String, Parameter> additionalParams = const {},
   }) async {
     try {
-      if (user == null) return null;
+      if (user == null) return {};
+
       return await invoke(prompt, {
         "age": Parameter(
           priority: 1,
@@ -192,12 +168,12 @@ Below is the information you will take into consideration when formulating your 
         "height": Parameter(
           priority: 2,
           value: user.height,
-          description: "User's height in centimeters",
+          description: "User's height in centimeters (cm)",
         ),
         "weight": Parameter(
           priority: 2,
           value: user.weight,
-          description: "User's weight in pounds",
+          description: "User's weight in pounds (lbs)",
         ),
         "gender": Parameter(
           priority: 3,
@@ -222,9 +198,8 @@ Below is the information you will take into consideration when formulating your 
         ...additionalParams,
       }, responseSchema: responseSchema);
     } on Error catch (e) {
-      debugPrintStack(stackTrace: e.stackTrace);
       e.printError();
-      return null;
+      return {};
     }
   }
 
@@ -235,15 +210,20 @@ Below is the information you will take into consideration when formulating your 
     WorkoutFocus? focus,
     ExerciseDifficulty? difficulty,
     ExerciseIntensity? intensity,
-    int count = 3,
+    int count = 0,
     Map<String, Parameter> additionalParams = const {},
   }) async {
     try {
       final result = await invokeWithUser(
         user,
-        "Provide the user with a workout with $count exercises. ${prompt ?? ''}",
+        "Provide the user with a workout. Ensure that each exercise follows the SRP (Single Responsibility Principle). ${prompt ?? ''}",
         additionalParams: {
           ...additionalParams,
+          "workout_exercise_count": Parameter(
+            priority: 5,
+            value: count,
+            description: "Number of exercises in the workout. Provide a value if not provided",
+          ),
           "workout_exercise_difficulty": Parameter(
             priority: 5,
             value: difficulty?.name,
@@ -260,18 +240,16 @@ Below is the information you will take into consideration when formulating your 
             description: "Type of exercise (strength, cardio, etc.)",
           ),
           "workout_focus": Parameter(
-            priority: 5,
+            priority: 6,
             value: focus?.name,
             description:
-                "Indicates the main (but not only) focus area for the workout. Shouldn't completely overshadow similar parameters. ",
+                "Desired focus for the overall workout.",
           ),
         },
         responseSchema: ResponseSchema.workout,
       );
       Get.log("[getExercises] Result $result");
-      return result == null || result.isEmpty
-          ? null
-          : WorkoutData.fromMap(result);
+      return result.isEmpty ? null : WorkoutData.fromMap(result);
     } on Error catch (e) {
       e.printError();
       return null;

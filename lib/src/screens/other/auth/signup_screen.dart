@@ -70,6 +70,10 @@ class SignUpScreen extends StatelessWidget {
             validator: FormBuilderValidators.password(
               errorText: "Password must be at least 6 characters long",
               minLength: 6,
+              minLowercaseCount: 0,
+              minNumberCount: 0,
+              minSpecialCharCount: 0,
+              minUppercaseCount: 0,
             ),
             isPassword: true,
           ),
@@ -136,25 +140,20 @@ class _SignUpScreenController extends AuthFormController {
       }
 
       final nameParts = name.split(" ");
-      try {
-        await userService.createUser(
-          response.supabaseUser!.id,
-          nameParts[0],
-          nameParts[1],
-          data["weight"],
-          data["height"],
-          dob!,
-          data["gender"],
-          data["physicalFitness"],
-        );
-      } catch (e) {
-        print(e);
-        return;
-      }
+      await userService.createUser(
+        response.supabaseUser!.id,
+        nameParts[0],
+        nameParts[1],
+        data["weight"],
+        data["height"],
+        dob!,
+        data["gender"],
+        data["physicalFitness"],
+      );
 
       router.replacePath(Routes.main);
     } catch (e) {
-      print(e);
+      e.printError();
       showSnackbar(e.toString(), AnimatedSnackBarType.error);
     }
   }

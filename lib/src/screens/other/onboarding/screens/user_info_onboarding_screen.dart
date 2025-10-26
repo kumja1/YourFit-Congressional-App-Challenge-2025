@@ -7,7 +7,6 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart';
 import 'package:yourfit/src/models/user_data.dart';
 import 'package:yourfit/src/widgets/other/auth_form.dart';
-import 'package:yourfit/src/widgets/textfields/auth_form_text_field.dart';
 import 'package:yourfit/src/widgets/other/onboarding_screen.dart';
 import 'package:yourfit/src/widgets/textfields/number_form_field.dart';
 

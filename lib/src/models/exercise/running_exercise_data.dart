@@ -1,9 +1,8 @@
 import 'package:dart_mappable/dart_mappable.dart';
 import 'package:yourfit/src/models/exercise/index.dart';
-import 'package:yourfit/src/utils/objects/other/mapping/hooks/map_hook.dart';
 part 'running_exercise_data.mapper.dart';
 
-@MappableClass(discriminatorKey: "running")
+@MappableClass(discriminatorValue: "running")
 class RunningExerciseData extends ExerciseData
     with RunningExerciseDataMappable {
   final double distance;

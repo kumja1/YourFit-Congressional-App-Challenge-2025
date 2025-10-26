@@ -2,7 +2,6 @@
 import 'package:const_date_time/const_date_time.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:yourfit/src/models/exercise/workout_data.dart';
 import 'package:yourfit/src/screens/tabs/roadmap_screen.dart';
 
 class RoadmapCalendar extends StatelessWidget {

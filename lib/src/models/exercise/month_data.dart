@@ -1,14 +1,12 @@
 import 'package:dart_mappable/dart_mappable.dart';
 import 'package:extensions_plus/extensions_plus.dart';
-import 'package:yourfit/src/utils/objects/other/mapping/hooks/map_hook.dart';
 import 'workout_data.dart';
 
 part 'month_data.mapper.dart';
 
 @MappableClass()
 class MonthData with MonthDataMappable {
-  @MappableField(hook: MapHook())
-  final Map<int, WorkoutData> workouts;
+  final Map<String, WorkoutData> workouts;
 
   double get caloriesBurned =>
       workouts.values.sum((workout) => workout.caloriesBurned).toDouble();

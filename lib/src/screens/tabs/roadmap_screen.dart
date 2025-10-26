@@ -1,4 +1,3 @@
-// lib/src/screens/tabs/roadmap/roadmap_screen.dart
 import 'dart:convert';
 import 'package:const_date_time/const_date_time.dart';
 import 'package:date_picker_plus/date_picker_plus.dart';
@@ -10,7 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yourfit/src/models/index.dart';
 import 'package:yourfit/src/models/roadmap/food_entry.dart';
-import 'package:yourfit/src/widgets/other/exercise/food_tracker_widget.dart';
+import 'package:yourfit/src/services/device_service.dart';
 import 'package:yourfit/src/services/index.dart';
 import 'package:yourfit/src/widgets/other/index.dart';
 
@@ -30,37 +29,21 @@ class RoadmapScreen extends StatelessWidget {
               builder: (s) => CustomScrollView(
                 slivers: [
                   if (s.generatingPlan) const AiGenerationBanner(),
-
-                  // Calendar
                   RoadmapCalendar(controller: s),
-
-                  // Selected day summary (workout chip, share, etc.)
                   SelectedWorkoutCard(workout: s.selectedWorkout),
-
-                  // --- Nutrition Summary (macros, calories, hydration, targets) ---
                   NutritionSummarySliver(controller: s),
-
-                  // --- Food Quick Add & Water ---
                   QuickAddRowSliver(controller: s),
-
-                  // --- Search box + Search button ---
                   GetBuilder<RoadmapController>(
                     builder: (controller) => FoodSearchSliver(
                       controller: TextEditingController(),
                       onSubmitted: (query) async {
-                        print(query);
                         await s.searchFood(query);
                       },
                       loading: controller.loadingSearch,
                     ),
                   ),
-
-                  // --- Search results list (tap to add with grams + meal) ---
                   FoodResultsSliver(controller: s),
-
-                  // --- Logged entries, grouped by meal, with edit/remove ---
                   FoodEntriesSliver(controller: s),
-
                   const SliverToBoxAdapter(child: SizedBox(height: 24)),
                 ],
               ),
@@ -72,15 +55,104 @@ class RoadmapScreen extends StatelessWidget {
   }
 }
 
+class FoodSearchResult {
+  final String fdcId;
+  final String name;
+  final String brand;
+  final String category;
+  final List<ServingSize> servings;
+  final FoodPer100 per100;
+
+  FoodSearchResult({
+    required this.fdcId,
+    required this.name,
+    required this.brand,
+    required this.category,
+    required this.servings,
+    required this.per100,
+  });
+
+  factory FoodSearchResult.fromJson(Map<String, dynamic> json) {
+    final nutrients = (json['foodNutrients'] as List?) ?? [];
+
+    double getNutrient(int id) {
+      final n = nutrients.firstWhere(
+        (n) => n['nutrientId'] == id || n['nutrientNumber'] == id.toString(),
+        orElse: () => null,
+      );
+      return n != null ? (n['value'] as num?)?.toDouble() ?? 0.0 : 0.0;
+    }
+
+    final servings = <ServingSize>[];
+    final portions = (json['foodPortions'] as List?) ?? [];
+
+    for (final p in portions) {
+      final amount = (p['amount'] as num?)?.toDouble() ?? 1.0;
+      final unit = (p['modifier'] ?? p['portionDescription'] ?? '').toString();
+      final grams = (p['gramWeight'] as num?)?.toDouble() ?? 100.0;
+
+      if (unit.isNotEmpty && grams > 0) {
+        servings.add(ServingSize(amount: amount, unit: unit, grams: grams));
+      }
+    }
+
+    if (servings.isEmpty) {
+      servings.add(ServingSize(amount: 100, unit: 'g', grams: 100));
+    }
+
+    return FoodSearchResult(
+      fdcId: json['fdcId']?.toString() ?? '',
+      name: json['description'] ?? json['lowercaseDescription'] ?? 'Unknown',
+      brand: json['brandName'] ?? json['brandOwner'] ?? '',
+      category: json['foodCategory'] ?? json['dataType'] ?? '',
+      servings: servings,
+      per100: FoodPer100(
+        name: json['description'] ?? 'Unknown',
+        brand: json['brandName'] ?? '',
+        kcal100: getNutrient(1008) * 0.239006,
+        protein100: getNutrient(1003),
+        carbs100: getNutrient(1005),
+        fat100: getNutrient(1004),
+        fiber100: getNutrient(1079),
+        sugar100: getNutrient(2000),
+        sodium100: getNutrient(1093),
+      ),
+    );
+  }
+}
+
+class ServingSize {
+  final double amount;
+  final String unit;
+  final double grams;
+
+  ServingSize({required this.amount, required this.unit, required this.grams});
+
+  String get label => amount == 1.0 ? unit : '$amount $unit';
+
+  Map<String, dynamic> toJson() => {
+    'amount': amount,
+    'unit': unit,
+    'grams': grams,
+  };
+
+  factory ServingSize.fromJson(Map<String, dynamic> json) => ServingSize(
+    amount: (json['amount'] as num?)?.toDouble() ?? 1.0,
+    unit: json['unit']?.toString() ?? 'serving',
+    grams: (json['grams'] as num?)?.toDouble() ?? 100.0,
+  );
+}
+
 class RoadmapController extends GetxController {
+  final DeviceService deviceService = Get.find();
   final Rx<UserData?> currentUser = Get.find<AuthService>().currentUser;
 
-  // --- Search ---
+  static const _usdaApiKey = 'YOUR_USDA_API_KEY_HERE';
+
   final searchController = TextEditingController();
   bool loadingSearch = false;
-  List<dynamic> searchResults = [];
+  List<FoodSearchResult> searchResults = [];
 
-  // --- Entries / totals / day state ---
   List<FoodEntry> entries = [];
   double totalCalories = 0;
   double totalProtein = 0;
@@ -90,22 +162,18 @@ class RoadmapController extends GetxController {
   double totalSugar = 0;
   double totalSodium = 0;
 
-  // --- Hydration ---
-  int waterMl = 0; // per day
+  int waterMl = 0;
 
-  // --- Targets (user-adjustable via dialog) ---
   int kcalTarget = 2600;
-  int proteinTarget = 110; // g
-  int carbsTarget = 330; // g
-  int fatTarget = 80; // g
-  int fiberTarget = 28; // g
+  int proteinTarget = 110;
+  int carbsTarget = 330;
+  int fatTarget = 80;
+  int fiberTarget = 28;
   int waterTargetMl = 2500;
 
-  // --- Plan / calendar ---
   bool generatingPlan = false;
   DateTime focusedDay = DateTime.now();
   DateTime selectedDay = DateTime.now();
-  SharedPreferences? _prefs;
 
   Map<String, WorkoutFocus> workoutPlans = {};
   WorkoutFocus? get selectedWorkout => getWorkoutForDate(selectedDay);
@@ -115,9 +183,7 @@ class RoadmapController extends GetxController {
       ? "Today"
       : "${_monthName(selectedDay.month)} ${selectedDay.day}, ${selectedDay.year}";
 
-  // --- Recents (quick add) ---
-  // Stored as a list of per-100g nutrition objects
-  List<FoodPer100> recentFoods = [];
+  List<FoodSearchResult> recentFoods = [];
 
   @override
   void onInit() {
@@ -126,7 +192,6 @@ class RoadmapController extends GetxController {
   }
 
   Future<void> _initPrefs() async {
-    _prefs = await SharedPreferences.getInstance();
     _loadDay(selectedDay);
     await _loadWorkoutPlans();
     _loadTargets();
@@ -138,7 +203,6 @@ class RoadmapController extends GetxController {
     }
   }
 
-  // ---------- Dates / keys ----------
   String _dateKey(DateTime d) =>
       "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
 
@@ -146,10 +210,10 @@ class RoadmapController extends GetxController {
     selectedDay = sel;
     focusedDay = foc;
     _loadDay(sel);
+    searchResults = [];
     update();
   }
 
-  // ---------- Plans ----------
   WorkoutFocus? getWorkoutForDate(DateTime date) {
     final key = _dateKey(date);
     return workoutPlans[key];
@@ -181,8 +245,7 @@ class RoadmapController extends GetxController {
     const apiKey = "AIzaSyCI-es8sI7XKwQwYiipkmLdlNH65MgExFo";
     const model = 'gemini-2.5-flash';
 
-    final prompt =
-        '''
+    final prompt = '''
 Generate a 30-day workout plan.
 User age: $age, activity: ${activity.name}.
 Return JSON with date keys (YYYY-MM-DD) starting from today ${_dateKey(DateTime.now())}.
@@ -294,11 +357,14 @@ Example:
   Future<void> _savePlans(Map<String, WorkoutFocus> plans) async {
     final Map<String, String> stringPlans = {};
     plans.forEach((key, value) => stringPlans[key] = value.name);
-    await _prefs?.setString('workout_plans', jsonEncode(stringPlans));
+    await deviceService.setDevicePreference(
+      'workout_plans',
+      jsonEncode(stringPlans),
+    );
   }
 
   Future<void> _loadWorkoutPlans() async {
-    final saved = _prefs?.getString('workout_plans');
+    final saved = deviceService.getDevicePreference('workout_plans');
     if (saved != null) {
       final Map<String, dynamic> decoded = jsonDecode(saved);
       workoutPlans = {};
@@ -310,12 +376,10 @@ Example:
     update();
   }
 
-  // ---------- Load & persist day ----------
   void _loadDay(DateTime d) {
-    // food entries
     final key = "food-${_dateKey(d)}";
     entries = [];
-    final raw = _prefs?.getString(key);
+    final raw = deviceService.getDevicePreference(key);
     if (raw != null) {
       final list = (jsonDecode(raw) as List)
           .cast<Map>()
@@ -324,18 +388,18 @@ Example:
       entries = list;
     }
 
-    // hydration
-    waterMl = _prefs?.getInt("water-${_dateKey(d)}") ?? 0;
-
-    // recompute totals
+    waterMl = deviceService.getDevicePreference("water-${_dateKey(d)}") ?? 0;
     _recomputeTotals();
   }
 
   void _persistDay() {
     final key = "food-${_dateKey(selectedDay)}";
     final list = entries.map((e) => e.toJson()).toList();
-    _prefs?.setString(key, jsonEncode(list));
-    _prefs?.setInt("water-${_dateKey(selectedDay)}", waterMl);
+    deviceService.setDevicePreference(key, jsonEncode(list));
+    deviceService.setDevicePreference(
+      "water-${_dateKey(selectedDay)}",
+      waterMl,
+    );
   }
 
   void _recomputeTotals() {
@@ -356,16 +420,20 @@ Example:
       totalSugar += e.sugarG;
       totalSodium += e.sodiumMg;
     }
+    update();
   }
 
-  // ---------- Targets ----------
   void _loadTargets() {
-    kcalTarget = _prefs?.getInt('target_kcal') ?? kcalTarget;
-    proteinTarget = _prefs?.getInt('target_protein') ?? proteinTarget;
-    carbsTarget = _prefs?.getInt('target_carbs') ?? carbsTarget;
-    fatTarget = _prefs?.getInt('target_fat') ?? fatTarget;
-    fiberTarget = _prefs?.getInt('target_fiber') ?? fiberTarget;
-    waterTargetMl = _prefs?.getInt('target_water') ?? waterTargetMl;
+    kcalTarget = deviceService.getDevicePreference('target_kcal') ?? kcalTarget;
+    proteinTarget =
+        deviceService.getDevicePreference('target_protein') ?? proteinTarget;
+    carbsTarget =
+        deviceService.getDevicePreference('target_carbs') ?? carbsTarget;
+    fatTarget = deviceService.getDevicePreference('target_fat') ?? fatTarget;
+    fiberTarget =
+        deviceService.getDevicePreference('target_fiber') ?? fiberTarget;
+    waterTargetMl =
+        deviceService.getDevicePreference('target_water') ?? waterTargetMl;
   }
 
   Future<void> setTargets({
@@ -382,17 +450,17 @@ Example:
     fatTarget = fat;
     fiberTarget = fiber;
     waterTargetMl = waterMl;
-
-    await _prefs?.setInt('target_kcal', kcalTarget);
-    await _prefs?.setInt('target_protein', proteinTarget);
-    await _prefs?.setInt('target_carbs', carbsTarget);
-    await _prefs?.setInt('target_fat', fatTarget);
-    await _prefs?.setInt('target_fiber', fiberTarget);
-    await _prefs?.setInt('target_water', waterTargetMl);
+    await Future.wait([
+      deviceService.setDevicePreference('target_kcal', kcalTarget),
+      deviceService.setDevicePreference('target_protein', proteinTarget),
+      deviceService.setDevicePreference('target_carbs', carbsTarget),
+      deviceService.setDevicePreference('target_fat', fatTarget),
+      deviceService.setDevicePreference('target_fiber', fiberTarget),
+      deviceService.setDevicePreference('target_water', waterTargetMl),
+    ]);
     update();
   }
 
-  // ---------- Hydration ----------
   void addWater(int ml) {
     waterMl = (waterMl + ml).clamp(0, 20000);
     _persistDay();
@@ -405,59 +473,124 @@ Example:
     update();
   }
 
-  // ---------- Food search ----------
   Future<void> searchFood(String? query) async {
     if (query == null || query.isEmpty) return;
+
     loadingSearch = true;
+    searchResults = [];
     update();
+
     try {
-      final uri = Uri.parse(
-        "https://world.openfoodfacts.org/cgi/search.pl?search_terms=${Uri.encodeComponent(query)}&search_simple=1&action=process&json=1&page_size=25",
-      );
-      final res = await http.get(uri, headers: {"Accept": "application/json"});
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        final products = (data["products"] as List?) ?? [];
-        searchResults = products
-            .where((p) {
-              final n = p["product_name"] ?? p["generic_name_en"];
-              final kcal =
-                  p["nutriments"]?["energy-kcal_100g"] ??
-                  p["nutriments"]?["energy-kcal_serving"];
-              return n != null && kcal != null;
-            })
-            .take(25)
-            .toList();
-      } else {
-        searchResults = [];
-      }
-    } catch (_) {
+      final branded = await _searchUSDA(query, 'Branded');
+      final foundation = await _searchUSDA(query, 'Foundation,SR Legacy');
+
+      final combined = <FoodSearchResult>[...branded, ...foundation];
+
+      final queryLower = query.toLowerCase();
+      combined.sort((a, b) {
+        final aName = a.name.toLowerCase();
+        final bName = b.name.toLowerCase();
+
+        if (aName == queryLower) return -1;
+        if (bName == queryLower) return 1;
+
+        final aStarts = aName.startsWith(queryLower) ? 0 : 1;
+        final bStarts = bName.startsWith(queryLower) ? 0 : 1;
+        if (aStarts != bStarts) return aStarts - bStarts;
+
+        final aIndex = aName.indexOf(queryLower);
+        final bIndex = bName.indexOf(queryLower);
+        if (aIndex != bIndex) return aIndex - bIndex;
+
+        if (a.brand.isNotEmpty && b.brand.isEmpty) return -1;
+        if (b.brand.isNotEmpty && a.brand.isEmpty) return 1;
+
+        return 0;
+      });
+
+      searchResults = combined.take(20).toList();
+    } catch (e) {
+      print('Search error: $e');
       searchResults = [];
     }
+
     loadingSearch = false;
     update();
   }
 
-  // Convert OFF product -> FoodPer100
-  FoodPer100 mapProductToPer100(dynamic p) {
-    final nutr = (p["nutriments"] ?? {}) as Map;
-    double _d(dynamic v) =>
-        (v is num) ? v.toDouble() : double.tryParse("$v") ?? 0.0;
+  Future<List<FoodSearchResult>> _searchUSDA(
+    String query,
+    String dataType,
+  ) async {
+    try {
+      final uri = Uri.parse('https://api.nal.usda.gov/fdc/v1/foods/search')
+          .replace(
+            queryParameters: {
+              'api_key': _usdaApiKey,
+              'query': query,
+              'dataType': dataType,
+              'pageSize': '25',
+              'sortBy': 'dataType.keyword',
+              'sortOrder': 'asc',
+            },
+          );
 
-    return FoodPer100(
-      name: (p["product_name"] ?? p["generic_name_en"] ?? "Unknown").toString(),
-      brand: (p["brands"] ?? "").toString(),
-      kcal100: _d(nutr["energy-kcal_100g"]),
-      protein100: _d(nutr["proteins_100g"]),
-      carbs100: _d(nutr["carbohydrates_100g"]),
-      fat100: _d(nutr["fat_100g"]),
-      fiber100: _d(nutr["fiber_100g"]),
-      sugar100: _d(nutr["sugars_100g"]),
-      sodium100: _d(nutr["sodium_100g"]) * 1000, // sometimes in g; ensure mg
-    );
+      final res = await http.get(uri).timeout(const Duration(seconds: 10));
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final foods = (data['foods'] as List?) ?? [];
+
+        return foods
+            .map((f) {
+              try {
+                return FoodSearchResult.fromJson(f);
+              } catch (e) {
+                return null;
+              }
+            })
+            .whereType<FoodSearchResult>()
+            .where((f) => f.per100.kcal100 > 0)
+            .toList();
+      }
+    } catch (e) {
+      print('USDA API error: $e');
+    }
+
+    return [];
   }
 
-  // ---------- Add / edit / remove ----------
+  void addFoodFromResult({
+    required FoodSearchResult result,
+    required ServingSize serving,
+    required double servingQty,
+    required MealType meal,
+  }) {
+    final totalGrams = serving.grams * servingQty;
+    final factor = totalGrams / 100.0;
+
+    final e = FoodEntry(
+      name: result.name,
+      brand: result.brand,
+      grams: totalGrams,
+      meal: meal,
+      kcal: result.per100.kcal100 * factor,
+      proteinG: result.per100.protein100 * factor,
+      carbsG: result.per100.carbs100 * factor,
+      fatG: result.per100.fat100 * factor,
+      fiberG: result.per100.fiber100 * factor,
+      sugarG: result.per100.sugar100 * factor,
+      sodiumMg: result.per100.sodium100 * factor,
+      time: DateTime.now(),
+    );
+
+    entries.add(e);
+    _recomputeTotals();
+    _persistDay();
+    _addRecent(result);
+    update();
+  }
+
   void addFoodFromPer100({
     required FoodPer100 per100,
     required double grams,
@@ -482,7 +615,6 @@ Example:
     entries.add(e);
     _recomputeTotals();
     _persistDay();
-    _addRecent(per100);
     update();
   }
 
@@ -533,27 +665,60 @@ Example:
     update();
   }
 
-  // ---------- Recents ----------
   void _loadRecents() {
-    final raw = _prefs?.getString('recent_foods');
+    final raw = deviceService.getDevicePreference('recent_foods_v2');
     recentFoods = [];
     if (raw != null && raw.isNotEmpty) {
       try {
         final list = (jsonDecode(raw) as List)
-            .map((e) => FoodPer100.fromJson(Map<String, dynamic>.from(e)))
+            .map((e) {
+              try {
+                final servings = ((e['servings'] as List?) ?? [])
+                    .map(
+                      (s) => ServingSize.fromJson(Map<String, dynamic>.from(s)),
+                    )
+                    .toList();
+
+                return FoodSearchResult(
+                  fdcId: e['fdcId'] ?? '',
+                  name: e['name'] ?? '',
+                  brand: e['brand'] ?? '',
+                  category: e['category'] ?? '',
+                  servings: servings.isEmpty
+                      ? [ServingSize(amount: 100, unit: 'g', grams: 100)]
+                      : servings,
+                  per100: FoodPer100.fromJson(
+                    Map<String, dynamic>.from(e['per100']),
+                  ),
+                );
+              } catch (_) {
+                return null;
+              }
+            })
+            .whereType<FoodSearchResult>()
             .toList();
-        recentFoods = list.take(12).toList();
+        recentFoods = list.take(15).toList();
       } catch (_) {}
     }
   }
 
   void _saveRecents() {
-    final list = recentFoods.map((e) => e.toJson()).toList();
-    _prefs?.setString('recent_foods', jsonEncode(list));
+    final list = recentFoods
+        .map(
+          (e) => {
+            'fdcId': e.fdcId,
+            'name': e.name,
+            'brand': e.brand,
+            'category': e.category,
+            'servings': e.servings.map((s) => s.toJson()).toList(),
+            'per100': e.per100.toJson(),
+          },
+        )
+        .toList();
+    deviceService.setDevicePreference('recent_foods_v2', jsonEncode(list));
   }
 
-  void _addRecent(FoodPer100 food) {
-    // de-dup by name+brand
+  void _addRecent(FoodSearchResult food) {
     recentFoods.removeWhere(
       (f) =>
           f.name.toLowerCase() == food.name.toLowerCase() &&
@@ -566,7 +731,6 @@ Example:
     _saveRecents();
   }
 
-  // ---------- Share ----------
   void shareDay() {
     final lines = <String>[];
     lines.add("Day • $selectedDateName");
@@ -578,9 +742,7 @@ Example:
     );
     lines.add("Meals:");
     for (final m in MealType.values) {
-      final mealEntries = entries
-          .where((e) => e.meal == m)
-          .toList(growable: false);
+      final mealEntries = entries.where((e) => e.meal == m).toList();
       if (mealEntries.isEmpty) continue;
       lines.add("• ${m.label}");
       for (final e in mealEntries) {
@@ -593,7 +755,6 @@ Example:
     Share.share(lines.join("\n"));
   }
 
-  // ---------- Date picker ----------
   Future<void> selectDate(BuildContext ctx) async {
     final pick = await showDatePickerDialog(
       context: ctx,
@@ -626,7 +787,6 @@ Example:
     onDaySelected(pick, pick);
   }
 
-  // ---------- Helpers ----------
   String _monthName(int m) {
     const names = [
       'Jan',

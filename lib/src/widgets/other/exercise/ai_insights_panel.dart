@@ -220,7 +220,9 @@ class _AiInsightsPanelController extends GetxController {
     if (loading || instruction.isBlank!) return;
 
     onTweak(instruction);
-    textController.clear();
+    if (textController.text.isNotEmpty) {
+      textController.clear();
+    }
   }
 
   void toggleExpanded() {

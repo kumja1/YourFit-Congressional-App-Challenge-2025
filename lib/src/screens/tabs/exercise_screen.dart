@@ -110,48 +110,53 @@ class ExerciseScreen extends StatelessWidget {
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                  child: AiInsightsPanel(
-                    loading: controller.loading,
-                    explanation: "",
-                    onTweak: controller.modifyWorkout,
+                  child: GetBuilder<_ExerciseScreenController>(
+                    id: "loading",
+                    builder: (controller) => AiInsightsPanel(
+                      loading: controller.loading,
+                      explanation: "",
+                      onTweak: controller.modifyWorkout,
+                    ),
                   ),
                 ),
               ),
-
-              controller.loading
-                  ? const SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  : SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
-                      sliver: SliverList.builder(
-                        itemCount: controller.workout?.exercises.length ?? 0,
-                        itemBuilder: (_, i) {
-                          final exercise = controller.workout?.exercises[i];
-                          return exercise == null
-                              ? const SizedBox.shrink()
-                              : ExerciseCard(
-                                  exercise: exercise,
-                                  onStart: (exercise) => context.router.push(
-                                    exercise is RunningExerciseData
-                                        ? RunningExerciseRoute(
-                                            exercise: exercise,
-                                            onSetComplete: () =>
-                                                controller.updateXp(exercise),
-                                            onExerciseComplete: () {},
-                                          )
-                                        : BasicExerciseRoute(
-                                            exercise: exercise,
-                                            onSetComplete: () =>
-                                                controller.updateXp(exercise),
-                                            onExerciseComplete: () {},
-                                          ),
-                                  ),
-                                );
-                        },
+              GetBuilder<_ExerciseScreenController>(
+                id: "loading",
+                builder: (controller) => controller.loading
+                    ? const SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    : SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+                        sliver: SliverList.builder(
+                          itemCount: controller.workout?.exercises.length ?? 0,
+                          itemBuilder: (_, i) {
+                            final exercise = controller.workout?.exercises[i];
+                            return exercise == null
+                                ? const SizedBox.shrink()
+                                : ExerciseCard(
+                                    exercise: exercise,
+                                    onStart: (exercise) => context.router.push(
+                                      exercise is RunningExerciseData
+                                          ? RunningExerciseRoute(
+                                              exercise: exercise,
+                                              onSetComplete: () =>
+                                                  controller.updateXp(exercise),
+                                              onExerciseComplete: () {},
+                                            )
+                                          : BasicExerciseRoute(
+                                              exercise: exercise,
+                                              onSetComplete: () =>
+                                                  controller.updateXp(exercise),
+                                              onExerciseComplete: () {},
+                                            ),
+                                    ),
+                                  );
+                          },
+                        ),
                       ),
-                    ),
+              ),
             ],
           ),
 
@@ -178,89 +183,134 @@ class _ExerciseScreenController extends GetxController {
   WorkoutData? workout;
 
   @override
-  void onReady() {
-    /**
-      final now = DateTime.now();
-      final timestamp =
-          deviceService.getDevicePreference<DateTime>(
-            "last_generation",
-            converter: (v) => DateTime.tryParse(v),
-          ) ??
-          now;
-  
-      if (now.difference(timestamp).inDays < 1) {
-        return;
-      }
-  
-      deviceService.setDevicePreference(
-        "last_generation",
-        now,
-        converter: (d) => d.toIso8601String(),
-      );
-  */
+  void onInit() {
+    super.onInit();
+
+    final now = DateTime.now();
+    final timestamp =
+        deviceService.getDevicePreference<DateTime>(
+          "last_generation",
+          converter: (v) => DateTime.tryParse(v),
+        ) ??
+        now;
+
+    if (now.difference(timestamp).inDays < 1) {
+      return;
+    }
+
+    deviceService.setDevicePreference(
+      "last_generation",
+      now,
+      converter: (d) => d.toIso8601String(),
+    );
   }
 
   Future<void> generate() async {
-    
-     if (loading) return;
-     loading = true;
-     update(["loading"]);
-     try {
-       final result = await exerciseService.getExercises(
-         currentUser.value,
-         difficulty: currentUser.value?.exercisesDifficulty,
-         intensity: currentUser.value?.exercisesIntensity,
-         focus: WorkoutFocus.cardio,
-       );
- 
-       if (result == null) return;
-       workout = result;
-       update();
-       Get.log(currentUser.value?.toJson() ?? "User null");
-     } catch (e) {
-       e.printError();
-     } finally {
-       loading = false;
-       update(["loading"]);
-     }
-  
+    if (loading) return;
+    loading = true;
+    update(["loading"]);
+    try {
+      final result = await exerciseService.getExercises(
+        currentUser.value,
+        difficulty: currentUser.value?.exercisesDifficulty,
+        intensity: currentUser.value?.exercisesIntensity,
+        additionalParams: {
+          "nearest_locations": Parameter(
+            description:
+                "Nearest locations to the user. Used for running exercises",
+            value: [
+              {
+                "name": "Central Park",
+                "latitude": 40.785091,
+                "longitude": -73.968285,
+                "distance_meters": 450,
+                "type": "park",
+                "estimated_travel_time_minutes": 6,
+              },
+              {
+                "name": "Planet Fitness Gym",
+                "latitude": 40.782342,
+                "longitude": -73.970891,
+                "distance_meters": 720,
+                "type": "gym",
+                "estimated_travel_time_minutes": 10,
+              },
+              {
+                "name": "Hudson River Running Path",
+                "latitude": 40.779562,
+                "longitude": -73.983187,
+                "distance_meters": 1100,
+                "type": "running_path",
+                "estimated_travel_time_minutes": 14,
+              },
+              {
+                "name": "Whole Foods Market",
+                "latitude": 40.780982,
+                "longitude": -73.972184,
+                "distance_meters": 950,
+                "type": "store",
+                "estimated_travel_time_minutes": 12,
+              },
+              {
+                "name": "Riverside Park South",
+                "latitude": 40.781145,
+                "longitude": -73.988198,
+                "distance_meters": 1300,
+                "type": "park",
+                "estimated_travel_time_minutes": 17,
+              },
+            ],
+          ),
+        },
+      );
+
+      if (result == null) return;
+      workout = result;
+      currentUser.value?.addWorkoutData(workout!);
+      userService.updateUser(currentUser.value!);
+      update();
+      Get.log(currentUser.value?.toJson() ?? "User null");
+    } catch (e) {
+      e.printError();
+    } finally {
+      loading = false;
+      update(["loading"]);
+    }
   }
 
   Future<void> modifyWorkout(String instruction) async {
     if (loading || workout == null) return;
     loading = true;
-    update();
+    update(["loading"]);
 
     try {
-      /**
-        final res = await exerciseService.getExercises(
-          currentUser.value,
-          prompt: instruction,
-          additionalParams: {
-            "current_workout": Parameter(
-              description: "The workout to modify",
-              value: workout?.toJson(),
-            ),
-          },
-          count: workout!.exercises.length,
-        );
-  
-        workout = res;
-    */
+      final res = await exerciseService.getExercises(
+        currentUser.value,
+        prompt: instruction,
+        additionalParams: {
+          "current_workout": Parameter(
+            description: "The workout to modify",
+            value: workout?.toJson(),
+          ),
+        },
+        count: workout!.exercises.length,
+      );
+
+      workout = res;
     } catch (e) {
       showSnackbar(e.toString(), AnimatedSnackBarType.error);
     } finally {
       loading = false;
-      update();
+      update(["loading"]);
     }
   }
 
-  void updateXp(ExerciseData exercise) async {
+  void updateXp(ExerciseData exercise) {
     final gained =
         8 + (exercise.reps ~/ 5) + (currentUser.value?.stats.streak ?? 0 ~/ 5);
 
     currentUser.value?.stats.addXp(gained);
-    await userService.updateUser(currentUser.value!);
+    userService.updateUser(currentUser.value!);
   }
 }
 

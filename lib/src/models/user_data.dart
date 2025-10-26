@@ -32,6 +32,10 @@ class UserData with UserDataMappable {
 
   final DateTime createdAt;
 
+  final Map<String, MonthData> workoutData;
+
+  final UserStats stats;
+
   String get fullName => "$firstName $lastName";
 
   String get intials => fullName.initials;
@@ -68,10 +72,6 @@ class UserData with UserDataMappable {
   List<String> disabilities;
   List<String> equipment;
 
-  final Map<String, MonthData> workoutData;
-
-  final UserStats stats;
-
   UserData({
     required this.id,
     required this.createdAt,
@@ -95,12 +95,12 @@ class UserData with UserDataMappable {
   void addWorkoutData(WorkoutData workoutData) {
     final now = DateTime.now();
     final monthData = getMonthData(now);
-    monthData.workouts[now.day] ??= workoutData;
+    monthData.workouts[now.day.toString()] = workoutData;
   }
 
-  WorkoutData getWorkoutData(DateTime date) {
+  WorkoutData? getWorkoutData(DateTime date) {
     final monthData = getMonthData(date);
-    return monthData.workouts[date.day]!;
+    return monthData.workouts[date.day.toString()];
   }
 
   MonthData getMonthData(DateTime date) =>

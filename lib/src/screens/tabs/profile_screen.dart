@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart' hide WidgetPaddingX;
-import 'package:yourfit/src/models/user_data.dart';
+import 'package:yourfit/src/models/index.dart';
 import 'package:yourfit/src/services/auth_service.dart';
 import 'package:yourfit/src/services/user_service.dart';
 import 'package:yourfit/src/utils/functions/show_snackbar.dart';
-import 'package:yourfit/src/widgets/textfields/number_form_field.dart';
+import 'package:yourfit/src/widgets/index.dart';
 
 @RoutePage()
 class ProfileScreen extends StatelessWidget {
@@ -34,14 +34,23 @@ class ProfileScreen extends StatelessWidget {
 
             _EquipmentSection(controller: controller),
             const SizedBox(height: 16),
+
+            AnimatedButton(
+              onPressed: () => controller.authService.signOut(),
+              child: const Text(
+                "Sign Out",
+                style: TextStyle(color: Colors.blue),
+              ),
+            ).align(Alignment.bottomCenter),
           ],
         ),
-      ).scrollable(),
+      ).scrollable().safeArea(),
     );
   }
 }
 
 class _ProfileScreenController extends GetxController {
+  final AuthService authService = Get.find();
   final Rx<UserData?> currentUser = Get.find<AuthService>().currentUser;
   final UserService userService = Get.find();
   final formKey = GlobalKey<FormBuilderState>();
@@ -104,77 +113,79 @@ class _ProfileScreenController extends GetxController {
 
   void editTraining() async {
     if (currentUser.value == null) return;
-    try {
-      await showBottomFormSheet(
-        title: 'Edit Training',
-        fields: [
-          FormBuilderDropdown(
-            name: "physicalFitness",
-            initialValue: currentUser.value?.physicalFitness.name,
-            items: UserPhysicalFitness.values
-                .map(
-                  (e) => DropdownMenuItem(
-                    value: e,
-                    child: Text(e.name.toTitleCase()),
-                  ),
-                )
-                .toList(),
-            decoration: const InputDecoration(labelText: 'Activity'),
-          ),
-          NumberFormField(
-            name: "exerciseDaysPerWeek",
-            labelText: "Days / week",
-            initialValue: currentUser.value?.exerciseDaysPerWeek,
-          ),
-        ],
-      );
-    } catch (e) {
-      print(e);
-    }
+    await showBottomFormSheet(
+      title: 'Edit Training',
+      fields: [
+        FormBuilderDropdown(
+          name: "physicalFitness",
+          initialValue: currentUser.value?.physicalFitness,
+          items: UserPhysicalFitness.values
+              .map(
+                (e) => DropdownMenuItem(
+                  value: e,
+                  child: Text(e.name.toTitleCase()),
+                ),
+              )
+              .toList(),
+          decoration: const InputDecoration(labelText: 'Activity'),
+        ),
+        NumberFormField(
+          name: "exerciseDaysPerWeek",
+          labelText: "Days / week",
+          initialValue: currentUser.value?.exerciseDaysPerWeek,
+        ),
+        FormBuilderDropdown(
+          name: "exercisesIntensity",
+          initialValue: currentUser.value?.exercisesIntensity,
+          items: ExerciseIntensity.values
+              .map(
+                (e) => DropdownMenuItem(
+                  value: e,
+                  child: Text(e.name.toTitleCase()),
+                ),
+              )
+              .toList(),
+          decoration: const InputDecoration(labelText: 'Intensity'),
+        ),
+      ],
+    );
   }
 
   void editEquipment() async {
     if (currentUser.value == null) return;
-    try {
-      await showBottomFormSheet(
-        title: 'Edit Equipment',
-        fields: [
-          FormBuilderTextField(
-            name: "equipment",
-            initialValue: (currentUser.value!.equipment).join(', '),
-            maxLines: 2,
-            valueTransformer: (v) => v?.split(',') ?? [],
-            decoration: const InputDecoration(
-              labelText: 'Equipment (comma-separated)',
-            ),
+    await showBottomFormSheet(
+      title: 'Edit Equipment',
+      fields: [
+        FormBuilderTextField(
+          name: "equipment",
+          initialValue: (currentUser.value!.equipment).join(', '),
+          maxLines: 2,
+          valueTransformer: (v) => v?.split(',') ?? [],
+          decoration: const InputDecoration(
+            labelText: 'Equipment (comma-separated)',
           ),
-        ],
-      );
-    } catch (e) {
-      print(e);
-    }
+        ),
+      ],
+    );
   }
 
   void editDisabilities() async {
     if (currentUser.value == null) return;
-    try {
-      await showBottomFormSheet(
-        title: 'Edit Disabilities',
-        fields: [
-          FormBuilderTextField(
-            name: "disabilities",
-            initialValue: (currentUser.value!.disabilities).join(', '),
-            maxLines: 2,
-            valueTransformer: (v) => v?.split(',') ?? [],
-            decoration: const InputDecoration(
-              labelText: 'Disabilities (comma-separated)',
-            ),
+
+    await showBottomFormSheet(
+      title: 'Edit Disabilities',
+      fields: [
+        FormBuilderTextField(
+          name: "disabilities",
+          initialValue: (currentUser.value!.disabilities).join(', '),
+          maxLines: 2,
+          valueTransformer: (v) => v?.split(',') ?? [],
+          decoration: const InputDecoration(
+            labelText: 'Disabilities (comma-separated)',
           ),
-        ],
-      );
-    } catch (e) {
-      Get.log(e.toString());
-    }
+        ),
+      ],
+    );
   }
 
   Future<void> showBottomFormSheet({
@@ -231,28 +242,63 @@ class _ProfileScreenController extends GetxController {
                         }
 
                         currentUser.update((user) {
-                          final name =
-                              (formKey.currentState!.value['name'] as String)
-                                  .split(" ");
-                          user!.firstName = name[0];
-                          user.lastName = name[1];
-                          user.goal = formKey.currentState!.value['goal'];
-                          user.height = formKey.currentState!.value['height'];
-                          user.weight = formKey.currentState!.value['weight'];
-                          user.gender = formKey.currentState!.value['gender'];
-                          user.equipment =
-                              formKey.currentState!.value['equipment'];
-                          user.disabilities =
-                              formKey.currentState!.value['disabilities'];
-                          user.exerciseDaysPerWeek = formKey
-                              .currentState!
-                              .value['exerciseDaysPerWeek'];
+                          final formValues = formKey.currentState!.value;
+
+                          if (formValues.containsKey('name')) {
+                            final name = (formValues['name'] as String).split(
+                              " ",
+                            );
+                            user!.firstName = name[0];
+                            user.lastName = name[1];
+                          }
+
+                          if (formValues.containsKey('goal')) {
+                            user!.goal = formValues['goal'];
+                          }
+
+                          if (formValues.containsKey('height')) {
+                            user!.height = formValues['height'];
+                          }
+
+                          if (formValues.containsKey('weight')) {
+                            user!.weight = formValues['weight'];
+                          }
+
+                          if (formValues.containsKey('gender')) {
+                            user!.gender = formValues['gender'];
+                          }
+
+                          if (formValues.containsKey('equipment')) {
+                            user!.equipment = formValues['equipment'];
+                          }
+
+                          if (formValues.containsKey('disabilities')) {
+                            user!.disabilities = formValues['disabilities'];
+                          }
+
+                          if (formValues.containsKey('exerciseDaysPerWeek')) {
+                            user!.exerciseDaysPerWeek =
+                                formValues['exerciseDaysPerWeek'];
+                          }
+
+                          if (formValues.containsKey('physicalFitness')) {
+                            user!.physicalFitness =
+                                formValues['physicalFitness'];
+                          }
+
+                          if (formValues.containsKey('exercisesIntensity')) {
+                            user!.exercisesIntensity =
+                                formValues['exercisesIntensity'];
+                          }
                         });
 
-                        userService.updateUser(currentUser.value!);
-                      } on Exception catch (e) {
+                        await userService.updateUser(currentUser.value!);
+                      } on Error catch (e) {
                         e.printError();
-                        showSnackbar("An error ocurred while updating your profile.", AnimatedSnackBarType.error);
+                        showSnackbar(
+                          "An error ocurred while updating your profile.",
+                          AnimatedSnackBarType.error,
+                        );
                       }
                     },
                     child: const Text('Save'),
@@ -385,7 +431,7 @@ class _ProfileHeader extends StatelessWidget {
                               () => _Pill(
                                 _formatValue(
                                   currentUser.value?.weight,
-                                  suffix: ' kg',
+                                  suffix: ' lb',
                                 ),
                               ),
                             ),
@@ -458,7 +504,7 @@ class _TrainingSection extends StatelessWidget {
         : _ProfileSectionCard(
             title: 'Training',
             trailing: IconButton(
-              onPressed: () => controller.editTraining,
+              onPressed: controller.editTraining,
               icon: const Icon(Icons.edit),
             ),
             child: Column(

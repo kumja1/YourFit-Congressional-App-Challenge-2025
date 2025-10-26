@@ -7,8 +7,10 @@ class ResponseSchema {
     'properties': {
       'exercises': {
         'type': 'array',
+        'description':'An array of exercise objects.',
         'items': {
           'type': 'object',
+          'description': 'An exercise object.',
           'properties': {
             'difficulty': {
               'type': 'string',
@@ -20,20 +22,26 @@ class ResponseSchema {
               'enum': ['low', 'medium', 'high'],
               'description': 'Intensity level of the exercise',
             },
+
             'type': {
               'type': 'string',
               'enum': ['strength', 'cardio', 'flexibility', 'balance'],
               'description':
                   'The exercise type of the exercise. Must be one of: cardio (Improves heart and lung function, builds endurance for sustained physical activity), strength (Develops muscle power and force production for lifting, throwing, and resistance movements), flexibility (Increases range of motion and mobility for better movement quality and injury prevention), balance (Enhances stability, coordination, and body control during static and dynamic activities)',
             },
+            'model_type':{
+              'type':'string',
+              'enum':['running', 'basic'],
+              'description':'The model type this object should be parsed into'
+            },
             'caloriesBurned': {
               'type': 'number',
               'description': 'Calories burned per exercise',
             },
-            'name': {'type': 'string', 'description': 'Exercise name'},
+            'name': {'type': 'string', 'description': 'A short, informative name for the exercise.'},
             'instructions': {
               'type': 'string',
-              'description': 'Instructions for the exercise.',
+              'description': 'Short, informative instructions on performing the exercise.',
             },
             'summary': {
               'type': 'string',
@@ -105,12 +113,12 @@ class ResponseSchema {
             'speed': {
               'type': 'integer',
               'description':
-                  'Speed the user would have to use for a running exercise',
+                  'Speed to be maintained for a running exercise',
             },
             'destination': {
               'type': 'string',
               'description':
-                  'The address of where the user would run to for a running exercise',
+                  'The destination address of a running exercise',
             },
           },
           'required': [
@@ -130,7 +138,6 @@ class ResponseSchema {
             'reps',
           ],
         },
-        'description': 'List of exercises with full details.',
       },
       'caloriesBurned': {
         'type': 'number',

@@ -1,3 +1,5 @@
+import 'package:get/get.dart';
+import 'package:get/get_utils/src/extensions/export.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 import 'package:yourfit/src/models/exercise/exercise_data.dart';
 import 'package:yourfit/src/models/exercise/month_data.dart';
@@ -31,8 +33,8 @@ class UserService {
       );
 
       return await createUserFromData(user);
-    } catch (e) {
-      print(e);
+    } on Error catch (e) {
+      e.printError();
       rethrow;
     }
   }
@@ -74,8 +76,8 @@ class UserService {
 
     try {
       await _userTable.insert(user.toMap());
-    } catch (e) {
-      print(e);
+    } on Error catch (e) {
+      e.printError();
     }
     return user;
   }
@@ -84,8 +86,8 @@ class UserService {
     try {
       await _userTable.update(user.toMap()).eq("id", user.id);
       return true;
-    } catch (e) {
-      print(e);
+    } on Error catch (e) {
+      e.printError();
       return false;
     }
   }
@@ -93,9 +95,10 @@ class UserService {
   Future<UserData?> getUser(String id) async {
     try {
       final response = await _userTable.select().eq("id", id);
+      response.printInfo();
       return UserData.fromMap(response.first);
-    } catch (e) {
-      print(e);
+    } on Error catch (e) {
+      e.printError();
       return null;
     }
   }

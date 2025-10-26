@@ -22,11 +22,10 @@ class MonthDataMapper extends ClassMapperBase<MonthData> {
   @override
   final String id = 'MonthData';
 
-  static Map<int, WorkoutData> _$workouts(MonthData v) => v.workouts;
-  static const Field<MonthData, Map<int, WorkoutData>> _f$workouts = Field(
+  static Map<String, WorkoutData> _$workouts(MonthData v) => v.workouts;
+  static const Field<MonthData, Map<String, WorkoutData>> _f$workouts = Field(
     'workouts',
     _$workouts,
-    hook: MapHook(),
   );
   static double _$caloriesBurned(MonthData v) => v.caloriesBurned;
   static const Field<MonthData, double> _f$caloriesBurned = Field(
@@ -106,12 +105,12 @@ abstract class MonthDataCopyWith<$R, $In extends MonthData, $Out>
     implements ClassCopyWith<$R, $In, $Out> {
   MapCopyWith<
     $R,
-    int,
+    String,
     WorkoutData,
     WorkoutDataCopyWith<$R, WorkoutData, WorkoutData>
   >
   get workouts;
-  $R call({Map<int, WorkoutData>? workouts});
+  $R call({Map<String, WorkoutData>? workouts});
   MonthDataCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(Then<$Out2, $R2> t);
 }
 
@@ -126,7 +125,7 @@ class _MonthDataCopyWithImpl<$R, $Out>
   @override
   MapCopyWith<
     $R,
-    int,
+    String,
     WorkoutData,
     WorkoutDataCopyWith<$R, WorkoutData, WorkoutData>
   >
@@ -136,7 +135,7 @@ class _MonthDataCopyWithImpl<$R, $Out>
     (v) => call(workouts: v),
   );
   @override
-  $R call({Map<int, WorkoutData>? workouts}) =>
+  $R call({Map<String, WorkoutData>? workouts}) =>
       $apply(FieldCopyWithData({if (workouts != null) #workouts: workouts}));
   @override
   MonthData $make(CopyWithData data) =>

@@ -44,6 +44,7 @@ class NumberFormField<T extends num> extends StatelessWidget {
           if (onChanged == null || s == null) return;
           onChanged!(num.parse(s) as T);
         },
+        valueTransformer: (s) => num.parse(s ?? "0") as T,
         validator: validator == null
             ? FormBuilderValidators.numeric()
             : FormBuilderValidators.numeric().and(validator!),

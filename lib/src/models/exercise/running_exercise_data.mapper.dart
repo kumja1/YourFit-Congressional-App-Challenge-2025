@@ -85,13 +85,7 @@ class RunningExerciseDataMapper
   static List<RestInterval> _$restIntervals(RunningExerciseData v) =>
       v.restIntervals;
   static const Field<RunningExerciseData, List<RestInterval>> _f$restIntervals =
-      Field(
-        'restIntervals',
-        _$restIntervals,
-        opt: true,
-        def: const [],
-        hook: MapHook(),
-      );
+      Field('restIntervals', _$restIntervals, opt: true, def: const []);
   static String _$destination(RunningExerciseData v) => v.destination;
   static const Field<RunningExerciseData, String> _f$destination = Field(
     'destination',
@@ -137,9 +131,9 @@ class RunningExerciseDataMapper
   };
 
   @override
-  final String discriminatorKey = 'basic';
+  final String discriminatorKey = 'model_type';
   @override
-  final dynamic discriminatorValue = 'RunningExerciseData';
+  final dynamic discriminatorValue = "running";
   @override
   late final ClassMapperBase superMapper =
       ExerciseDataMapper.ensureInitialized();

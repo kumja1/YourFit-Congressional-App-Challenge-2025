@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart' hide WidgetPaddingX;
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 import 'package:yourfit/src/models/exercise/exercise_data.dart';
+import 'package:yourfit/src/routing/index.dart';
+import 'package:yourfit/src/widgets/buttons/animated_button.dart';
 
 @RoutePage()
 class BasicExerciseScreen extends StatelessWidget {
@@ -23,57 +25,81 @@ class BasicExerciseScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(
-      _BasicExerciseScreenController(
-        exercise,
-        onExerciseComplete,
-        onSetComplete,
-      ),
-      tag: _tag,
-    );
     return Scaffold(
-      body: Column(
-        children: [
-          GetBuilder<_BasicExerciseScreenController>(
-            tag: _tag,
-            builder: (controller) => StepProgressIndicator(
-              size: 10,
-              totalSteps: controller.exercise.sets,
-              padding: 0,
-              currentStep: controller.exercise.state.setsDone,
-              roundedEdges: const Radius.circular(10),
-              crossAxisAlignment: CrossAxisAlignment.start,
-              unselectedColor: Colors.grey[200]!,
-              selectedColor: Colors.blue,
-              progressDirection: TextDirection.ltr,
-            ).paddingOnly(left: 30, right: 30, top: 20),
-          ),
-          Align(
-            alignment: Alignment.center,
-            child: CircularCountDownTimer(
-              duration: controller.exercise.setDuration.inSeconds,
-              autoStart: true,
-              controller: controller.countdownController,
-              isReverse: true,
-              isReverseAnimation: true,
-              isTimerTextShown: true,
-              textFormat: CountdownTextFormat.MM_SS,
-              onComplete: controller.completeSet,
-              ringColor: Colors.grey[200]!,
-              fillColor: Colors.blue,
-              backgroundColor: Colors.transparent,
-              strokeWidth: 12.0,
-              strokeCap: StrokeCap.round,
-              textStyle: const TextStyle(
-                color: Colors.blue,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+      body: GetBuilder<_BasicExerciseScreenController>(
+        init: _BasicExerciseScreenController(
+          exercise,
+          onExerciseComplete,
+          onSetComplete,
+        ),
+        id: "started",
+        tag: _tag,
+        builder: (controller) => !controller.started
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text("Instructions", style: Theme.of(context).textTheme.headlineMedium,),
+                  const SizedBox(height: 10),
+                  Text(
+                    exercise.instructions,
+                    style: const TextStyle(color: Colors.black38),
+                    textAlign: TextAlign.center,
+                    softWrap: true,
+                  ),
+                  const SizedBox(height: 15),
+                  AnimatedButton(
+                    onPressed: controller.toggleStarted,
+                    child: const Text(
+                      "Continue",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              )
+            : Column(
+                children: [
+                  GetBuilder<_BasicExerciseScreenController>(
+                    tag: _tag,
+                    builder: (controller) => StepProgressIndicator(
+                      size: 10,
+                      totalSteps: controller.exercise.sets,
+                      padding: 0,
+                      currentStep: controller.exercise.state.setsDone,
+                      roundedEdges: const Radius.circular(10),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      unselectedColor: Colors.grey[200]!,
+                      selectedColor: Colors.blue,
+                      progressDirection: TextDirection.ltr,
+                    ).paddingOnly(left: 30, right: 30, top: 20),
+                  ),
+                  Align(
+                    alignment: Alignment.center,
+                    child: CircularCountDownTimer(
+                      duration: controller.exercise.setDuration.inSeconds,
+                      autoStart: true,
+                      controller: controller.countdownController,
+                      isReverse: true,
+                      isReverseAnimation: true,
+                      isTimerTextShown: true,
+                      textFormat: CountdownTextFormat.MM_SS,
+                      onComplete: controller.completeSet,
+                      ringColor: Colors.grey[200]!,
+                      fillColor: Colors.blue,
+                      backgroundColor: Colors.transparent,
+                      strokeWidth: 12.0,
+                      strokeCap: StrokeCap.round,
+                      textStyle: const TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                      width: 90,
+                      height: 90,
+                    ),
+                  ).flexible(),
+                ],
               ),
-              width: 90,
-              height: 90,
-            ),
-          ).flexible(),
-        ],
       ),
     );
   }
@@ -84,6 +110,8 @@ class _BasicExerciseScreenController extends GetxController {
   final VoidCallback onSetComplete;
   final VoidCallback onExerciseComplete;
   final CountDownController countdownController = CountDownController();
+  final AppRouter router = Get.find();
+  bool started = false;
 
   _BasicExerciseScreenController(
     this.exercise,
@@ -91,8 +119,15 @@ class _BasicExerciseScreenController extends GetxController {
     this.onSetComplete,
   );
 
+  void toggleStarted() {
+    started = !started;
+    update(["started"]);
+  }
+
   void completeExercise() {
     exercise.state.completed = true;
+
+    router.back();
     onExerciseComplete();
   }
 
@@ -101,6 +136,7 @@ class _BasicExerciseScreenController extends GetxController {
       completeExercise();
       return;
     }
+
     update();
     onSetComplete();
     countdownController.restart();
