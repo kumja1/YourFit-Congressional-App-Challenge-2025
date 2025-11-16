@@ -6,6 +6,7 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:get/get.dart' hide WidgetPaddingX;
 import 'package:yourfit/src/models/index.dart';
+import 'package:yourfit/src/routing/index.dart';
 import 'package:yourfit/src/services/auth_service.dart';
 import 'package:yourfit/src/services/user_service.dart';
 import 'package:yourfit/src/utils/functions/show_snackbar.dart';
@@ -36,7 +37,9 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 16),
 
             AnimatedButton(
-              onPressed: () => controller.authService.signOut(),
+              onPressed: () => controller.signOut(),
+              backgroundColor: Colors.white,
+              shadowColor: Colors.black12,
               child: const Text(
                 "Sign Out",
                 style: TextStyle(color: Colors.blue),
@@ -53,6 +56,7 @@ class _ProfileScreenController extends GetxController {
   final AuthService authService = Get.find();
   final Rx<UserData?> currentUser = Get.find<AuthService>().currentUser;
   final UserService userService = Get.find();
+  final AppRouter router = Get.find();
   final formKey = GlobalKey<FormBuilderState>();
 
   void editBasics() async {
@@ -311,6 +315,14 @@ class _ProfileScreenController extends GetxController {
       ),
     ),
   );
+
+  void signOut() async {
+    try {
+      await authService.signOut();
+    } finally {
+      router.replacePath(Routes.landing);
+    }
+  }
 }
 
 class _ProfileSectionCard extends StatelessWidget {
@@ -566,14 +578,14 @@ class _EquipmentSection extends StatelessWidget {
                 Obx(
                   () => _TagGroup(
                     label: 'Equipment',
-                    tags: currentUser.value!.equipment,
+                    tags: currentUser.value?.equipment ?? [],
                   ),
                 ),
                 const SizedBox(height: 12),
                 Obx(
                   () => _TagGroup(
                     label: 'Disabilities',
-                    tags: currentUser.value!.disabilities,
+                    tags: currentUser.value?.disabilities ?? [],
                   ),
                 ),
               ],

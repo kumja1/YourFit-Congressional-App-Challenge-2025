@@ -21,7 +21,7 @@ class ExerciseService extends GetxService {
           ChatMessagePromptTemplate.system("""
 ---- Instructions ----
 You are a extremly considerate, medically accurate fitness trainer.
-Your task: Provide the user with an appropriate response to the prompt, taking into consideration their age, height, weight, gender, physicalFitness, and any other additional parameters provided.
+Your task: Provide the user with an appropriate response to the prompt, taking into consideration the parameters provided and their priority.
 Follow these rules:
 1. Response should be based on the given information as well as any additional information found in the dataset.
 2. Response should not contain anything redundant but remain relatively consistent with the historical data provided, upscaling if necessary.

@@ -93,7 +93,6 @@ class DeviceService extends GetxService {
           number: 10,
         ),
       );
-
       response.waypoints.sort(
         (a, b) => (a.distance ?? 0).compareTo(b.distance ?? 0),
       );

@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:yourfit/src/models/exercise/running_exercise_data.dart';
 import 'package:yourfit/src/screens/other/exercises/basic_exercise_screen.dart';
+import 'package:yourfit/src/services/device_service.dart';
 import 'package:yourfit/src/widgets/other/navigation_map.dart';
 
 @RoutePage()
@@ -32,7 +33,7 @@ class RunningExerciseScreen extends BasicExerciseScreen {
 
 class _RunningExerciseScreenController extends GetxController {
   final RunningExerciseData exercise;
-  final FmService geocodingService = Get.find();
+  final DeviceService deviceService = Get.find();
   LatLng? destination;
 
   _RunningExerciseScreenController({required this.exercise});
@@ -40,7 +41,7 @@ class _RunningExerciseScreenController extends GetxController {
   @override
   void onInit() async {
     super.onInit();
-    FmData? location = await geocodingService.getGeocode(
+    FmData? location = await deviceService.geocoding.getGeocode(
       address: exercise.destination,
     );
     if (location == null) return;

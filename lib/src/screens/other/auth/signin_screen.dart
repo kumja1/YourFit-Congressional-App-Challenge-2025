@@ -95,13 +95,14 @@ class _SignInController extends AuthFormController {
       );
 
       if (response.code == AuthCode.error) {
-        print(response.message!);
+        response.message.printError();
         showSnackbar(response.message!, AnimatedSnackBarType.error);
         return;
       }
 
       router.replacePath(Routes.main);
     } catch (e) {
+      e.printError();
       showSnackbar(e.toString(), AnimatedSnackBarType.error);
     }
   }

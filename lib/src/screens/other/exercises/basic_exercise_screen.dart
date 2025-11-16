@@ -132,7 +132,7 @@ class _BasicExerciseScreenController extends GetxController {
   }
 
   void completeSet() {
-    if (exercise.state.setsDone++ >= exercise.sets) {
+    if (exercise.state.setsDone++ >= exercise.sets - 1) {
       completeExercise();
       return;
     }

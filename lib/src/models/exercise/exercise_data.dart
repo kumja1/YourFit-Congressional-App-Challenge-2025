@@ -34,12 +34,15 @@ enum ExerciseType {
       ExerciseTypeMapper.fromValue(value);
 }
 
+@MappableClass(discriminatorKey: "model_type")
+abstract class ExerciseDataBase with ExerciseDataBaseMappable {
+}
+
 @MappableClass(
   includeCustomMappers: [DurationMapper()],
-  discriminatorKey: "model_type",
-  discriminatorValue: "basic"
+  discriminatorValue: "basic",
 )
-class ExerciseData with ExerciseDataMappable {
+class ExerciseData extends ExerciseDataBase with ExerciseDataMappable {
   final ExerciseDifficulty difficulty;
   final ExerciseIntensity intensity;
   final ExerciseType type;

@@ -31,13 +31,45 @@ class RoadmapScreen extends StatelessWidget {
                   if (s.generatingPlan) const AiGenerationBanner(),
                   RoadmapCalendar(controller: s),
                   SelectedWorkoutCard(workout: s.selectedWorkout),
+                  // ADD REGENERATE BUTTON HERE
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: s.generatingPlan
+                            ? null
+                            : () => s.generateMonthlyPlan(),
+                        icon: s.generatingPlan
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.refresh),
+                        label: Text(
+                          s.generatingPlan
+                              ? 'Generating...'
+                              : 'Regenerate Monthly Plan',
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
+                      ),
+                    ),
+                  ),
                   NutritionSummarySliver(controller: s),
                   QuickAddRowSliver(controller: s),
                   GetBuilder<RoadmapController>(
                     builder: (controller) => FoodSearchSliver(
-                      controller: TextEditingController(),
+                      controller: controller.searchController,
                       onSubmitted: (query) async {
-                        await s.searchFood(query);
+                        await controller.searchFood(query);
                       },
                       loading: controller.loadingSearch,
                     ),
@@ -147,7 +179,7 @@ class RoadmapController extends GetxController {
   final DeviceService deviceService = Get.find();
   final Rx<UserData?> currentUser = Get.find<AuthService>().currentUser;
 
-  static const _usdaApiKey = 'YOUR_USDA_API_KEY_HERE';
+  static const _usdaApiKey = 'YTzDQuJd18nmpR7b0iUph7fES7bMp8fRoCBjCWlK';
 
   final searchController = TextEditingController();
   bool loadingSearch = false;
@@ -230,8 +262,23 @@ class RoadmapController extends GetxController {
       final plan = await _generateAIPlan(age, activity);
       await _savePlans(plan);
       workoutPlans = plan;
+
+      Get.snackbar(
+        'Success',
+        'Monthly workout plan generated!',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
     } catch (e) {
+      print('AI plan generation failed: $e');
       workoutPlans = _generateDefaultPlan();
+
+      Get.snackbar(
+        'Note',
+        'Using default workout plan',
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 2),
+      );
     }
 
     generatingPlan = false;
@@ -243,13 +290,14 @@ class RoadmapController extends GetxController {
     UserPhysicalFitness activity,
   ) async {
     const apiKey = "AIzaSyCI-es8sI7XKwQwYiipkmLdlNH65MgExFo";
-    const model = 'gemini-2.5-flash';
+    const model = 'gemini-2.0-flash-exp';
 
-    final prompt = '''
+    final prompt =
+        '''
 Generate a 30-day workout plan.
 User age: $age, activity: ${activity.name}.
 Return JSON with date keys (YYYY-MM-DD) starting from today ${_dateKey(DateTime.now())}.
-Make the routine consistent
+Make the routine consistent , consistency from week to week. For example, if you have a rest day on a sunday, make sure that EVERY sunday is a rest day.
 Allowed values: legDay, upperBody, cardio, core, fullBody, rest, yoga.
 Keep variety and 1-2 rest days per week.
 Example:
@@ -309,7 +357,9 @@ Example:
         if (plan.isEmpty) return _generateDefaultPlan();
         return plan;
       }
-    } catch (_) {}
+    } catch (e) {
+      print('Gemini API error: $e');
+    }
 
     return _generateDefaultPlan();
   }
@@ -381,11 +431,16 @@ Example:
     entries = [];
     final raw = deviceService.getDevicePreference(key);
     if (raw != null) {
-      final list = (jsonDecode(raw) as List)
-          .cast<Map>()
-          .map((e) => FoodEntry.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
-      entries = list;
+      try {
+        final list = (jsonDecode(raw) as List)
+            .cast<Map>()
+            .map((e) => FoodEntry.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+        entries = list;
+      } catch (e) {
+        print('Error loading day: $e');
+        entries = [];
+      }
     }
 
     waterMl = deviceService.getDevicePreference("water-${_dateKey(d)}") ?? 0;
@@ -481,36 +536,55 @@ Example:
     update();
 
     try {
+      // Search multiple data types for better results
       final branded = await _searchUSDA(query, 'Branded');
       final foundation = await _searchUSDA(query, 'Foundation,SR Legacy');
 
       final combined = <FoodSearchResult>[...branded, ...foundation];
 
+      // Sort by relevance
       final queryLower = query.toLowerCase();
       combined.sort((a, b) {
         final aName = a.name.toLowerCase();
         final bName = b.name.toLowerCase();
 
+        // Exact matches first
         if (aName == queryLower) return -1;
         if (bName == queryLower) return 1;
 
+        // Starts with query
         final aStarts = aName.startsWith(queryLower) ? 0 : 1;
         final bStarts = bName.startsWith(queryLower) ? 0 : 1;
         if (aStarts != bStarts) return aStarts - bStarts;
 
+        // Contains query earlier
         final aIndex = aName.indexOf(queryLower);
         final bIndex = bName.indexOf(queryLower);
         if (aIndex != bIndex) return aIndex - bIndex;
 
+        // Branded items first (usually more accurate)
         if (a.brand.isNotEmpty && b.brand.isEmpty) return -1;
         if (b.brand.isNotEmpty && a.brand.isEmpty) return 1;
 
         return 0;
       });
 
-      searchResults = combined.take(20).toList();
+      searchResults = combined.take(25).toList();
+
+      if (searchResults.isEmpty) {
+        Get.snackbar(
+          'No Results',
+          'No foods found for "$query". Try a different search term.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
     } catch (e) {
       print('Search error: $e');
+      Get.snackbar(
+        'Search Failed',
+        'Could not search foods. Please check your internet connection.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
       searchResults = [];
     }
 
@@ -546,15 +620,20 @@ Example:
               try {
                 return FoodSearchResult.fromJson(f);
               } catch (e) {
+                print('Error parsing food: $e');
                 return null;
               }
             })
             .whereType<FoodSearchResult>()
             .where((f) => f.per100.kcal100 > 0)
             .toList();
+      } else if (res.statusCode == 403) {
+        throw Exception(
+          'API key invalid. Get one from https://fdc.nal.usda.gov/api-key-signup.html',
+        );
       }
     } catch (e) {
-      print('USDA API error: $e');
+      print('USDA API error for $dataType: $e');
     }
 
     return [];
@@ -588,6 +667,18 @@ Example:
     _recomputeTotals();
     _persistDay();
     _addRecent(result);
+
+    // Clear search after adding
+    searchController.clear();
+    searchResults = [];
+
+    Get.snackbar(
+      'Added',
+      '${result.name} added to ${meal.label}',
+      snackPosition: SnackPosition.BOTTOM,
+      duration: const Duration(seconds: 2),
+    );
+
     update();
   }
 
@@ -698,7 +789,9 @@ Example:
             .whereType<FoodSearchResult>()
             .toList();
         recentFoods = list.take(15).toList();
-      } catch (_) {}
+      } catch (e) {
+        print('Error loading recents: $e');
+      }
     }
   }
 

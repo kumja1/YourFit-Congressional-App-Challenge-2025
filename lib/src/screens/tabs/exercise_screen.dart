@@ -121,7 +121,6 @@ class ExerciseScreen extends StatelessWidget {
                 ),
               ),
               GetBuilder<_ExerciseScreenController>(
-                id: "loading",
                 builder: (controller) => controller.loading
                     ? const SliverFillRemaining(
                         hasScrollBody: false,
@@ -131,29 +130,41 @@ class ExerciseScreen extends StatelessWidget {
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
                         sliver: SliverList.builder(
                           itemCount: controller.workout?.exercises.length ?? 0,
-                          itemBuilder: (_, i) {
-                            final exercise = controller.workout?.exercises[i];
-                            return exercise == null
-                                ? const SizedBox.shrink()
-                                : ExerciseCard(
-                                    exercise: exercise,
-                                    onStart: (exercise) => context.router.push(
-                                      exercise is RunningExerciseData
-                                          ? RunningExerciseRoute(
-                                              exercise: exercise,
-                                              onSetComplete: () =>
-                                                  controller.updateXp(exercise),
-                                              onExerciseComplete: () {},
-                                            )
-                                          : BasicExerciseRoute(
-                                              exercise: exercise,
-                                              onSetComplete: () =>
-                                                  controller.updateXp(exercise),
-                                              onExerciseComplete: () {},
-                                            ),
-                                    ),
-                                  );
-                          },
+                          itemBuilder: (_, i) =>
+                              controller.workout?.exercises[i] == null
+                              ? const SizedBox.shrink()
+                              : ExerciseCard(
+                                  exercise: controller.workout!.exercises[i],
+                                  onClick: (exercise, cardController) {
+                                    try {
+                                      context.router.push(
+                                        exercise is RunningExerciseData
+                                            ? RunningExerciseRoute(
+                                                exercise: exercise,
+                                                onSetComplete: () => controller
+                                                    .updateXp(exercise),
+                                                onExerciseComplete:
+                                                    cardController
+                                                        .toggleDisabled,
+                                              )
+                                            : BasicExerciseRoute(
+                                                exercise: exercise,
+                                                onSetComplete: () => controller
+                                                    .updateXp(exercise),
+                                                onExerciseComplete:
+                                                    cardController
+                                                        .toggleDisabled,
+                                              ),
+                                      );
+                                    } on Error catch (e) {
+                                      e.printError();
+                                      showSnackbar(
+                                        e.toString(),
+                                        AnimatedSnackBarType.error,
+                                      );
+                                    }
+                                  },
+                                ),
                         ),
                       ),
               ),
@@ -180,12 +191,109 @@ class _ExerciseScreenController extends GetxController {
 
   // ---- Screen State ----
   bool loading = false;
-  WorkoutData? workout;
+  WorkoutData? workout = WorkoutData(
+    focus: WorkoutFocus.cardio,
+    caloriesBurned: 450,
+    duration: Duration(minutes: 45),
+    summary:
+        "A comprehensive running workout combining intervals, steady-state runs, and cool-down jog to build endurance and burn calories.",
+    exercises: [
+      // Warm-up Run
+      RunningExerciseData(
+        name: "Warm-up Jog",
+        difficulty: ExerciseDifficulty.easy,
+        intensity: ExerciseIntensity.low,
+        type: ExerciseType.cardio,
+        caloriesBurned: 60,
+        duration: Duration(minutes: 10),
+        setDuration: Duration(minutes: 10),
+        sets: 1,
+        reps: 1,
+        distance: 1.5,
+        speed: 9, // km/h
+        destination: "100 N 5th St, Richmond, VA 23219",
+        instructions:
+            "Start with a light jog to warm up your muscles. Keep your pace comfortable and focus on steady breathing. Land midfoot and maintain good posture.",
+        summary: "Easy warm-up jog to prepare your body for the workout.",
+        targetMuscles: ["Legs", "Cardiovascular System"],
+        equipment: ["Running Shoes"],
+      ),
+
+      // Interval Training
+      RunningExerciseData(
+        name: "Sprint Intervals",
+        difficulty: ExerciseDifficulty.hard,
+        intensity: ExerciseIntensity.high,
+        type: ExerciseType.cardio,
+        caloriesBurned: 180,
+        duration: Duration(minutes: 20),
+        setDuration: Duration(minutes: 2),
+        sets: 6,
+        reps: 1,
+        distance: 3.0,
+        speed: 15, // km/h during sprints
+        destination: "200 Tredegar St, Richmond, VA 23219",
+        instructions:
+            "Sprint at 80-90% max effort for 1 minute, then recover jog for 1 minute. Repeat for 6 sets. Focus on explosive power and maintaining form even when tired.",
+        summary:
+            "High-intensity interval training to boost speed and endurance.",
+        targetMuscles: ["Quadriceps", "Hamstrings", "Calves", "Glutes"],
+        equipment: ["Running Shoes", "Water Bottle"],
+        restIntervals: [
+          RestInterval(duration: Duration(minutes: 1), restAt: 1),
+          RestInterval(duration: Duration(minutes: 1), restAt: 2),
+          RestInterval(duration: Duration(minutes: 1), restAt: 3),
+          RestInterval(duration: Duration(minutes: 1), restAt: 4),
+          RestInterval(duration: Duration(minutes: 1), restAt: 5),
+        ],
+      ),
+
+      // Tempo Run
+      RunningExerciseData(
+        name: "Steady Tempo Run",
+        difficulty: ExerciseDifficulty.medium,
+        intensity: ExerciseIntensity.medium,
+        type: ExerciseType.cardio,
+        caloriesBurned: 150,
+        duration: Duration(minutes: 12),
+        setDuration: Duration(minutes: 12),
+        sets: 1,
+        reps: 1,
+        distance: 2.0,
+        speed: 11, // km/h
+        destination: "501 E Byrd St, Richmond, VA 23219",
+        instructions:
+            "Run at a comfortably hard pace - you should be able to speak in short sentences but not hold a full conversation. Maintain consistent speed throughout.",
+        summary: "Moderate-intensity run to build lactate threshold.",
+        targetMuscles: ["Legs", "Core", "Cardiovascular System"],
+        equipment: ["Running Shoes"],
+      ),
+
+      // Cool-down
+      RunningExerciseData(
+        name: "Cool-down Jog",
+        difficulty: ExerciseDifficulty.easy,
+        intensity: ExerciseIntensity.low,
+        type: ExerciseType.cardio,
+        caloriesBurned: 60,
+        duration: Duration(minutes: 8),
+        setDuration: Duration(minutes: 8),
+        sets: 1,
+        reps: 1,
+        distance: 1.0,
+        speed: 8, // km/h
+        destination: "1000 E Broad St, Richmond, VA 23219",
+        instructions:
+            "Gradually reduce your pace to a slow jog. Focus on deep breathing and allowing your heart rate to come down. Finish with light stretching.",
+        summary: "Easy cool-down to help recovery and prevent soreness.",
+        targetMuscles: ["Legs", "Cardiovascular System"],
+        equipment: ["Running Shoes"],
+      ),
+    ],
+  );
 
   @override
-  void onInit() {
-    super.onInit();
-
+  void onReady() {
     final now = DateTime.now();
     final timestamp =
         deviceService.getDevicePreference<DateTime>(
@@ -203,6 +311,12 @@ class _ExerciseScreenController extends GetxController {
       now,
       converter: (d) => d.toIso8601String(),
     );
+
+    Get.log("Getting existing workout");
+    workout = currentUser.value?.getWorkoutData(DateTime.now());
+    workout.printInfo();
+    update();
+    Get.log("Updated UI");
   }
 
   Future<void> generate() async {
@@ -215,51 +329,12 @@ class _ExerciseScreenController extends GetxController {
         difficulty: currentUser.value?.exercisesDifficulty,
         intensity: currentUser.value?.exercisesIntensity,
         additionalParams: {
-          "nearest_locations": Parameter(
+          "relative_locations": Parameter(
             description:
-                "Nearest locations to the user. Used for running exercises",
-            value: [
-              {
-                "name": "Central Park",
-                "latitude": 40.785091,
-                "longitude": -73.968285,
-                "distance_meters": 450,
-                "type": "park",
-                "estimated_travel_time_minutes": 6,
-              },
-              {
-                "name": "Planet Fitness Gym",
-                "latitude": 40.782342,
-                "longitude": -73.970891,
-                "distance_meters": 720,
-                "type": "gym",
-                "estimated_travel_time_minutes": 10,
-              },
-              {
-                "name": "Hudson River Running Path",
-                "latitude": 40.779562,
-                "longitude": -73.983187,
-                "distance_meters": 1100,
-                "type": "running_path",
-                "estimated_travel_time_minutes": 14,
-              },
-              {
-                "name": "Whole Foods Market",
-                "latitude": 40.780982,
-                "longitude": -73.972184,
-                "distance_meters": 950,
-                "type": "store",
-                "estimated_travel_time_minutes": 12,
-              },
-              {
-                "name": "Riverside Park South",
-                "latitude": 40.781145,
-                "longitude": -73.988198,
-                "distance_meters": 1300,
-                "type": "park",
-                "estimated_travel_time_minutes": 17,
-              },
-            ],
+                "Relative locations to the user. Used for generating running exercises",
+            value: (await deviceService.getPositionsNearDevice()).map(
+              (e) => e.toJson(),
+            ),
           ),
         },
       );
@@ -269,9 +344,10 @@ class _ExerciseScreenController extends GetxController {
       currentUser.value?.addWorkoutData(workout!);
       userService.updateUser(currentUser.value!);
       update();
-      Get.log(currentUser.value?.toJson() ?? "User null");
-    } catch (e) {
+      currentUser.value?.toJson().printInfo();
+    } on Error catch (e) {
       e.printError();
+      showSnackbar(e.toString(), AnimatedSnackBarType.error);
     } finally {
       loading = false;
       update(["loading"]);

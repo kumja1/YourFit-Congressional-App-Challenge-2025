@@ -161,13 +161,67 @@ extension ExerciseTypeMapperExtension on ExerciseType {
   }
 }
 
-class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
+class ExerciseDataBaseMapper extends ClassMapperBase<ExerciseDataBase> {
+  ExerciseDataBaseMapper._();
+
+  static ExerciseDataBaseMapper? _instance;
+  static ExerciseDataBaseMapper ensureInitialized() {
+    if (_instance == null) {
+      MapperContainer.globals.use(_instance = ExerciseDataBaseMapper._());
+      ExerciseDataMapper.ensureInitialized();
+    }
+    return _instance!;
+  }
+
+  @override
+  final String id = 'ExerciseDataBase';
+
+  @override
+  final MappableFields<ExerciseDataBase> fields = const {};
+
+  static ExerciseDataBase _instantiate(DecodingData data) {
+    throw MapperException.missingSubclass(
+      'ExerciseDataBase',
+      'model_type',
+      '${data.value['model_type']}',
+    );
+  }
+
+  @override
+  final Function instantiate = _instantiate;
+
+  static ExerciseDataBase fromMap(Map<String, dynamic> map) {
+    return ensureInitialized().decodeMap<ExerciseDataBase>(map);
+  }
+
+  static ExerciseDataBase fromJson(String json) {
+    return ensureInitialized().decodeJson<ExerciseDataBase>(json);
+  }
+}
+
+mixin ExerciseDataBaseMappable {
+  String toJson();
+  Map<String, dynamic> toMap();
+  ExerciseDataBaseCopyWith<ExerciseDataBase, ExerciseDataBase, ExerciseDataBase>
+  get copyWith;
+}
+
+abstract class ExerciseDataBaseCopyWith<$R, $In extends ExerciseDataBase, $Out>
+    implements ClassCopyWith<$R, $In, $Out> {
+  $R call();
+  ExerciseDataBaseCopyWith<$R2, $In, $Out2> $chain<$R2, $Out2>(
+    Then<$Out2, $R2> t,
+  );
+}
+
+class ExerciseDataMapper extends SubClassMapperBase<ExerciseData> {
   ExerciseDataMapper._();
 
   static ExerciseDataMapper? _instance;
   static ExerciseDataMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = ExerciseDataMapper._());
+      ExerciseDataBaseMapper.ensureInitialized().addSubMapper(_instance!);
       MapperContainer.globals.useAll([DurationMapper()]);
       ExerciseDifficultyMapper.ensureInitialized();
       ExerciseIntensityMapper.ensureInitialized();
@@ -273,6 +327,14 @@ class ExerciseDataMapper extends ClassMapperBase<ExerciseData> {
     #state: _f$state,
   };
 
+  @override
+  final String discriminatorKey = 'model_type';
+  @override
+  final dynamic discriminatorValue = "basic";
+  @override
+  late final ClassMapperBase superMapper =
+      ExerciseDataBaseMapper.ensureInitialized();
+
   static ExerciseData _instantiate(DecodingData data) {
     return ExerciseData(
       difficulty: data.dec(_f$difficulty),
@@ -353,7 +415,7 @@ extension ExerciseDataValueCopy<$R, $Out>
 }
 
 abstract class ExerciseDataCopyWith<$R, $In extends ExerciseData, $Out>
-    implements ClassCopyWith<$R, $In, $Out> {
+    implements ExerciseDataBaseCopyWith<$R, $In, $Out> {
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
   get targetMuscles;
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get equipment;
@@ -363,6 +425,7 @@ abstract class ExerciseDataCopyWith<$R, $In extends ExerciseData, $Out>
     RestIntervalCopyWith<$R, RestInterval, RestInterval>
   >
   get restIntervals;
+  @override
   $R call({
     ExerciseDifficulty? difficulty,
     ExerciseIntensity? intensity,
