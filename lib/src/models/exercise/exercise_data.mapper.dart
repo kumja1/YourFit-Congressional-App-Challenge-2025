@@ -222,7 +222,7 @@ class ExerciseDataMapper extends SubClassMapperBase<ExerciseData> {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = ExerciseDataMapper._());
       ExerciseDataBaseMapper.ensureInitialized().addSubMapper(_instance!);
-      MapperContainer.globals.useAll([DurationMapper()]);
+      MapperContainer.globals.useAll([_DurationMapper()]);
       ExerciseDifficultyMapper.ensureInitialized();
       ExerciseIntensityMapper.ensureInitialized();
       ExerciseTypeMapper.ensureInitialized();
@@ -301,12 +301,6 @@ class ExerciseDataMapper extends SubClassMapperBase<ExerciseData> {
     opt: true,
     def: const [],
   );
-  static ExerciseState _$state(ExerciseData v) => v.state;
-  static const Field<ExerciseData, ExerciseState> _f$state = Field(
-    'state',
-    _$state,
-    mode: FieldMode.member,
-  );
 
   @override
   final MappableFields<ExerciseData> fields = const {
@@ -324,7 +318,6 @@ class ExerciseDataMapper extends SubClassMapperBase<ExerciseData> {
     #targetMuscles: _f$targetMuscles,
     #equipment: _f$equipment,
     #restIntervals: _f$restIntervals,
-    #state: _f$state,
   };
 
   @override
@@ -543,7 +536,7 @@ class RestIntervalMapper extends ClassMapperBase<RestInterval> {
   static RestIntervalMapper ensureInitialized() {
     if (_instance == null) {
       MapperContainer.globals.use(_instance = RestIntervalMapper._());
-      MapperContainer.globals.useAll([DurationMapper()]);
+      MapperContainer.globals.useAll([_DurationMapper()]);
     }
     return _instance!;
   }

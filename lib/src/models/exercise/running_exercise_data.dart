@@ -9,7 +9,7 @@ class RunningExerciseData extends ExerciseData
   final int speed;
   final String destination;
 
-  RunningExerciseData({
+   RunningExerciseData({
     required super.difficulty,
     required super.intensity,
     required super.type,

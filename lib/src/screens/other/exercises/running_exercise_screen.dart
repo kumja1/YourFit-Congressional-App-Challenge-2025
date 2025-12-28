@@ -1,12 +1,14 @@
+import 'package:animated_snack_bar/animated_snack_bar.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:extensions_plus/extensions_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:free_map/fm_models.dart';
-import 'package:free_map/fm_service.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:maplibre_gl/maplibre_gl.dart';
+import 'package:open_route_service/open_route_service.dart';
 import 'package:yourfit/src/models/exercise/running_exercise_data.dart';
 import 'package:yourfit/src/screens/other/exercises/basic_exercise_screen.dart';
 import 'package:yourfit/src/services/device_service.dart';
+import 'package:yourfit/src/utils/functions/index.dart';
 import 'package:yourfit/src/widgets/other/navigation_map.dart';
 
 @RoutePage()
@@ -25,8 +27,29 @@ class RunningExerciseScreen extends BasicExerciseScreen {
         exercise: exercise as RunningExerciseData,
       ),
     );
+
     return Scaffold(
-      body: NavigationMap(end: controller.destination, onEnd: () {}),
+      body: FutureBuilder(
+        future: controller.init(),
+        builder: (_, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator(color: Colors.blue).center();
+          }
+
+          if (snapshot.hasError || snapshot.data == false) {
+            if (snapshot.hasError) {
+              snapshot.error.printError();
+            }
+
+            return const SizedBox.shrink();
+          }
+
+          return NavigationMap(
+            route: controller.route!,
+            onDestinationReached: onExerciseComplete,
+          );
+        },
+      ),
     );
   }
 }
@@ -34,17 +57,34 @@ class RunningExerciseScreen extends BasicExerciseScreen {
 class _RunningExerciseScreenController extends GetxController {
   final RunningExerciseData exercise;
   final DeviceService deviceService = Get.find();
-  LatLng? destination;
+
+  late ({
+    Position start,
+    Map<String, dynamic> segmentJson,
+    DirectionRouteSegment segment,
+    GeoJsonFeatureGeometry geometry,
+  })?
+  route;
 
   _RunningExerciseScreenController({required this.exercise});
 
-  @override
-  void onInit() async {
-    super.onInit();
-    FmData? location = await deviceService.geocoding.getGeocode(
-      address: exercise.destination,
-    );
-    if (location == null) return;
-    destination = LatLng(location.lat, location.lng);
+  Future<bool> init() async {
+    try {
+      route = await deviceService.getRouteFromDevicePosition(
+        targetLongitude: -77.46844980291,
+        targetLatitude: 37.620874568397,
+      );
+
+      if (route == null || route!.segment.steps.isEmpty) {
+        Get.log("[_RunningExerciseScreenController] Route is malformed!");
+        return false;
+      }
+
+      return true;
+    } on Error catch (e) {
+      e.printError();
+      showSnackbar(e.toString(), AnimatedSnackBarType.error);
+      return false;
+    }
   }
 }

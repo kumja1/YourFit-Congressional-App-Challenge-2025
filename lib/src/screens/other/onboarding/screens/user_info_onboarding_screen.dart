@@ -35,14 +35,8 @@ class UserInfoOnboardingScreen extends OnboardingScreen {
             errorText: "Gender is required",
           ),
         ).constrains(maxWidth: 360),
-        NumberFormField<double>(
-          name: "weight",
-          labelText: "Weight (lb)",
-        ),
-        NumberFormField<double>(
-          name: "height",
-          labelText: "Height (cm)",
-        ),
+        NumberFormField<double>(name: "weight", labelText: "Weight (lb)"),
+        NumberFormField<double>(name: "height", labelText: "Height (cm)"),
       ],
     ).center();
   }

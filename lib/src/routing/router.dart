@@ -30,5 +30,6 @@ class AppRouter extends RootStackRouter {
       ],
     ),
     AutoRoute(page: BasicExerciseRoute.page),
+    AutoRoute(page: RunningExerciseRoute.page)
   ];
 }

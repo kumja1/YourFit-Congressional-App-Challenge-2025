@@ -2,13 +2,13 @@ import 'package:get/get.dart';
 import 'package:get/get_utils/src/extensions/export.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 import 'package:yourfit/src/models/exercise/exercise_data.dart';
-import 'package:yourfit/src/models/exercise/month_data.dart';
+import 'package:yourfit/src/models/exercise/monthly_workout_data.dart';
 import 'package:yourfit/src/models/user_data.dart';
 
 class UserService {
   final _userTable = Supabase.instance.client.from("user_data");
 
-  Future<UserData> createUser(
+  Future<UserData?> createUser(
     String id,
     String firstName,
     String lastName,
@@ -35,7 +35,7 @@ class UserService {
       return await createUserFromData(user);
     } on Error catch (e) {
       e.printError();
-      rethrow;
+      return null;
     }
   }
 
@@ -53,7 +53,8 @@ class UserService {
     String? goal,
     int? exerciseDaysPerWeek,
     ExerciseIntensity? exercisesIntensity,
-    Map<String, MonthData>? workoutData,
+    Map<String, MonthlyWorkoutData>? workoutData,
+    Map<String, MonthlyWorkoutData>? waterData,
     List<String>? disabilities,
     List<String>? equipment,
   }) async {

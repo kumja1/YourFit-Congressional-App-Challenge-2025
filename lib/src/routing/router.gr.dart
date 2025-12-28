@@ -338,12 +338,16 @@ class SignUpRouteArgs {
     if (identical(this, other)) return true;
     if (other is! SignUpRouteArgs) return false;
     return key == other.key &&
-        const _i17.MapEquality().equals(onboardingData, other.onboardingData);
+        const _i17.MapEquality<String, dynamic>().equals(
+          onboardingData,
+          other.onboardingData,
+        );
   }
 
   @override
   int get hashCode =>
-      key.hashCode ^ const _i17.MapEquality().hash(onboardingData);
+      key.hashCode ^
+      const _i17.MapEquality<String, dynamic>().hash(onboardingData);
 }
 
 /// generated route for

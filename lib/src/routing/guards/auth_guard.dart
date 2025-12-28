@@ -10,7 +10,7 @@ class AuthGuard extends AutoRouteGuard {
   void onNavigation(NavigationResolver resolver, StackRouter router) async {
     await _authService.refreshSession();
     if (_authService.isSignedIn) {
-      router.replacePath(Routes.main);
+      resolver.next();
       return;
     }
 

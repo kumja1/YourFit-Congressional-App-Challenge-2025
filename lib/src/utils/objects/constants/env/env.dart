@@ -4,10 +4,21 @@ part 'env.g.dart';
 
 @Envied(obfuscate: true, useConstantCase: true)
 class Env {
-  @EnviedField(varName: "SUPABASE_KEY")
+  @EnviedField()
   static final String supabaseKey = _Env.supabaseKey;
-  @EnviedField(varName: "SUPABASE_URL")
+
+  @EnviedField()
   static final String supabaseUrl = _Env.supabaseUrl;
-  @EnviedField(varName: "GEMINI_KEY")
+
+  @EnviedField()
   static final String geminiKey = _Env.geminiKey;
+
+  @EnviedField()
+  static final String usdaKey = _Env.usdaKey;
+
+  @EnviedField()
+  static final String openRouteKey = _Env.openRouteKey;
+
+  @EnviedField()
+  static final String mapTilerKey = _Env.mapTilerKey;
 }

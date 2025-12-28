@@ -4,6 +4,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:langchain/langchain.dart';
+import 'package:logging/logging.dart';
 import 'package:yourfit/src/models/exercise/running_exercise_data.dart';
 import 'package:yourfit/src/models/index.dart';
 import 'package:yourfit/src/routing/router.gr.dart';
@@ -211,7 +212,7 @@ class _ExerciseScreenController extends GetxController {
         reps: 1,
         distance: 1.5,
         speed: 9, // km/h
-        destination: "100 N 5th St, Richmond, VA 23219",
+        destination: "1200 Westbrook Avenue Richmond, VA, 23227",
         instructions:
             "Start with a light jog to warm up your muscles. Keep your pace comfortable and focus on steady breathing. Land midfoot and maintain good posture.",
         summary: "Easy warm-up jog to prepare your body for the workout.",
@@ -312,11 +313,11 @@ class _ExerciseScreenController extends GetxController {
       converter: (d) => d.toIso8601String(),
     );
 
-    Get.log("Getting existing workout");
+    Logger.root.info("Getting existing workout");
     workout = currentUser.value?.getWorkoutData(DateTime.now());
     workout.printInfo();
     update();
-    Get.log("Updated UI");
+    Logger.root.info("Updated UI");
   }
 
   Future<void> generate() async {

@@ -24,6 +24,7 @@ class AuthService extends GetxService {
     _auth.onAuthStateChange.listen((event) async {
       try {
         switch (event.event) {
+          case AuthChangeEvent.initialSession:
           case AuthChangeEvent.signedIn:
             currentUser.value = await _userService.getUser(
               event.session!.user.id,

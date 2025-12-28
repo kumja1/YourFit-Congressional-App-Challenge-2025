@@ -42,8 +42,9 @@ class PhysicalFitnessOnboardingScreen extends OnboardingScreen {
   }
 
   @override
-  Map<String, dynamic> getData() => {"physicalFitness": controller.selectedChoice};
-  
+  Map<String, dynamic> getData() => {
+    "physicalFitness": controller.selectedChoice,
+  };
 
   @override
   bool canProgress() => controller.selectedChoice != null;

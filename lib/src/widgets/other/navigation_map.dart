@@ -1,99 +1,200 @@
-import "dart:async";
-
-import "package:flutter/material.dart";
-import "package:geolocator/geolocator.dart";
-import "package:get/get.dart";
-import "package:maplibre_gl/maplibre_gl.dart";
+import 'dart:async';
+import 'package:animated_snack_bar/animated_snack_bar.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_map_location_marker/flutter_map_location_marker.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:get/get.dart';
+import 'package:icon_decoration/icon_decoration.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:open_route_service/open_route_service.dart';
+import 'package:yourfit/src/services/device_service.dart';
+import 'package:yourfit/src/utils/index.dart';
 
 class NavigationMap extends StatelessWidget {
-  final LatLng? end;
-  final VoidCallback onEnd;
+  final ({
+  Position start,
+  Map<String, dynamic> segmentJson,
+  DirectionRouteSegment segment,
+  GeoJsonFeatureGeometry geometry,
+  })
+  route;
+  final VoidCallback onDestinationReached;
 
-  const NavigationMap({super.key, required this.end, required this.onEnd});
+  const NavigationMap({
+    super.key,
+    required this.route,
+    required this.onDestinationReached,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(_NavMapController(onEnd: onEnd));
-    if (end == null) return const SizedBox.shrink();
-    final start = LatLng(
-      controller.lastPosition.latitude,
-      controller.lastPosition.longitude,
-    );
-    return MapLibreMap(
-      styleString:
-          'https://raw.githubusercontent.com/openmaptiles/maptiler-3d-gl-style/refs/heads/master/style.json',
-      onMapCreated: (c) => controller.mapController = c,
-      initialCameraPosition: CameraPosition(target: start, zoom: 15),
-      cameraTargetBounds: CameraTargetBounds(
-        LatLngBounds(northeast: end!, southwest: start),
-      ),
-    );
+    try {
+      Get.log("Controller initialized with start: ${route.start}");
+      return GetBuilder<_NavigationMapController>(
+        init: _NavigationMapController(
+          route: route,
+          onDestinationReached: onDestinationReached,
+        ),
+        builder: (controller) =>
+            FlutterMap(
+              mapController: controller.mapController,
+              options: MapOptions(
+                cameraConstraint: CameraConstraint.containCenter(
+                  bounds: LatLngBounds.fromPoints(controller.routeGeometry),
+                ),
+                initialCenter: LatLng(
+                    route.start.latitude, route.start.longitude),
+                minZoom: 18,
+                initialZoom: 18,
+              ),
+              children: [
+                TileLayer(
+                  urlTemplate:
+                  "https://api.maptiler.com/maps/streets-v4/{z}/{x}/{y}@2x.png?key=${Env
+                      .mapTilerKey}",
+                ),
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: controller.routeGeometry,
+                      color: Colors.blue,
+                      strokeWidth: 12,
+                      strokeCap: StrokeCap.round,
+                    ),
+                  ],
+                ),
+                CurrentLocationLayer(
+                  style: const LocationMarkerStyle(
+                    showAccuracyCircle: false,
+                    markerDirection: MarkerDirection.heading,
+                    markerSize: Size.square(30),
+                    marker: DecoratedIcon(
+                      icon: Icon(Icons.navigation_rounded, color: Colors.blue),
+                      decoration: IconDecoration(
+                        border: IconBorder(color: Colors.white, width: 5),
+                      ),
+                    )
+                  ),
+                  alignDirectionOnUpdate: AlignOnUpdate.always,
+                  alignPositionOnUpdate: AlignOnUpdate.always,
+                  errorHandler: (e) {
+                    e.printError();
+                    return e;
+                  },
+                  positionStream: controller.stream?.map(
+                        (pos) =>
+                        LocationMarkerPosition(
+                          latitude: pos.latitude,
+                          longitude: pos.longitude,
+                          accuracy: pos.accuracy,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+      );
+    } on Error catch (e) {
+      e.printError();
+      return const SizedBox.shrink();
+    }
   }
 }
 
-class _NavMapController extends GetxController {
-  late final MapLibreMapController mapController;
-  late final Position lastPosition;
-  late final StreamSubscription<Position> positionStream;
-  final VoidCallback onEnd;
+class _NavigationMapController extends GetxController {
+  final DeviceService deviceService = Get.find();
+  final ({
+  Position start,
+  Map<String, dynamic> segmentJson,
+  DirectionRouteSegment segment,
+  GeoJsonFeatureGeometry geometry,
+  })
+  route;
+  final VoidCallback onDestinationReached;
+  final MapController mapController = MapController();
+  late List<LatLng> routeGeometry;
+  late StreamSubscription<Position> subscription;
+  Stream<Position>? stream;
 
-  _NavMapController({required this.onEnd});
+
+  _NavigationMapController({
+    required this.onDestinationReached,
+    required this.route,
+  }) : routeGeometry = route.geometry.coordinates.first
+      .map((c) => LatLng(c.latitude, c.longitude))
+      .toList();
 
   @override
-  void onInit() async {
-    super.onInit();
+  void onReady() {
+    try {
+      Get.log("Starting navigation");
+      final steps = route.segment.steps;
+      final stepsJson = (route.segmentJson["steps"] as List<dynamic>)
+          .map((step) => Map<String, dynamic>.from(step as Map))
+          .toList();
 
-    lastPosition = await Geolocator.getCurrentPosition();
-    final line = await mapController.addLine(
-      LineOptions(
-        geometry: [LatLng(lastPosition.latitude, lastPosition.longitude)],
-        lineColor: "blue",
-      ),
-    );
+      Get.log("Route has ${steps.length} steps");
+      stream = deviceService.getDevicePositionStream()?.asBroadcastStream();
+      if (stream == null) {
+        return;
+      }
 
-    positionStream =
-        Geolocator.getPositionStream(
-          locationSettings: const LocationSettings(distanceFilter: 3),
-        ).listen((position) async {
-          if (Geolocator.distanceBetween(
-                lastPosition.latitude,
-                lastPosition.longitude,
-                position.latitude,
-                position.longitude,
-              ) >
-              12.5) // This is to ensure that they are running without aid
-          {
-            end(); // For now end the map when they cheat
+      DirectionRouteSegmentStep currentStep = steps.first;
+      int currentIndex = 0;
+
+      subscription = stream!.listen((position) async {
+        // if (lastPosition.)
+        ORSCoordinate maneuverCoords = ORSCoordinate.fromList(
+          stepsJson[currentIndex]["maneuver"]["location"],
+        );
+
+        double distance = Geolocator.distanceBetween(
+          position.latitude,
+          position.longitude,
+          maneuverCoords.latitude,
+          maneuverCoords.longitude,
+        );
+
+        Get.log("Current position: $position");
+        Get.log("Next maneuver at: $maneuverCoords");
+        Get.log("Distance from next maneuver: $distance");
+
+        try {
+          bool isNear = distance <= 5;
+          if (!isNear) {
+            if (currentStep.instruction.isBlank == true) {
+              return;
+            }
+
+            await deviceService.speak(
+              currentStep.instruction.trim(),
+              isNavigation: true,
+            );
+            return;
           }
 
-          await Future.wait([
-            mapController.animateCamera(
-              CameraUpdate.newLatLng(
-                LatLng(position.latitude, position.longitude),
-              ),
-            ),
-            mapController.updateLine(
-              line,
-              LineOptions(
-                geometry: [
-                  LatLng(lastPosition.latitude, lastPosition.longitude),
-                  LatLng(position.latitude, position.longitude),
-                ],
-                lineColor: "blue",
-              ),
-            ),
-          ]);
-        });
+          if (isNear && currentIndex == steps.length - 1) {
+            Get.log("Reached final destination");
+            onRouteEnd();
+            return;
+          }
+
+          currentStep = steps[++currentIndex];
+          Get.log("Moving to step $currentIndex");
+        } on Error catch (e) {
+          e.printError();
+          showSnackbar(e.toString(), AnimatedSnackBarType.error);
+        }
+      });
+    } on Error catch (e) {
+      e.printError();
+      showSnackbar(e.toString(), AnimatedSnackBarType.error);
+    }
   }
 
-  void end() {
-    positionStream.cancel();
-    onEnd();
-  }
-
-  @override
-  void onClose() {
-    end();
-    super.onClose();
+  void onRouteEnd() {
+    Get.log("Navigation completed");
+    subscription.cancel();
+    onDestinationReached();
   }
 }

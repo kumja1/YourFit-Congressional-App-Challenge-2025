@@ -101,12 +101,6 @@ class RunningExerciseDataMapper
     'speed',
     _$speed,
   );
-  static ExerciseState _$state(RunningExerciseData v) => v.state;
-  static const Field<RunningExerciseData, ExerciseState> _f$state = Field(
-    'state',
-    _$state,
-    mode: FieldMode.member,
-  );
 
   @override
   final MappableFields<RunningExerciseData> fields = const {
@@ -127,7 +121,6 @@ class RunningExerciseDataMapper
     #destination: _f$destination,
     #distance: _f$distance,
     #speed: _f$speed,
-    #state: _f$state,
   };
 
   @override

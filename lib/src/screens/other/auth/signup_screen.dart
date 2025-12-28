@@ -140,7 +140,7 @@ class _SignUpScreenController extends AuthFormController {
       }
 
       final nameParts = name.split(" ");
-      await userService.createUser(
+     final newUser = await userService.createUser(
         response.supabaseUser!.id,
         nameParts[0],
         nameParts[1],
@@ -151,6 +151,7 @@ class _SignUpScreenController extends AuthFormController {
         data["physicalFitness"],
       );
 
+      authService.currentUser.value = newUser;
       router.replacePath(Routes.main);
     } catch (e) {
       e.printError();

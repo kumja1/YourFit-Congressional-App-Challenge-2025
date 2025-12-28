@@ -1,17 +1,21 @@
-import 'package:free_map/free_map.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:osrm/osrm.dart';
+import 'package:open_route_service/open_route_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:yourfit/src/utils/extensions/position_extension.dart';
+import 'package:yourfit/src/utils/extensions/location_extensions.dart';
+import 'package:yourfit/src/utils/index.dart';
 
 class DeviceService extends GetxService {
-  final FmService geocoding = FmService();
-  final Osrm routing = Osrm();
+  final OpenRouteService locationClient = OpenRouteService(
+    apiKey: Env.openRouteKey,
+  );
 
+  final FlutterTts speech = FlutterTts();
   late final SharedPreferences preferences;
 
-  Future<void> initialize() async =>
+  Future<void> initPreferences() async =>
       preferences = await SharedPreferences.getInstance();
 
   Future<void> setDevicePreference<T>(
@@ -60,7 +64,7 @@ class DeviceService extends GetxService {
         return false;
       }
 
-      if (preferences.containsKey("location_permission")) {
+      if (preferences.containsKey("location_enabled")) {
         return true;
       }
 
@@ -71,7 +75,7 @@ class DeviceService extends GetxService {
           permission == LocationPermission.unableToDetermine;
 
       if (!denied) {
-        setDevicePreference("location_permission", true);
+        setDevicePreference("location_enabled", true);
       }
 
       return !denied;
@@ -81,37 +85,40 @@ class DeviceService extends GetxService {
     }
   }
 
-  Stream<Position> getDevicePositionStream() => Geolocator.getPositionStream();
+  Stream<Position>? getDevicePositionStream({
+    LocationSettings? locationSettings,
+  }) {
+    try {
+      return Geolocator.getPositionStream(locationSettings: locationSettings);
+    } on Error catch (e) {
+      e.printError();
+      return null;
+    }
+  }
 
-  Future<List<Position>> getPositionsNearDevice() async {
+  Future<List<Position>> getPositionsNearDevice({int amount = 5}) async {
     try {
       Position position = await getDevicePosition();
-      NearestResponse response = await routing.nearest(
-        NearestOptions(
-          coordinate: (position.longitude, position.latitude),
-          profile: OsrmRequestProfile.foot,
-          number: 10,
-        ),
-      );
-      response.waypoints.sort(
-        (a, b) => (a.distance ?? 0).compareTo(b.distance ?? 0),
-      );
-      return response.waypoints
-          .map(
-            (e) => Position(
-              longitude: e.location!.$1,
-              latitude: e.location!.$2,
-              timestamp: DateTime.now(),
-              accuracy: 0,
-              altitude: 0,
-              altitudeAccuracy: 0,
-              heading: 0,
-              headingAccuracy: 0,
-              speed: 0,
-              speedAccuracy: 0,
-            )..distance = e.distance as double,
-          )
-          .toList();
+      if (position.latitude == 0 && position.longitude == 0) {
+        return [];
+      }
+
+      PoisData response = await locationClient.poisDataPost(request: "pois");
+      return response.features.map((e) {
+        ORSCoordinate coords = e.geometry.coordinates.first.first;
+        return Position(
+          longitude: coords.longitude,
+          latitude: coords.latitude,
+          timestamp: DateTime.now(),
+          accuracy: 0,
+          altitude: coords.altitude ?? 0,
+          altitudeAccuracy: 0,
+          heading: 0,
+          headingAccuracy: 0,
+          speed: 0,
+          speedAccuracy: 0,
+        )..distance = e.properties["distance"] as double;
+      }).toList();
     } on Error catch (e) {
       e.printError();
       return [];
@@ -133,6 +140,7 @@ class DeviceService extends GetxService {
         speedAccuracy: 0,
       );
     }
+
     return await Geolocator.getCurrentPosition();
   }
 
@@ -140,6 +148,109 @@ class DeviceService extends GetxService {
     if (!(await _requestDeviceLocationPermission())) {
       return null;
     }
+
     return await Geolocator.getLastKnownPosition();
+  }
+
+  Future<
+    ({
+      Position start,
+      Map<String, dynamic> segmentJson,
+      DirectionRouteSegment segment,
+      GeoJsonFeatureGeometry geometry,
+    })?
+  >
+  getRouteFromDevicePosition({
+    required double targetLongitude,
+    required double targetLatitude,
+    ORSProfile? profile,
+  }) async {
+    try {
+      Position position = await getDevicePosition();
+      if (position.longitude == 0 && position.latitude == 0) {
+        return null;
+      }
+
+      final route = (await locationClient.directionsMultiRouteGeoJsonPost(
+        coordinates: [
+          ORSCoordinate(
+            latitude: position.latitude,
+            longitude: position.longitude,
+          ),
+          ORSCoordinate(latitude: targetLatitude, longitude: targetLongitude),
+        ],
+        maneuvers: true,
+        profileOverride: profile,
+        geometrySimplify: true,
+
+      )).features.first;
+
+      final List<Map<String, dynamic>> segments =
+          (route.properties["segments"] as List<dynamic>)
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList();
+
+      if (segments.isEmpty) {
+        return null;
+      }
+
+      final segment = segments.first;
+      if (segments.length >= 2) {
+        for (final seg in segments.skip(1)) {
+          (segment["steps"] as List<Map<String, dynamic>>).addAll(seg["steps"]);
+        }
+      }
+
+      return (
+        start: position,
+        segmentJson: segment,
+        segment: DirectionRouteSegment.fromJson(segment),
+        geometry: route.geometry,
+      );
+    } on Error catch (e) {
+      e.printError();
+      return null;
+    }
+  }
+
+  Future<void> speak(
+    String text, {
+    bool isNavigation = false,
+    double? pitch,
+    double? rate,
+    double? volume,
+    String? language,
+    String? voice,
+  }) async {
+    try {
+      if (language != null) {
+        await speech.setLanguage(language);
+      }
+
+      if (pitch != null) {
+        await speech.setPitch(pitch);
+      }
+
+      if (rate != null) {
+        await speech.setSpeechRate(rate);
+      }
+
+      if (volume != null) {
+        await speech.setVolume(volume);
+      }
+
+      if (voice != null) {
+        await speech.setVoice({"name": voice, "locale": language ?? ""});
+      }
+
+      if (isNavigation && !kIsWeb) {
+        await speech.setAudioAttributesForNavigation();
+      }
+
+      await speech.stop();
+      await speech.speak(text);
+    } on Error catch (e) {
+      e.printError();
+    }
   }
 }

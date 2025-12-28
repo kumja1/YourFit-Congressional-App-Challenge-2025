@@ -2,7 +2,8 @@ import 'package:dart_mappable/dart_mappable.dart';
 import 'package:extensions_plus/extensions_plus.dart';
 import 'package:yourfit/src/models/exercise/workout_data.dart';
 import 'package:yourfit/src/models/exercise/exercise_data.dart';
-import 'package:yourfit/src/models/exercise/month_data.dart';
+import 'package:yourfit/src/models/exercise/monthly_workout_data.dart';
+import 'package:yourfit/src/models/nutrition/monthly_water_data.dart';
 
 part 'user_data.mapper.dart';
 
@@ -32,7 +33,9 @@ class UserData with UserDataMappable {
 
   final DateTime createdAt;
 
-  final Map<String, MonthData> workoutData;
+  final Map<String, MonthlyWorkoutData> workoutData;
+
+  final Map<String, MonthlyWaterData> waterData;
 
   final UserStats stats;
 
@@ -88,23 +91,24 @@ class UserData with UserDataMappable {
     this.exercisesIntensity = ExerciseIntensity.low,
     this.exercisesDifficulty = ExerciseDifficulty.easy,
     this.workoutData = const {},
+    this.waterData = const {},
     this.disabilities = const [],
     this.equipment = const [],
   });
 
   void addWorkoutData(WorkoutData workoutData) {
     final now = DateTime.now();
-    final monthData = getMonthData(now);
+    final monthData = getMonthlyWorkout(now);
     monthData.workouts[now.day.toString()] = workoutData;
   }
 
   WorkoutData? getWorkoutData(DateTime date) {
-    final monthData = getMonthData(date);
+    final monthData = getMonthlyWorkout(date);
     return monthData.workouts[date.day.toString()];
   }
 
-  MonthData getMonthData(DateTime date) =>
-      workoutData["${date.year}.${date.month}"] ??= MonthData(workouts: {});
+  MonthlyWorkoutData getMonthlyWorkout(DateTime date) =>
+      workoutData["${date.year}.${date.month}"] ??= MonthlyWorkoutData(workouts: {});
 
   factory UserData.fromJson(String json) => UserDataMapper.fromJson(json);
 

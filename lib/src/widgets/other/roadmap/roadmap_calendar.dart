@@ -6,6 +6,7 @@ import 'package:yourfit/src/screens/tabs/roadmap_screen.dart';
 
 class RoadmapCalendar extends StatelessWidget {
   final RoadmapController controller;
+
   const RoadmapCalendar({super.key, required this.controller});
 
   @override
@@ -30,6 +31,17 @@ class RoadmapCalendar extends StatelessWidget {
               formatButtonVisible: false,
               titleCentered: true,
               headerPadding: EdgeInsets.symmetric(vertical: 10),
+            ),
+            calendarStyle: CalendarStyle(
+              outsideTextStyle: TextStyle(color: Colors.grey[400]),
+              selectedDecoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.blue[400],
+              ),
+              todayDecoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.blue[100],
+              ),
             ),
             selectedDayPredicate: (d) => isSameDay(d, controller.selectedDay),
             onDaySelected: (sel, foc) => controller.onDaySelected(sel, foc),

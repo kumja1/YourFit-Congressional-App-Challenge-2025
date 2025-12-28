@@ -1,5 +1,4 @@
 import 'package:dart_mappable/dart_mappable.dart';
-import 'package:yourfit/src/utils/objects/other/mapping/duration_mapper.dart';
 
 part 'exercise_data.mapper.dart';
 
@@ -39,7 +38,7 @@ abstract class ExerciseDataBase with ExerciseDataBaseMappable {
 }
 
 @MappableClass(
-  includeCustomMappers: [DurationMapper()],
+  includeCustomMappers: [_DurationMapper()],
   discriminatorValue: "basic",
 )
 class ExerciseData extends ExerciseDataBase with ExerciseDataMappable {
@@ -85,7 +84,7 @@ class ExerciseData extends ExerciseDataBase with ExerciseDataMappable {
       ExerciseDataMapper.fromMap(map);
 }
 
-@MappableClass(includeCustomMappers: [DurationMapper()])
+@MappableClass(includeCustomMappers: [_DurationMapper()])
 class RestInterval with RestIntervalMappable {
   final Duration duration;
   final int restAt;
@@ -110,4 +109,17 @@ class ExerciseState with ExerciseStateMappable {
 
   factory ExerciseState.fromMap(Map<String, dynamic> map) =>
       ExerciseStateMapper.fromMap(map);
+}
+
+
+class _DurationMapper extends SimpleMapper<Duration> {
+  const _DurationMapper();
+
+  @override
+  Object? encode(Duration self) => {"inSeconds": self.inSeconds};
+
+  @override
+  Duration decode(Object? self) => self is Map<String, dynamic>
+      ? Duration(seconds: self["inSeconds"])
+      : throw Exception("Invalid type");
 }

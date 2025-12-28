@@ -119,7 +119,8 @@ class UserDataMapper extends ClassMapperBase<UserData> {
       UserStatsMapper.ensureInitialized();
       ExerciseIntensityMapper.ensureInitialized();
       ExerciseDifficultyMapper.ensureInitialized();
-      MonthDataMapper.ensureInitialized();
+      MonthlyWorkoutDataMapper.ensureInitialized();
+      MonthlyWaterDataMapper.ensureInitialized();
     }
     return _instance!;
   }
@@ -200,14 +201,25 @@ class UserDataMapper extends ClassMapperBase<UserData> {
         opt: true,
         def: ExerciseDifficulty.easy,
       );
-  static Map<String, MonthData> _$workoutData(UserData v) => v.workoutData;
-  static const Field<UserData, Map<String, MonthData>> _f$workoutData = Field(
-    'workoutData',
-    _$workoutData,
-    key: r'workout_data',
-    opt: true,
-    def: const {},
-  );
+  static Map<String, MonthlyWorkoutData> _$workoutData(UserData v) =>
+      v.workoutData;
+  static const Field<UserData, Map<String, MonthlyWorkoutData>> _f$workoutData =
+      Field(
+        'workoutData',
+        _$workoutData,
+        key: r'workout_data',
+        opt: true,
+        def: const {},
+      );
+  static Map<String, MonthlyWaterData> _$waterData(UserData v) => v.waterData;
+  static const Field<UserData, Map<String, MonthlyWaterData>> _f$waterData =
+      Field(
+        'waterData',
+        _$waterData,
+        key: r'water_data',
+        opt: true,
+        def: const {},
+      );
   static List<String> _$disabilities(UserData v) => v.disabilities;
   static const Field<UserData, List<String>> _f$disabilities = Field(
     'disabilities',
@@ -221,31 +233,6 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     _$equipment,
     opt: true,
     def: const [],
-  );
-  static String _$fullName(UserData v) => v.fullName;
-  static const Field<UserData, String> _f$fullName = Field(
-    'fullName',
-    _$fullName,
-    key: r'full_name',
-    mode: FieldMode.member,
-  );
-  static String _$intials(UserData v) => v.intials;
-  static const Field<UserData, String> _f$intials = Field(
-    'intials',
-    _$intials,
-    mode: FieldMode.member,
-  );
-  static int _$age(UserData v) => v.age;
-  static const Field<UserData, int> _f$age = Field(
-    'age',
-    _$age,
-    mode: FieldMode.member,
-  );
-  static double _$bmi(UserData v) => v.bmi;
-  static const Field<UserData, double> _f$bmi = Field(
-    'bmi',
-    _$bmi,
-    mode: FieldMode.member,
   );
 
   @override
@@ -265,12 +252,9 @@ class UserDataMapper extends ClassMapperBase<UserData> {
     #exercisesIntensity: _f$exercisesIntensity,
     #exercisesDifficulty: _f$exercisesDifficulty,
     #workoutData: _f$workoutData,
+    #waterData: _f$waterData,
     #disabilities: _f$disabilities,
     #equipment: _f$equipment,
-    #fullName: _f$fullName,
-    #intials: _f$intials,
-    #age: _f$age,
-    #bmi: _f$bmi,
   };
 
   static UserData _instantiate(DecodingData data) {
@@ -290,6 +274,7 @@ class UserDataMapper extends ClassMapperBase<UserData> {
       exercisesIntensity: data.dec(_f$exercisesIntensity),
       exercisesDifficulty: data.dec(_f$exercisesDifficulty),
       workoutData: data.dec(_f$workoutData),
+      waterData: data.dec(_f$waterData),
       disabilities: data.dec(_f$disabilities),
       equipment: data.dec(_f$equipment),
     );
@@ -356,10 +341,17 @@ abstract class UserDataCopyWith<$R, $In extends UserData, $Out>
   MapCopyWith<
     $R,
     String,
-    MonthData,
-    MonthDataCopyWith<$R, MonthData, MonthData>
+    MonthlyWorkoutData,
+    MonthlyWorkoutDataCopyWith<$R, MonthlyWorkoutData, MonthlyWorkoutData>
   >
   get workoutData;
+  MapCopyWith<
+    $R,
+    String,
+    MonthlyWaterData,
+    MonthlyWaterDataCopyWith<$R, MonthlyWaterData, MonthlyWaterData>
+  >
+  get waterData;
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get disabilities;
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>> get equipment;
   $R call({
@@ -377,7 +369,8 @@ abstract class UserDataCopyWith<$R, $In extends UserData, $Out>
     int? exerciseDaysPerWeek,
     ExerciseIntensity? exercisesIntensity,
     ExerciseDifficulty? exercisesDifficulty,
-    Map<String, MonthData>? workoutData,
+    Map<String, MonthlyWorkoutData>? workoutData,
+    Map<String, MonthlyWaterData>? waterData,
     List<String>? disabilities,
     List<String>? equipment,
   });
@@ -399,13 +392,25 @@ class _UserDataCopyWithImpl<$R, $Out>
   MapCopyWith<
     $R,
     String,
-    MonthData,
-    MonthDataCopyWith<$R, MonthData, MonthData>
+    MonthlyWorkoutData,
+    MonthlyWorkoutDataCopyWith<$R, MonthlyWorkoutData, MonthlyWorkoutData>
   >
   get workoutData => MapCopyWith(
     $value.workoutData,
     (v, t) => v.copyWith.$chain(t),
     (v) => call(workoutData: v),
+  );
+  @override
+  MapCopyWith<
+    $R,
+    String,
+    MonthlyWaterData,
+    MonthlyWaterDataCopyWith<$R, MonthlyWaterData, MonthlyWaterData>
+  >
+  get waterData => MapCopyWith(
+    $value.waterData,
+    (v, t) => v.copyWith.$chain(t),
+    (v) => call(waterData: v),
   );
   @override
   ListCopyWith<$R, String, ObjectCopyWith<$R, String, String>>
@@ -437,7 +442,8 @@ class _UserDataCopyWithImpl<$R, $Out>
     int? exerciseDaysPerWeek,
     ExerciseIntensity? exercisesIntensity,
     ExerciseDifficulty? exercisesDifficulty,
-    Map<String, MonthData>? workoutData,
+    Map<String, MonthlyWorkoutData>? workoutData,
+    Map<String, MonthlyWaterData>? waterData,
     List<String>? disabilities,
     List<String>? equipment,
   }) => $apply(
@@ -459,6 +465,7 @@ class _UserDataCopyWithImpl<$R, $Out>
       if (exercisesDifficulty != null)
         #exercisesDifficulty: exercisesDifficulty,
       if (workoutData != null) #workoutData: workoutData,
+      if (waterData != null) #waterData: waterData,
       if (disabilities != null) #disabilities: disabilities,
       if (equipment != null) #equipment: equipment,
     }),
@@ -489,6 +496,7 @@ class _UserDataCopyWithImpl<$R, $Out>
       or: $value.exercisesDifficulty,
     ),
     workoutData: data.get(#workoutData, or: $value.workoutData),
+    waterData: data.get(#waterData, or: $value.waterData),
     disabilities: data.get(#disabilities, or: $value.disabilities),
     equipment: data.get(#equipment, or: $value.equipment),
   );

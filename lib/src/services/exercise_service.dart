@@ -1,71 +1,105 @@
 import 'dart:async';
+
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:yourfit/src/models/index.dart';
 import 'package:langchain/langchain.dart';
 import 'package:langchain_google/langchain_google.dart';
-import 'package:yourfit/src/services/device_service.dart';
+import 'package:yourfit/src/models/index.dart';
 import 'package:yourfit/src/utils/objects/constants/env/env.dart';
 import 'package:yourfit/src/utils/objects/constants/exercise/response_schema.dart';
 import 'package:yourfit/src/utils/objects/other/exercise/parameter.dart';
 import 'package:yourfit/src/utils/objects/other/supabase/supabase_vectorstore.dart';
 
+import 'device_service.dart';
+
 class ExerciseService extends GetxService {
   final DeviceService deviceService = Get.find();
-  late final Runnable llmChain;
+  late final Runnable runnable;
 
   @override
   void onInit() {
     super.onInit();
-    final model =
-        ChatPromptTemplate.fromPromptMessages([
-          ChatMessagePromptTemplate.system("""
----- Instructions ----
-You are a extremly considerate, medically accurate fitness trainer.
-Your task: Provide the user with an appropriate response to the prompt, taking into consideration the parameters provided and their priority.
-Follow these rules:
-1. Response should be based on the given information as well as any additional information found in the dataset.
-2. Response should not contain anything redundant but remain relatively consistent with the historical data provided, upscaling if necessary.
-3. Response should be in a JSON format and follow the schema provided.
+    Tool runningDestTool = Tool.fromFunction(
+      name: "Running Destination Tool",
+      description: "Tool for finding a suitable destination for running",
+      inputJsonSchema: const {
+        "type": "object",
+        "properties": {
+          "empty": {"type": "string"},
+        },
+      },
+      func: (_) async {
+        List<Position> nearbyPositions = await deviceService
+            .getPositionsNearDevice();
+        Position devicePos = await deviceService.getDevicePosition();
 
----- Context ----
-{context}
-"""),
-          ChatMessagePromptTemplate.human("""
-Below is the information you will take into consideration when formulating your response.
-
----- Information ----
-  {params}
-"""),
-
-          ChatMessagePromptTemplate.human("User Prompt: {prompt}"),
-        ]) |
-        ChatGoogleGenerativeAI(
-          apiKey: Env.geminiKey,
-          defaultOptions: ChatGoogleGenerativeAIOptions(
-            model: "gemini-2.5-flash",
-            responseMimeType: "application/json",
-            safetySettings: const [
-              ChatGoogleGenerativeAISafetySetting(
-                category: ChatGoogleGenerativeAISafetySettingCategory
-                    .sexuallyExplicit,
-                threshold: ChatGoogleGenerativeAISafetySettingThreshold
-                    .blockLowAndAbove,
+        return {
+          "user_location": devicePos.toJson(),
+          "nearby_locations": nearbyPositions.map(
+            (p) => {
+              ...p.toJson(),
+              "distance_from_user": Geolocator.distanceBetween(
+                devicePos.latitude,
+                devicePos.longitude,
+                p.latitude,
+                p.longitude,
               ),
-              ChatGoogleGenerativeAISafetySetting(
-                category:
-                    ChatGoogleGenerativeAISafetySettingCategory.hateSpeech,
-                threshold: ChatGoogleGenerativeAISafetySettingThreshold
-                    .blockLowAndAbove,
-              ),
-              ChatGoogleGenerativeAISafetySetting(
-                category: ChatGoogleGenerativeAISafetySettingCategory
-                    .dangerousContent,
-                threshold: ChatGoogleGenerativeAISafetySettingThreshold
-                    .blockLowAndAbove,
-              ),
-            ],
+            },
           ),
-        );
+        };
+      },
+    );
+
+    final agent = ToolsAgent.fromLLMAndTools(
+      tools: [runningDestTool],
+      llm: ChatGoogleGenerativeAI(
+        apiKey: Env.geminiKey,
+        defaultOptions: const ChatGoogleGenerativeAIOptions(
+          model: "gemini-2.5-flash",
+          responseMimeType: "application/json",
+          safetySettings: [
+            ChatGoogleGenerativeAISafetySetting(
+              category:
+                  ChatGoogleGenerativeAISafetySettingCategory.sexuallyExplicit,
+              threshold:
+                  ChatGoogleGenerativeAISafetySettingThreshold.blockLowAndAbove,
+            ),
+            ChatGoogleGenerativeAISafetySetting(
+              category: ChatGoogleGenerativeAISafetySettingCategory.hateSpeech,
+              threshold:
+                  ChatGoogleGenerativeAISafetySettingThreshold.blockLowAndAbove,
+            ),
+            ChatGoogleGenerativeAISafetySetting(
+              category:
+                  ChatGoogleGenerativeAISafetySettingCategory.dangerousContent,
+              threshold:
+                  ChatGoogleGenerativeAISafetySettingThreshold.blockLowAndAbove,
+            ),
+          ],
+        ),
+      ),
+      systemChatMessage: SystemChatMessagePromptTemplate.fromTemplate("""
+    ---- Instructions ----
+        You are a extremely considerate, medically accurate fitness trainer.
+        Your task: Provide the user with an appropriate response to the prompt, taking into consideration the parameters provided and their priority.
+        Follow these rules:
+        1. Response should be based on the given information as well as any additional information found in the dataset.
+        2. Response should not contain anything redundant but remain relatively consistent with the historical data provided, increasing the difficulty if appropriate.
+        3. Response should be in a JSON format and follow the schema provided.
+
+        ---- Context ----
+        {context}
+        """),
+      extraPromptMessages: [
+        ChatMessagePromptTemplate.human("""
+        Below is the information you will take into consideration when formulating your response.
+
+        ---- Information ----
+        {params}
+        """),
+        ChatMessagePromptTemplate.human("User Prompt: {prompt}"),
+      ],
+    );
 
     final vectorStore = Supabase(
       tableName: "documents",
@@ -78,7 +112,7 @@ Below is the information you will take into consideration when formulating your 
       ),
     );
 
-    llmChain =
+    runnable =
         Runnable.fromMap({
           "context":
               Runnable.getItemFromMap("prompt") |
@@ -96,17 +130,23 @@ Below is the information you will take into consideration when formulating your 
                 StringBuffer buffer = StringBuffer();
                 for (MapEntry<String, Parameter> entry
                     in (params as Map<String, Parameter>).entries) {
-                  i++;
                   buffer.writeln(
-                    "${entry.key}: ${entry.value.value} (priority: ${entry.value.priority ?? i}) (description: ${entry.value.description})",
+                    "${entry.key}: ${entry.value.value} (priority: ${entry.value.priority ?? ++i}) (description: ${entry.value.description})",
                   );
                 }
                 buffer.printInfo();
                 return buffer.toString();
               }),
         }) |
-        model |
-        JsonOutputParser();
+        AgentExecutor(
+          agent: agent,
+          maxExecutionTime: Duration(minutes: 1),
+          handleParsingErrors: (e) {
+            e.printError();
+            return {};
+          },
+        ) |
+        ToolsAgentOutputParser();
   }
 
   Future<Map<String, dynamic>> invoke(
@@ -117,7 +157,7 @@ Below is the information you will take into consideration when formulating your 
     Get.log("Invoking LLM with parameters: $params");
     try {
       Map<String, dynamic> results =
-          await llmChain.invoke(
+          await runnable.invoke(
                 {"params": params, "prompt": prompt},
                 options: responseSchema == null
                     ? null
@@ -222,7 +262,8 @@ Below is the information you will take into consideration when formulating your 
           "workout_exercise_count": Parameter(
             priority: 5,
             value: count,
-            description: "Number of exercises in the workout. Provide a value if not provided",
+            description:
+                "Number of exercises in the workout. Provide a value if not provided",
           ),
           "workout_exercise_difficulty": Parameter(
             priority: 5,
@@ -242,8 +283,7 @@ Below is the information you will take into consideration when formulating your 
           "workout_focus": Parameter(
             priority: 6,
             value: focus?.name,
-            description:
-                "Desired focus for the overall workout.",
+            description: "Desired focus for the overall workout.",
           ),
         },
         responseSchema: ResponseSchema.workout,

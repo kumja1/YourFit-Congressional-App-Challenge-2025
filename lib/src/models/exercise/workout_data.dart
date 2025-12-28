@@ -32,7 +32,7 @@ class WorkoutData with WorkoutDataMappable {
   final WorkoutFocus focus;
   final String summary;
 
-  WorkoutData({
+  const WorkoutData({
     required this.exercises,
     required this.focus,
     required this.caloriesBurned,
