@@ -1,4 +1,6 @@
 import 'dart:core';
+import 'package:const_date_time/const_date_time.dart';
+import 'package:extensions_plus/extensions_plus.dart';
 import 'package:get/get.dart';
 import 'package:health/health.dart';
 import 'device_service.dart';
@@ -7,19 +9,16 @@ class HealthConnectService extends GetxService {
   final deviceService = DeviceService();
   final health = Health();
 
-  Future<int> getTotalSteps({DateTime? from, DateTime? to}) async {
-    if (!(await _requestHealthDataPermissions())) {
-      return 0;
-    }
+  bool _enabled = false;
 
-    to ??= DateTime.now();
-    from ??= to.subtract(const Duration(days: 1));
-    return (await health.getTotalStepsInInterval(from, to))!;
+  @override
+  Future<void> onReady() async {
+    _enabled = await _requestHealthDataPermissions();
+    super.onReady();
   }
 
   Future<bool> _requestHealthDataPermissions() async {
     try {
-      bool allowed = false;
       if (!(await health.isHealthConnectAvailable())) {
         await health.installHealthConnect();
       }
@@ -29,6 +28,7 @@ class HealthConnectService extends GetxService {
         return true;
       }
 
+      bool allowed = false;
       if (!(await health.isHealthDataHistoryAuthorized())) {
         allowed = await health.requestHealthDataHistoryAuthorization();
       }
@@ -40,6 +40,7 @@ class HealthConnectService extends GetxService {
       if ((await health.hasPermissions(dataTypeKeysAndroid)) == false) {
         allowed = await health.requestAuthorization(
           dataTypeKeysAndroid,
+          permissions: [HealthDataAccess.READ_WRITE],
           // permissions: [HealthDataAccess.] - Specify READ_WRITE permissions for HealthDataType.WORKOUT
         );
       }
@@ -51,4 +52,39 @@ class HealthConnectService extends GetxService {
       return false;
     }
   }
+
+  Future<int?> getTotalSteps({DateTime? from, DateTime? to}) async {
+    if (!_enabled) {
+      return 0;
+    }
+
+    to ??= DateTime.now();
+    from ??= to.startOfDay;
+    return await health.getTotalStepsInInterval(from, to);
+  }
+
+  Future<List<HealthDataPoint?>> getHealthData({
+    DateTime? from,
+    DateTime? to,
+    List<HealthDataType> types = const [],
+  }) async {
+    if (!_enabled) {
+      return [];
+    }
+
+    to ??= DateTime.now();
+    from = to.startOfDay;
+
+    return (await health.getHealthDataFromTypes(
+      types: types,
+      startTime: from,
+      endTime: to,
+      preferredUnits: {
+      }
+    ));
+    
+    health.getHealthIntervalDataFromTypes(startDate: startDate, endDate: endDate, types: types, interval: interval)
+  }
+  
+  
 }

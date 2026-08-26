@@ -57,24 +57,35 @@ class _UserInfoOnboardingScreenController extends AuthFormController {
     context: context,
     maxDate: const ConstDateTime(3000),
     minDate: const ConstDateTime(1900, 12, 31),
-    initialDate: DateTime.now(),
-    centerLeadingDate: true,
-    daysOfTheWeekTextStyle: const TextStyle(
-      color: Colors.black26,
-      fontSize: 14,
+    currentDate: DateTime.now(),
+    theme: const DatePickerPlusTheme(
+      headerTheme: HeaderTheme(
+        centerLeadingDate: true,
+        leadingDateTextStyle: TextStyle(fontSize: 20),
+      ),
+      daysPickerTheme: DaysPickerTheme(
+        currentDateTextStyle: TextStyle(color: Colors.white, fontSize: 14),
+        currentDateDecoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.black26,
+        ),
+        daysOfTheWeekTheme: DaysOfTheWeekTheme(
+          textStyle: TextStyle(
+            color: Colors.black26,
+            fontSize: 14,
+          ),
+        ),
+        enabledCellsTextStyle: TextStyle(color: Colors.black26, fontSize: 14),
+        selectedCellDecoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.blue,
+        ),
+        inkResponseTheme: InkResponseTheme(borderRadius: BorderRadius.all(Radius.circular(20)))
+      ),
+      rangePickerTheme: RangePickerTheme(
+      )
     ),
-    enabledCellsTextStyle: const TextStyle(color: Colors.black26, fontSize: 14),
-    currentDateTextStyle: const TextStyle(color: Colors.white, fontSize: 14),
-    currentDateDecoration: const BoxDecoration(
-      shape: BoxShape.circle,
-      color: Colors.black26,
-    ),
-    selectedCellDecoration: const BoxDecoration(
-      shape: BoxShape.circle,
-      color: Colors.blue,
-    ),
-    leadingDateTextStyle: const TextStyle(fontSize: 20),
-    slidersColor: Colors.black,
-    splashRadius: 20,
+
+    // slidersColor: Colors.black,
   );
 }

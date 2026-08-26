@@ -202,28 +202,37 @@ class RoadmapController extends GetxController {
       context: ctx,
       minDate: currentUser.value?.createdAt ?? const ConstDateTime(1970),
       maxDate: const ConstDateTime(2050),
-      initialDate: selectedDay,
-      centerLeadingDate: true,
-      daysOfTheWeekTextStyle: const TextStyle(
-        color: Colors.black26,
-        fontSize: 14,
+      currentDate: selectedDay,
+      theme: const DatePickerPlusTheme(
+        daysPickerTheme: DaysPickerTheme(
+          daysOfTheWeekTheme: DaysOfTheWeekTheme(
+            textStyle: TextStyle(
+              color: Colors.black26,
+              fontSize: 14,
+            ),
+
+          ),
+          enabledCellsTextStyle: TextStyle(
+            color: Colors.black26,
+            fontSize: 14,
+          ),
+          currentDateTextStyle: TextStyle(color: Colors.white, fontSize: 14),
+          currentDateDecoration:  BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.grey,
+          ),
+          selectedCellDecoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.blue,
+          ),
+        ),
+        headerTheme: HeaderTheme(
+          centerLeadingDate: true,
+          leadingDateTextStyle: TextStyle(fontSize: 20),
+        )
       ),
-      enabledCellsTextStyle: const TextStyle(
-        color: Colors.black26,
-        fontSize: 14,
-      ),
-      currentDateTextStyle: const TextStyle(color: Colors.white, fontSize: 14),
-      currentDateDecoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.grey,
-      ),
-      selectedCellDecoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.blue,
-      ),
-      leadingDateTextStyle: const TextStyle(fontSize: 20),
-      slidersColor: Colors.black,
-      splashRadius: 20,
+      // slidersColor: Colors.black,
+      // splashRadius: 20,
     );
 
     if (pick == null) {
